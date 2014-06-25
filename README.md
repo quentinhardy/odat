@@ -51,6 +51,8 @@ Thanks to ODAT, you can:
  * pickup the session key and salt for arbitrary users
  * attack by dictionary on sessions
 
+![Alt text](./pictures/ODAT_main_features_v1.0.jpg)
+
 Supported Platforms and dependencies
 ====
 

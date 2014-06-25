@@ -7,7 +7,7 @@ __ODAT__ ( __O__ racle __D__ atabase __A__ ttacking __T__ ool) is an open source
 Current version: 1.0
 ====
 
-Version __1.0__ (2014/07/01)
+Version __1.0__ (2014/06/26)
 
 Tested on Oracle Database __10g__ and __11g__.
 

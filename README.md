@@ -1,4 +1,4 @@
-ODAT (*by Quentin HARDY*)
+ODAT 
 ====
 
 __ODAT__ (Oracle Database Attacking Tool) is an open source __penetration testing__ tool that test the security of __Oracle Databases remotely__.

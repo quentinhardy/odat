@@ -14,8 +14,11 @@ Tested on Oracle Database __10g__ and __11g__.
 Changelog
 ====
 
-* Version __1.1__ (2014/07/28) : add the *DBMS_LOB* module useful in order to download files stored on a remote server through Oracle Database.
-* Version __1.0__ (2014/06/26) : first ODAT version.
+* Version __1.1__ (__2014/07/28__) : 
+ * add the *DBMS_LOB* module useful in order to download files stored on a remote server through Oracle Database.
+ * bug fix: java source code: "getenv no longer supported, use properties and -D instead"
+* Version __1.0__ (__2014/06/26__) : 
+ * first ODAT version.
 
 Features
 ====

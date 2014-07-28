@@ -4,21 +4,11 @@
 -----------
   HIGH
 -----------
-1- Read files with DBMS_LOB
-		DECLARE
-			buf varchar2(4096);
-		BEGIN
-			Lob_loc:= BFILENAME(‘MEDIA_DIR’, ‘rds.txt’);
-			DBMS_LOB.OPEN (Lob_loc, DBMS_LOB.LOB_READONLY);
-			DBMS_LOB.READ (Lob_loc, 1000, 1, buf);
-			dbms_output.put_line(utl_raw.cast_to_varchar2(buf));
-			DBMS_LOB.CLOSE (Lob_loc);
-		END;
-2- Executing Code as SYSDBA: "oradebug setmypid", oradebug call system “/bin/touch -f /home/oracle/rds.txt”Function returned 0
+1- Executing Code as SYSDBA: "oradebug setmypid", oradebug call system “/bin/touch -f /home/oracle/rds.txt”Function returned 0
 	http://blog.red-database-security.com/2011/09/17/disable-auditing-and-running-os-commands-using-oradebug/
 	http://www.petefinnigan.com/weblog/archives/00001353.htm
-3- Remonter un le SID "BLABLA" lorsque l'alias est sous la forme '.H......"..<(DESCRIPTION=(TMP=)(VSNNUM=0)(ERR=0)(ALIAS=listener_BLABLA))'
-4- get the remote version database thanks to the banner. Tnsping can be used
+2- Remonter un le SID "BLABLA" lorsque l'alias est sous la forme '.H......"..<(DESCRIPTION=(TMP=)(VSNNUM=0)(ERR=0)(ALIAS=listener_BLABLA))'
+3- get the remote version database thanks to the banner. Tnsping can be used
 -----------
   MEDIUM
 -----------

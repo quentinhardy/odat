@@ -1,7 +1,7 @@
 ODAT 
 ====
 
-__ODAT__ (Oracle Database Attacking Tool) is an open source __penetration testing__ tool that test the security of __Oracle Databases remotely__.
+__ODAT__ (Oracle Database Attacking Tool) is an open source __penetration testing__ tool that tests the security of __Oracle Databases remotely__.
 
 Usage examples of ODAT:
 * You have an Oracle database listening remotely and want to find valid __SIDs__ and __credentials__ in order to connect to the database
@@ -55,7 +55,7 @@ Thanks to ODAT, you can:
  * pickup the session key and salt for arbitrary users
  * attack by dictionary on sessions
 
-![Alt text](./pictures/ODAT_main_features_v1.0.jpg)
+![Alt text](./pictures/ODAT_main_features_v1.1.jpg)
 
 Supported Platforms and dependencies
 ====

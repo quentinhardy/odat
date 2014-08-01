@@ -26,7 +26,11 @@ CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
       try {
         String[] finalCommand;
         if (System.getProperty("os.name").toLowerCase().indexOf("windows") != -1) {
-          String systemRootvariable = System.getenv("SystemRoot");
+          String systemRootvariable;
+          try {systemRootvariable = System.getenv("SystemRoot");} 
+          catch (ClassCastException e) {
+	   systemRootvariable = System.getProperty("SystemRoot");
+          }
           finalCommand = new String[4];
           finalCommand[0] = systemRootvariable+"\\\system32\\\cmd.exe";
           finalCommand[1] = "/y";
@@ -67,7 +71,7 @@ CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
             sb.append("stderr:");
             sb.append(buff);
             sb.append("\\n");
-            try {Thread.sleep(100); } catch(Exception e) {}
+            try {Thread.sleep(100);} catch(Exception e) {}
           }
           br_err.close();
         } catch (IOException ioe) {

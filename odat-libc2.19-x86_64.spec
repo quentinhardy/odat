@@ -1,6 +1,6 @@
 # -*- mode: python -*-
 a = Analysis(['odat.py'],
-             pathex=['/home/bobsecurity/repo-pentest-brutus/ODSCCT/odat'],
+             pathex=['/home/bobsecurity/odat'],
              hiddenimports=[],
              hookspath=['/usr/lib/python2.7/dist-packages/scapy/layers/'],
              runtime_hooks=None)

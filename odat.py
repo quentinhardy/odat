@@ -35,6 +35,7 @@ from Passwords import Passwords,runPasswordsModule
 from DbmsXslprocessor import DbmsXslprocessor,runDbmsXslprocessorModule
 from ExternalTable import ExternalTable,runExternalTableModule
 from UtlTcp import UtlTcp,runUtlTcpModule
+from DbmsLob import DbmsLob,runDbmsLob
 from CVE_2012_3137 import CVE_2012_3137,runCVE20123137Module
 from Oradbg import Oradbg,runOradbgModule
 from UsernameLikePassword import UsernameLikePassword,runUsernameLikePassword
@@ -140,7 +141,10 @@ def runAllModules(args):
 			#Oradbg
 			oradbg = Oradbg(args)
 			oradbg.testAll()
-			oradbg.close() #Close the socket to the remote database
+			#DbmsLob
+			dbmsLob = DbmsLob(args)
+			dbmsLob.testAll()
+			dbmsLob.close() #Close the socket to the remote database
 			#CVE_2012_3137
 			cve = CVE_2012_3137 (args)
 			cve.testAll()
@@ -290,6 +294,11 @@ def main():
 	PPoradbg._optionals.title = "oradbg commands"
 	PPoradbg.add_argument('--exec',dest='exec',default=None,required=False,help='execute a system command on the remote system (no args allowed)')
 	PPoradbg.add_argument('--test-module',dest='test-module',action='store_true',help='test the module before use it')
+	#1.12- Parent parser: DBMS_LOB
+	PPdbmsLob = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
+	PPdbmsLob._optionals.title = "DBMS_LOB commands (new)"
+	PPdbmsLob.add_argument('--getFile',dest='getFile',default=None,required=False,nargs=3,metavar=('remotePath','remoteNamefile','localFile'),help='get a file from the remote database server')
+	PPdbmsLob.add_argument('--test-module',dest='test-module',action='store_true',help='test the module before use it')
 	#1.17- Parent parser: usernamelikepassword
 	PPusernamelikepassword = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
 	PPusernamelikepassword._optionals.title = "usernamelikepassword commands"
@@ -346,6 +355,9 @@ def main():
 	#2.n- Oradbg 
 	parser_oradbg = subparsers.add_parser('oradbg',parents=[PPoptional,PPconnection,PPoradbg,PPoutput],help='to execute a bin or script')
 	parser_oradbg.set_defaults(func=runOradbgModule,auditType='oradbg')
+	#2.o- DBMS_LOB
+	parser_dbmslob = subparsers.add_parser('dbmslob',parents=[PPoptional,PPconnection,PPdbmsLob,PPoutput],help='to download files')
+	parser_dbmslob.set_defaults(func=runDbmsLob,auditType='dbmslob')
 	#2.o- steal Passwords (CVE-2012-313)
 	parser_passwords = subparsers.add_parser('stealremotepwds',parents=[PPoptional,PPstealRemotePass,PPoutput],help='to steal hashed passwords thanks an authentication sniffing (CVE-2012-313)')
 	parser_passwords.set_defaults(func=runCVE20123137Module,auditType='passwords')

@@ -29,7 +29,7 @@ from Java import Java,runjavaModule
 from Info import Info
 from PasswordGuesser import PasswordGuesser, runPasswordGuesserModule
 from SIDGuesser import SIDGuesser, runSIDGuesserModule
-from SMB import SMB
+from SMB import SMB, runSMBModule
 from Ctxsys import Ctxsys,runCtxsysModule
 from Passwords import Passwords,runPasswordsModule
 from DbmsXslprocessor import DbmsXslprocessor,runDbmsXslprocessorModule
@@ -144,7 +144,10 @@ def runAllModules(args):
 			#DbmsLob
 			dbmsLob = DbmsLob(args)
 			dbmsLob.testAll()
-			dbmsLob.close() #Close the socket to the remote database
+			#SMB
+			smb = SMB(args)
+			smb.testAll()
+			smb.close() #Close the socket to the remote database
 			#CVE_2012_3137
 			cve = CVE_2012_3137 (args)
 			cve.testAll()
@@ -304,10 +307,15 @@ def main():
 	PPusernamelikepassword._optionals.title = "usernamelikepassword commands"
 	PPusernamelikepassword.add_argument('--run',dest='run',action='store_true',required=True,help='try to connect using each Oracle username like the password')
 	PPusernamelikepassword.add_argument('--force-retry',dest='force-retry',action='store_true',help='allow to test multiple passwords for a user without ask you')
-	#1.18- Parent parser: clean
+	#1.18- Parent parser: smb
+	PPsmb = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
+	PPsmb._optionals.title = "smb commands"
+	PPsmb.add_argument('--capture',dest='captureSMBAuthentication',default=None,required=False,nargs=2,metavar=('local_ip','share_name'),help='capture the smb authentication')
+	PPsmb.add_argument('--test-module',dest='test-module',action='store_true',help='test the module before use it')
+	#1.19- Parent parser: clean
 	PPclean = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
 	PPclean._optionals.title = "clean commands"
-	PPclean.add_argument('--all',dest='all',action='store_true',required=True,help='clean all traces and logs')
+	PPclean.add_argument('--all',dest='all',action='store_true',required=True,help='clean all traces and logs stored locally')
 	#2- main commands
 	subparsers = parser.add_subparsers(help='\nChoose a main command')
 	#2.a- Run all modules
@@ -364,6 +372,9 @@ def main():
 	#2.p- username like password
 	parser_usernamelikepassword = subparsers.add_parser('userlikepwd',parents=[PPoptional,PPconnection,PPusernamelikepassword,PPoutput],help='to try each Oracle username stored in the DB like the corresponding pwd')
 	parser_usernamelikepassword.set_defaults(func=runUsernameLikePassword,auditType='usernamelikepassword')
+	#2.q- smb
+	parser_smb = subparsers.add_parser('smb',parents=[PPoptional,PPconnection,PPsmb,PPoutput],help='to capture the SMB authentication')
+	parser_smb.set_defaults(func=runSMBModule,auditType='smb')
 	#2.q- clean
 	parser_clean = subparsers.add_parser('clean',parents=[PPoptional,PPclean,PPoutput],help='clean traces and logs')
 	parser_clean.set_defaults(func=runClean,auditType='clean')

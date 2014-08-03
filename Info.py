@@ -17,20 +17,6 @@ class Info (OracleDatabase):
 		self.version = ''
 		self.os = ''
 
-	def isWindows(self):	
-		'''
-		Return True if Windows
-		'''
-		if "windows" in self.os.lower() : return True
-		else : return False
-
-	def isLinux(self):	
-		'''
-		Return True if Linux
-		'''
-		if "linux" in self.os.lower() : return True
-		else : return False
-
 	def isVersion(self, version=None):
 		'''
 		return True if version 11

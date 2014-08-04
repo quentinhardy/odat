@@ -122,6 +122,7 @@ class OracleDatabase:
 		'''
 		cursor = self.args['dbcon'].cursor()
 		try:
+			if SHOW_SQL_REQUESTS_IN_VERBOSE_MODE == True: logging.info("SQL request executed: {0}".format(query))
 			cursor.execute(query)
 		except Exception, e:
 			logging.info("Impossible to execute the query `{0}`: `{1}`".format(query, self.cleanError(e)))

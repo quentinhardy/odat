@@ -25,13 +25,12 @@ class SMB (OracleDatabase):
 		self.INDEX_NAME = "ODAT_SMB_INDEX"
 		self.SQL_CREATE_INDEX = "CREATE INDEX {0} ON {1}(path) INDEXTYPE IS ctxsys.context PARAMETERS ('datastore ctxsys.file_datastore format column ot_format')"
 		self.SQL_DROP_INDEX = "DROP INDEX {0}"
+		self.loadInformationRemoteDatabase()
 
-	def createTable (self, localIP=None, shareName=None):
+	def createTable (self):
 		'''
 		Create a temporary table
 		'''
-		if localIP == None : localIP = self.localIp
-		if shareName == None : shareName = self.shareName
 		logging.info("Creating the table named {0}".format(self.TABLE_NAME))
 		status = self.__execPLSQL__(self.SQL_CREATE_TABLE.format(self.TABLE_NAME))
 		if isinstance(status,Exception):
@@ -39,8 +38,8 @@ class SMB (OracleDatabase):
 			return status
 		else : 
 			logging.info("The table named {0} is created".format(self.TABLE_NAME))
-			logging.info("Inserting into the table named {0} in order to connect to \\\\{1}\\{2}".format(self.TABLE_NAME, localIP, shareName))
-			status = self.__execPLSQL__(self.SQL_INSERTINTO.format(self.TABLE_NAME, localIP, shareName))
+			logging.info("Inserting into the table named {0} in order to connect to \\\\{1}\\{2}".format(self.TABLE_NAME, self.localIp, self.shareName))
+			status = self.__execPLSQL__(self.SQL_INSERTINTO.format(self.TABLE_NAME, self.localIp, self.shareName))
 			if isinstance(status,Exception):
 				logging.info("Impossible to insert into the table named {0}: {1}".format(self.TABLE_NAME, self.cleanError(status)))
 				return status
@@ -65,13 +64,13 @@ class SMB (OracleDatabase):
 		'''
 		Create an index to start the SMB connection
 		'''
-		logging.info("Creating the index named {0}".format(self.INDEX_NAME))
+		logging.info("Creating the index named {0}. SMB connection is establishing ....".format(self.INDEX_NAME))
 		status = self.__execPLSQL__(self.SQL_CREATE_INDEX.format(self.INDEX_NAME, self.TABLE_NAME))
 		if isinstance(status,Exception):
 			logging.info("The index named {0} has not been created: {1}".format(self.INDEX_NAME, self.cleanError(status)))
 			return status
 		else : 
-			logging.info("The index named {0} is created. The SMB connection to \\\\{1}\\{2} is doing...".format(self.INDEX_NAME, self.localIp, self.shareName))
+			logging.info("The index named {0} is created. The SMB connection to \\\\{1}\\{2} is done.".format(self.INDEX_NAME, self.localIp, self.shareName))
 			return True
 		
 	def deleteIndex (self):
@@ -84,13 +83,15 @@ class SMB (OracleDatabase):
 			logging.info("The index named {0} has not been dropped: {1}".format(self.INDEX_NAME, self.cleanError(status)))
 			return status
 		else : 
-			logging.info("The index named {0} is dropped. The SMB connection to \\\\{1}\\{2} is establishing...".format(self.INDEX_NAME, self.localIp, self.shareName))
+			logging.info("The index named {0} is dropped".format(self.INDEX_NAME, self.localIp, self.shareName))
 			return True
 
 	def captureSMBAuthentication (self, localIP, shareName):
 		'''
 		Capture the SMB authentication
 		'''
+		self.localIp = localIP
+		self.shareName = shareName
 		logging.info("Delete table and index if exist")
 		self.deleteTable() #Delete the table because the user can stop ODAT between the creation and the deleting
 		self.deleteIndex() #Delete the index because the user can stop ODAT between the creation and the deleting
@@ -98,7 +99,7 @@ class SMB (OracleDatabase):
 		if self.remoteSystemIsWindows() == True:
 			logging.info("The remote server is Windows, good news")
 			logging.info("Create the table and insert the share name in this one")
-			status = self.createTable(localIP,shareName)
+			status = self.createTable()
 			if status == True:
 				logging.info("Create an index")
 				status = self.createIndex()
@@ -120,6 +121,8 @@ class SMB (OracleDatabase):
 		'''
 		Test all functions
 		'''
+		self.localIp = "127.0.0.1"
+		self.shareName = "SHARE"
 		logging.info("Delete table and index if exist")
 		self.deleteTable() #Delete the table because the user can stop ODAT between the creation and the deleting
 		self.deleteIndex() #Delete the index because the user can stop ODAT between the creation and the deleting
@@ -131,11 +134,11 @@ class SMB (OracleDatabase):
 			if status == True:
 				logging.info("Simulate the index creation")
 				status = self.createIndex()
-				if status == True:
+				if status != True:
 					self.deleteIndex()
 					self.args['print'].badNews("KO")
 				else:
-					self.args['print'].unknownNews("Perhaps (try with --capture)")
+					self.args['print'].unknownNews("Perhaps (try with --capture to be sure)")
 				self.deleteTable()
 			else : 
 				self.deleteTable()

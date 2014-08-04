@@ -258,17 +258,21 @@ class OracleDatabase:
 		'''
 		Get the oracle versions
 		'''
+		if 'dbcon' not in self.args :
+			self.remoteOS = ""
+			return False
 		logging.debug ("Pickup the remote verion")
 		self.oracleDatabaseversion = self.args['dbcon'].version
 		logging.debug ("Pickup the remote Operating System")
 		REQ = "select rtrim(substr(replace(banner,'TNS for ',''),1,instr(replace(banner,'TNS for ',''),':')-1)) os from v$version where  banner like 'TNS for %'"
 		response = self.__execQuery__(query=REQ,ld=['OS'])
 		if isinstance(response,Exception):
-			pass
+			return False
 		else : 
 			if isinstance(response,list) and isinstance(response[0],dict):
 				self.remoteOS = response[0]['OS']
 				logging.info("OS version : {0}".format(self.remoteOS))
+				return True
 
 	def remoteSystemIsWindows(self):	
 		'''

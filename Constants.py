@@ -15,7 +15,7 @@ DESCRIPTION = ""\
 
 By Quentin Hardy (quentin.hardy@bt.com or qhardyfr@gmail.com)
 """
-CURRENT_VERSION = "Version 1.1 - 2014/07/28"
+CURRENT_VERSION = "Version 1.2 - 2014/08/08"
 DEFAULT_SID_MAX_SIZE = 2
 MAX_HELP_POSITION=60
 DEFAULT_SID_FILE = "sids.txt"
@@ -32,4 +32,4 @@ ALL_IS_OK=0
 TIMEOUT_VALUE = 5
 PASSWORD_EXTENSION_FILE = ".odat.save"
 CHALLENGE_EXT_FILE = ".odat.challenge"
-SHOW_SQL_REQUESTS_IN_VERBOSE_MODE = True
+SHOW_SQL_REQUESTS_IN_VERBOSE_MODE = False

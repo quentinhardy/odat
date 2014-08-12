@@ -285,5 +285,5 @@ class OracleDatabase:
 		'''
 		Return True if Linux
 		'''
-		if "linux" in self.remoteOS.lower() : return True
+		if "linux" in self.remoteOS.lower() or 'solaris' in self.remoteOS.lower() : return True
 		else : return False

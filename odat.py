@@ -367,7 +367,7 @@ def main():
 	parser_dbmslob = subparsers.add_parser('dbmslob',parents=[PPoptional,PPconnection,PPdbmsLob,PPoutput],help='to download files')
 	parser_dbmslob.set_defaults(func=runDbmsLob,auditType='dbmslob')
 	#2.o- steal Passwords (CVE-2012-313)
-	parser_passwords = subparsers.add_parser('stealremotepwds',parents=[PPoptional,PPstealRemotePass,PPoutput],help='to steal hashed passwords thanks an authentication sniffing (CVE-2012-313)')
+	parser_passwords = subparsers.add_parser('stealremotepwds',parents=[PPoptional,PPstealRemotePass,PPoutput],help='to steal hashed passwords thanks an authentication sniffing (CVE-2012-3137)')
 	parser_passwords.set_defaults(func=runCVE20123137Module,auditType='passwords')
 	#2.p- username like password
 	parser_usernamelikepassword = subparsers.add_parser('userlikepwd',parents=[PPoptional,PPconnection,PPusernamelikepassword,PPoutput],help='to try each Oracle username stored in the DB like the corresponding pwd')

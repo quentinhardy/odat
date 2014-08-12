@@ -72,7 +72,7 @@ class Passwords (OracleDatabase):
 			if len(l)==3 and l.has_key('name') and l.has_key('spare4'):
 				if l['password']!=None and l['spare4']!=None: print "{0}; {1}; {2}".format(l['name'], l['password'],l['spare4'])
 			elif l.has_key('username'):
-				if l['password']!=None:  print "{0}; {1}".format(l['username'], l['password'])
+				if l['password']!=None:  print "{0}:{1}".format(l['username'], l['password'])
 			elif l.has_key('user#'):
 				if l['password']!=None:  print "{0}; {1}; {2}".format(l['user#'], l['password'], l['password_date'])
 

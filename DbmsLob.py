@@ -71,7 +71,6 @@ class DbmsLob (DirectoryManagement):
 		isFileExist= self.getFileExist (remotePath, remoteNameFile)
 		if isFileExist == True :
 			status = self.__createOrRemplaceDirectory__(remotePath)
-			print "---------6666>",status
 			if isinstance(status,Exception): return status
 			cursor = cx_Oracle.Cursor(self.args['dbcon'])
 			cursor.callproc("dbms_output.enable")

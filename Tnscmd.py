@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import logging,struct, socket, re
+from Constants import *
 
 class Tnscmd ():
 	'''
@@ -16,10 +17,18 @@ class Tnscmd ():
 		self.recvdata = ""
 		self.alias = []
 
+	def resetAlias (self):
+		'''
+		reset alias
+		'''
+		logging.info ("alias list emptied")
+		self.alias = []
+
 	def getInformation(self,cmd='ping'):
 		'''
 		Get information about the oracle database service 
 		'''
+		self.resetAlias()
 		command = "(CONNECT_DATA=(COMMAND={0}))".format(cmd)
 		commandlen = len(command)
 		#logging.info("Sending {0} to {1}:{2} in order to get ALIAS".format(command,self.args['server'],self.args['port']))
@@ -49,7 +58,7 @@ class Tnscmd ():
 			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			logging.debug("Connection to {0}:{1}".format(self.args['server'],int(self.args['port'])))
 			s.connect((self.args['server'],int(self.args['port'])))
-			logging.debug("writing {0} bytes".format(len(sendbuf)))
+			logging.debug("writing {0} bytes: {1}".format(len(sendbuf),repr(sendbuf)))
 			s.sendall(sendbuf)
 			logging.debug("reading data")
 			# read until socket EOF
@@ -61,7 +70,7 @@ class Tnscmd ():
 		except Exception,e:
 			logging.critical("Connection Error: {0}".format(e))
 		# 1st 12 bytes have some meaning which so far eludes me
-		#logging.info('Data received: {0}'.format(repr(self.recvdata)))
+		logging.info('Data received thanks to the {1} cmd: {0}'.format(repr(self.recvdata),cmd))
 		self.__getAliasStrg__()
 
 	def __getAliasStrg__(self):
@@ -78,13 +87,21 @@ class Tnscmd ():
 		'''
 		self.getInformation()
 		return self.alias
+		
+def runTnsCmdModule(args):
+	'''
+	run the TNS cmd module
+	'''
+	if args['ping'] == False :
+		logging.critical("You must choose the --ping option")
+		return EXIT_MISS_ARGUMENT
+	args['print'].title("Searching ALIAS on the {0} server, port {1}".format(args['server'],args['port']))
+	tnscmd = Tnscmd(args)
+	if args['ping'] == True:
+		alias = tnscmd.getAlias()
+		args['print'].goodNews("{0} ALIAS received: {1}. You should use this alias (more or less) as Oracle SID.".format(len(alias),alias))
+		#print alias
+	
 
-'''
-args = {}
-args['server'] = '192.168.142.73'
-args['port'] = '1521'
-tnscmd = Tnscmd(args)
-tnscmd.getInformation()
-'''
-
+	
 

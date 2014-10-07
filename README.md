@@ -13,7 +13,9 @@ Tested on Oracle Database __10g__ and __11g__.
 
 Changelog
 ====
-
+* Version __1.3__ (__2014/10/07__) : 
+ * add the *-C* option in the *all* module. It can be used to use a credentiels file (disable the *-U* and *-P* option)
+ * add the *tnscmd* module to get TNS *alias*, database *version* (thanks to VSNNUM) ans TNS *status*
 * Version __1.2__ (__2014/08/08__) : 
  * add the *SMB* module to capture a SMB authentication
  * add an option (*SHOW_SQL_REQUESTS_IN_VERBOSE_MODE*) in *Constants.py* to show SQL requests sent to the database server
@@ -221,7 +223,26 @@ For each valid account on each valid instance (SID), it will give you what each 
 
 * If you known a SID (ex: *ORCL*) and an account (*SYS/password*):
 ```bash
-./odat.py all -s 192.168.142.73 -p 1521 -d ORCL -U SYS -P password
+./odat.py all -s $SERVER -p $PORT -d $SID -U $USER -P $PASSWORD
+```
+
+ *tnscmd* module
+---
+This module can be used to communicate directly with the Oracle's TNS listener.
+
+* If you would like to know alias defined on the listener, you could use this following command:
+```bash
+./odat.py tnscmd -s $SERVER -p $PORT --ping
+```
+
+* To know the remote database version, the following command can be used:
+```bash
+./odat.py tnscmd -s $SERVER -p $PORT --version
+```
+
+* To know the remote database status, the following command can be used:
+```bash
+./odat.py tnscmd -s $SERVER -p $PORT --status
 ```
 
  *sidguesser* module
@@ -446,7 +467,7 @@ This module has been created in order to get hashed password quicly and to picku
 ./odat.py passwordstealer -s $SERVER -d $SID -U $USER -P $PASSWORD --get-passwords
 ```
 
- *dbmslob* module (NEW : 2014/07/28)
+ *dbmslob* module
 ---
 
 This module uses the DBMS_LOB Oracle library to download files remotely.
@@ -456,7 +477,7 @@ This module uses the DBMS_LOB Oracle library to download files remotely.
 ./odat.py dbmslob -s $SERVER -d $SID -U $USER -P $PASSWORD --getFile /etc/ passwd temp.txt
 ```
 
- *smb* module (NEW : 2014/08/08)
+ *smb* module
 ---
 
 This module allows to capture a SMB authentication.

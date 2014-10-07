@@ -20,6 +20,7 @@ from sys import exit,stdout
 
 from Constants import *
 from Output import Output
+from Tnscmd import runTnsCmdModule
 from UtlFile import UtlFile, runUtlFileModule
 from DbmsAdvisor import DbmsAdvisor,runDbmsadvisorModule
 from DbmsScheduler import DbmsScheduler,runDbmsSchedulerModule
@@ -66,12 +67,24 @@ def runAllModules(args):
 	connectionInformation, validSIDsList = {}, []
 	#A)SID MANAGEMENT
 	if args['sid'] == None :
+		logging.debug("Searching valid SIDs")
 		validSIDsList = runSIDGuesserModule(args)
 		args['user'], args['password'] = None, None 
 	else :
 		validSIDsList = [args['sid']]
 	#B)ACCOUNT MANAGEMENT
-	if args['user'] == None and args['password'] == None:
+	print repr(args['accounts-file'])
+	if args['credentielsFile'] == True :
+		logging.debug("Loading credentiels stored in the {0} file".format(args['accounts-file']))
+		#Load accounts from file
+		passwordGuesser = PasswordGuesser(args, args['accounts-file'])
+		validAccountsList = passwordGuesser.getAccountsFromFile()
+		for aSid in validSIDsList:
+			for anAccount in validAccountsList:
+				if connectionInformation.has_key(aSid) == False: connectionInformation[aSid] = [[anAccount[0], anAccount[1]]]
+				else : connectionInformation[aSid].append([anAccount[0], anAccount[1]])
+		print validAccountsList
+	elif args['user'] == None and args['password'] == None:
 		for sid in validSIDsList:
 			args['print'].title("Searching valid accounts on the {0} SID".format(sid))
 			args['sid'] = sid
@@ -94,7 +107,7 @@ def runAllModules(args):
 				else : connectionInformation[aSid].append([aLogin,aPassword])
 	#C)ALL OTHERS MODULES
 	if sidHasBeenGiven(args) == False : return EXIT_MISS_ARGUMENT
-	elif anAccountIsGiven(args) == False : return EXIT_MISS_ARGUMENT
+	#elif anAccountIsGiven(args) == False : return EXIT_MISS_ARGUMENT
 	for aSid in connectionInformation.keys():
 		for loginAndPass in connectionInformation[aSid]:
 			args['sid'] , args['user'], args['password'] = aSid, loginAndPass[0],loginAndPass[1]
@@ -203,6 +216,14 @@ def main():
 	PPoutput._optionals.title = "output configurations"
 	PPoutput.add_argument('--no-color', dest='no-color', required=False, action='store_true', help='no color for output')
 	PPoutput.add_argument('--output-file',dest='outputFile',default=None,required=False,help='save results in this file')
+	#1.3- Parent parser: all option
+	PPallModule = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
+	PPallModule._optionals.title = "all module options"
+	PPallModule.add_argument('-C', dest='credentielsFile', action='store_true', required=False, default=False, help='use credentiels stored in the --accounts-file file (disable -P and -U)')
+	#1.3- Parent parser: TNS cmd
+	PPTnsCmd = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
+	PPTnsCmd._optionals.title = "TNS cmd options"
+	PPTnsCmd.add_argument('--ping', dest='ping', action='store_true', required=False, default=False, help='send a TNS ping command to get alias')
 	#1.3- Parent parser: SID Guesser
 	PPsidguesser = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
 	PPsidguesser._optionals.title = "SID guesser options"
@@ -319,8 +340,11 @@ def main():
 	#2- main commands
 	subparsers = parser.add_subparsers(help='\nChoose a main command')
 	#2.a- Run all modules
-	parser_all = subparsers.add_parser('all',parents=[PPoptional,PPconnection,PPoutput,PPsidguesser,PPpassguesser],help='to run all modules in order to know what it is possible to do')	
+	parser_all = subparsers.add_parser('all',parents=[PPoptional,PPconnection,PPallModule,PPoutput,PPsidguesser,PPpassguesser],help='to run all modules in order to know what it is possible to do')	
 	parser_all.set_defaults(func=runAllModules,auditType='all')
+	#2.b- tnscmd
+	parser_tnscmd = subparsers.add_parser('tnscmd',parents=[PPoptional,PPconnection,PPTnsCmd,PPoutput],help='to know TNS alias')	
+	parser_tnscmd.set_defaults(func=runTnsCmdModule,auditType='tnscmd')
 	#2.b- SIDGuesser
 	parser_sidGuesser = subparsers.add_parser('sidguesser',parents=[PPoptional,PPconnection,PPsidguesser,PPoutput],help='to know valid SIDs')
 	parser_sidGuesser.set_defaults(func=runSIDGuesserModule,auditType='sidGuesser')

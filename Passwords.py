@@ -100,7 +100,7 @@ def runPasswordsModule(args):
 	Run the Passwords module
 	'''
 	status = True
-	if checkOptionsGivenByTheUser(args,["test-module","info","get-passwords","get-passwords-from-history"]) == False : return EXIT_MISS_ARGUMENT
+	if checkOptionsGivenByTheUser(args,["test-module","get-passwords","get-passwords-from-history"]) == False : return EXIT_MISS_ARGUMENT
 	passwords = Passwords(args)
 	status = passwords.connection(stopIfError=True)
 	if args.has_key('info')==False:

@@ -16,19 +16,20 @@ class Tnscmd ():
 		self.args = args
 		self.recvdata = ""
 		self.alias = []
-
-	def resetAlias (self):
+		self.version = ""
+		
+	def getRecvData(self):
 		'''
-		reset alias
+		return a representation of received data
 		'''
-		logging.info ("alias list emptied")
-		self.alias = []
+		return repr(self.recvdata)
 
 	def getInformation(self,cmd='ping'):
 		'''
 		Get information about the oracle database service 
 		'''
-		self.resetAlias()
+		logging.info ("alias list emptied")
+		self.recvdata = ""
 		command = "(CONNECT_DATA=(COMMAND={0}))".format(cmd)
 		commandlen = len(command)
 		#logging.info("Sending {0} to {1}:{2} in order to get ALIAS".format(command,self.args['server'],self.args['port']))
@@ -70,37 +71,52 @@ class Tnscmd ():
 		except Exception,e:
 			logging.critical("Connection Error: {0}".format(e))
 		# 1st 12 bytes have some meaning which so far eludes me
-		logging.info('Data received thanks to the {1} cmd: {0}'.format(repr(self.recvdata),cmd))
-		self.__getAliasStrg__()
-
-	def __getAliasStrg__(self):
-		'''
-		load aliasstring from self.recvdata
-		'''
-		alias = re.findall(r'(?<=ALIAS).+?(?=\))', self.recvdata, flags=re.IGNORECASE)
-		for anAlias in alias : self.alias.append(anAlias.replace('\n','').replace(' ','').replace('\t','').replace('=',''))
-		#logging.info("Alias found: {0}".format(self.alias))
+		logging.info("Data received thanks to the '{1}' cmd: {0}".format(repr(self.recvdata),cmd))
 
 	def getAlias(self):
 		'''
 		return alias list
 		'''
-		self.getInformation()
+		self.alias = []
+		self.getInformation(cmd='ping')
+		alias = re.findall(r'(?<=ALIAS=).+?(?=\))', self.recvdata, flags=re.IGNORECASE)
+		for anAlias in alias : self.alias.append(anAlias.replace('\n','').replace(' ','').replace('\t',''))
 		return self.alias
+		
+	def getVersion(self):
+		'''
+		return version from VSNNUM
+		'''
+		self.version = ""
+		self.getInformation(cmd='version')
+		vsnnum = re.findall(r'(?<=VSNNUM=).+?(?=\))', self.recvdata, flags=re.IGNORECASE)
+		hexversion = str(hex(int(vsnnum[0])))[2:]
+		if len(hexversion)%2 !=0 : hexversion='0'+hexversion
+		versionList = re.findall('..?',hexversion)
+		for v in versionList : self.version += str(int(v,16)) + '.'
+		return self.version
+		
 		
 def runTnsCmdModule(args):
 	'''
 	run the TNS cmd module
 	'''
-	if args['ping'] == False :
-		logging.critical("You must choose the --ping option")
+	if args['ping'] == False and args['version'] == False and args['status'] == False:
+		logging.critical("You must choose --ping or/and --version or/and --status")
 		return EXIT_MISS_ARGUMENT
-	args['print'].title("Searching ALIAS on the {0} server, port {1}".format(args['server'],args['port']))
 	tnscmd = Tnscmd(args)
 	if args['ping'] == True:
+		args['print'].title("Searching ALIAS on the {0} server, port {1}".format(args['server'],args['port']))
 		alias = tnscmd.getAlias()
 		args['print'].goodNews("{0} ALIAS received: {1}. You should use this alias (more or less) as Oracle SID.".format(len(alias),alias))
-		#print alias
+	if args['version'] == True:
+		args['print'].title("Searching the version of the Oracle database server ({0}) listening on the port {1}".format(args['server'],args['port']))
+		version = tnscmd.getVersion()
+		args['print'].goodNews("The remote database version is: '{0}'".format(version))
+	if args['status'] == True:
+		args['print'].title("Searching the server status of the Oracle database server ({0}) listening on the port {1}".format(args['server'],args['port']))
+		tnscmd.getInformation(cmd='status')
+		args['print'].goodNews("Data received by the database server: '{0}'".format(tnscmd.getRecvData()))
 	
 
 	

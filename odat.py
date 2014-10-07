@@ -224,6 +224,8 @@ def main():
 	PPTnsCmd = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
 	PPTnsCmd._optionals.title = "TNS cmd options"
 	PPTnsCmd.add_argument('--ping', dest='ping', action='store_true', required=False, default=False, help='send a TNS ping command to get alias')
+	PPTnsCmd.add_argument('--version', dest='version', action='store_true', required=False, default=False, help='send a TNS version command to try to get verion')
+	PPTnsCmd.add_argument('--status', dest='status', action='store_true', required=False, default=False, help='send a TNS status command to get the status')
 	#1.3- Parent parser: SID Guesser
 	PPsidguesser = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
 	PPsidguesser._optionals.title = "SID guesser options"

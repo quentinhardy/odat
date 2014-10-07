@@ -23,6 +23,12 @@ class PasswordGuesser (OracleDatabase):
 		self.args['SYSDBA'] = False
 		self.args['SYSOPER'] = False
 		self.timeSleep = timeSleep
+		
+	def getAccountsFromFile (self):
+		'''
+		return list which contains accounts
+		'''
+		return self.accounts
 
 	def __getAccounts__(self):
 		'''

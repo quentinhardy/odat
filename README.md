@@ -16,6 +16,7 @@ Changelog
 * Version __1.3__ (__2014/10/07__) : 
  * add the *-C* option in the *all* module. It can be used to use a credentiels file (disable the *-U* and *-P* option)
  * add the *tnscmd* module to get TNS *alias*, database *version* (thanks to VSNNUM) ans TNS *status*
+ * bug fix: name server can be given to the *-s* option
 * Version __1.2__ (__2014/08/08__) : 
  * add the *SMB* module to capture a SMB authentication
  * add an option (*SHOW_SQL_REQUESTS_IN_VERBOSE_MODE*) in *Constants.py* to show SQL requests sent to the database server

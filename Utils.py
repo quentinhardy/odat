@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import re, logging, platform,time
+from socket import gethostbyname
 from sys import exit
 from sys import stdout
 from datetime import datetime
@@ -159,9 +160,9 @@ def anOperationHasBeenChosen(args, operations):
 	logging.critical("An operation on this module must be chosen thanks to one of these options: --{0};".format(', --'.join(operations)))
 	return False
 
-def ipHasBeenGiven(args):
+def ipOrNameServerHasBeenGiven(args):
 	'''
-	Return True if an ip  has been given
+	Return True if an ip or name server has been given
 	Otherwise return False
 	- args must be a dictionnary
 	'''
@@ -172,8 +173,12 @@ def ipHasBeenGiven(args):
 		try:
 			inet_aton(args['server'])
 		except Exception,e:
-			logging.critical("The server addess must be an IPv4 address")
-			return False
+			try:
+				ip = gethostbyname(args['server'])
+				args['server'] = ip
+			except Exception,e:
+				logging.critical("There is an error with the name server or ip address: '{0}'".format(e))
+				return False
 	return True
 
 def sidHasBeenGiven(args):
@@ -194,7 +199,7 @@ def checkOptionsGivenByTheUser(args,operationsAllowed,checkAccount=True):
 	- args: list
 	- operationsAllowed : opertaions allowed with this module
 	'''
-	if ipHasBeenGiven(args) == False : return False
+	if ipOrNameServerHasBeenGiven(args) == False : return False
 	elif sidHasBeenGiven(args) == False : return False
 	elif checkAccount==True and anAccountIsGiven(args) == False : return False
 	elif anOperationHasBeenChosen(args,operationsAllowed) == False : return False

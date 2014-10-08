@@ -1,10 +1,16 @@
 # -*- mode: python -*-
+
+block_cipher = None
+
+
 a = Analysis(['odat.py'],
              pathex=['/home/bobsecurity/odat'],
              hiddenimports=[],
              hookspath=['/usr/lib/python2.7/dist-packages/scapy/layers/'],
-             runtime_hooks=None)
-pyz = PYZ(a.pure)
+             runtime_hooks=None,
+             cipher=block_cipher)
+pyz = PYZ(a.pure,
+             cipher=block_cipher)
 exe = EXE(pyz,
           a.scripts,
           exclude_binaries=True,

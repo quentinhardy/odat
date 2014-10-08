@@ -15,7 +15,7 @@ except ImportError:
 	COLORLOG_AVAILABLE = False
 
 import argparse, logging, platform, cx_Oracle, string, os
-from Utils import areEquals, configureLogging,ErrorSQLRequest, sidHasBeenGiven, anAccountIsGiven, ipHasBeenGiven
+from Utils import areEquals, configureLogging,ErrorSQLRequest, sidHasBeenGiven, anAccountIsGiven, ipOrNameServerHasBeenGiven
 from sys import exit,stdout
 
 from Constants import *
@@ -345,7 +345,7 @@ def main():
 	parser_all = subparsers.add_parser('all',parents=[PPoptional,PPconnection,PPallModule,PPoutput,PPsidguesser,PPpassguesser],help='to run all modules in order to know what it is possible to do')	
 	parser_all.set_defaults(func=runAllModules,auditType='all')
 	#2.b- tnscmd
-	parser_tnscmd = subparsers.add_parser('tnscmd',parents=[PPoptional,PPconnection,PPTnsCmd,PPoutput],help='to know TNS alias')	
+	parser_tnscmd = subparsers.add_parser('tnscmd',parents=[PPoptional,PPconnection,PPTnsCmd,PPoutput],help='to communicate with the TNS listener')	
 	parser_tnscmd.set_defaults(func=runTnsCmdModule,auditType='tnscmd')
 	#2.b- SIDGuesser
 	parser_sidGuesser = subparsers.add_parser('sidguesser',parents=[PPoptional,PPconnection,PPsidguesser,PPoutput],help='to know valid SIDs')
@@ -412,7 +412,7 @@ def main():
 	configureLogging(args)
 	args['print'] = Output(args)
 	#Start the good function
-	if args['auditType']!='clean' and ipHasBeenGiven(args) == False : return EXIT_MISS_ARGUMENT
+	if args['auditType']!='clean' and ipOrNameServerHasBeenGiven(args) == False : return EXIT_MISS_ARGUMENT
 	arguments.func(args)
 	exit(ALL_IS_OK)
 

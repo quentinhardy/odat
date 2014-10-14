@@ -73,7 +73,6 @@ def runAllModules(args):
 	else :
 		validSIDsList = [args['sid']]
 	#B)ACCOUNT MANAGEMENT
-	print repr(args['accounts-file'])
 	if args['credentielsFile'] == True :
 		logging.debug("Loading credentiels stored in the {0} file".format(args['accounts-file']))
 		#Load accounts from file
@@ -83,7 +82,6 @@ def runAllModules(args):
 			for anAccount in validAccountsList:
 				if connectionInformation.has_key(aSid) == False: connectionInformation[aSid] = [[anAccount[0], anAccount[1]]]
 				else : connectionInformation[aSid].append([anAccount[0], anAccount[1]])
-		print validAccountsList
 	elif args['user'] == None and args['password'] == None:
 		for sid in validSIDsList:
 			args['print'].title("Searching valid accounts on the {0} SID".format(sid))

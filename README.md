@@ -74,7 +74,7 @@ Supported Platforms and dependencies
 
 ODAT is compatible with __Linux__ only.
 
-A __standalone version__ exists in order to don't have need to install dependencies and slqplus (see the __build__ folder of the git).
+__Standalone versions__ exist in order to don't have need to install dependencies and slqplus (see [https://github.com/quentinhardy/odat-standalones](https://github.com/quentinhardy/odat-standalones)).
 The ODAT standalone has been generated thanks to *pyinstaller*.
 
 If you want to have the __development version__ installed on your computer, these following tool and dependencies are needed:
@@ -123,7 +123,6 @@ sudo dpkg -i oracle-instantclient11.2-devel_???_???.deb
 export ORACLE_HOME=/usr/lib/oracle/11.2/client64/
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ORACLE_HOME/lib
 export PATH=$ORACLE_HOME/bin:$PATH
-source /etc/profile
 ```
 
 * Restart your session (to apply env variables)  and run *sqlplus*:

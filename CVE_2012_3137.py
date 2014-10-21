@@ -24,8 +24,7 @@ except ImportError:
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 sys.stdout = tempout; sys.stderr = temperr
 if SCAPY_AVAILABLE == False :
-	logging.critical('You need to install python scapy !')
-	sys.exit(EXIT_MISS_MODULE)
+	logging.warning('You need to install python scapy if you want to use the CVE_2012_3137 module !')
 
 class CVE_2012_3137 ():
 	'''

@@ -252,7 +252,7 @@ This module search valid SID only.
 
 * You can give the file name containing a SID list:
 ```bash
-./odat.py passwordguesser -s $SERVER -d $SID --accounts-file=./accounts_small.txt 
+./odat.py sidguesser -s $SERVER -d $SID --sids-file=./sids.txt
 ```
 
  *passwordguesser* module

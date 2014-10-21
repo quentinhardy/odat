@@ -1,10 +1,17 @@
 #/bin/bash
-GLIBC_VERSION=`ldd --version | grep ldd | cut -d ' ' -f 5`
+GLIBC_VERSION=`ldd --version | grep ldd | grep -o ')[^"]*' | sed "s/) //g"`
 VERSION="libc$GLIBC_VERSION-`uname -m`"
-echo $NAME
+PYINSTALLER="/usr/local/bin/pyinstaller" #or "/opt/python2.7.8/bin/pyinstaller"
+ORACLE_HOME="/usr/lib/oracle/11.2/client64/"
 #Creation
+if which $PYINSTALLER >/dev/null; then
+	echo "Pyinstaller has been found: good news :)"
+else
+	echo "Pyinstaller not found, stop!"
+	exit 0
+fi
 mkdir -p ./build/linux/
-pyinstaller --clean --onedir --noconfirm --distpath="./build/linux/" --workpath="./build/" --name="odat-$VERSION" odat.py --additional-hooks-dir='/usr/lib/python2.7/dist-packages/scapy/layers/' --strip
+$PYINSTALLER --clean --onedir --noconfirm --distpath="./build/linux/" --workpath="./build/" --name="odat-$VERSION" odat.py --additional-hooks-dir='/usr/lib/python2.7/dist-packages/scapy/layers/' --strip
 #Add a librarie manually
 cp "$ORACLE_HOME"/lib/libociei.so ./build/linux/odat-$VERSION/libociei.so
 #Required files
@@ -25,4 +32,3 @@ if [[ $REPLY =~ ^[Yy]$ ]]
 then
 rm -r ./odat-$VERSION/
 fi
-

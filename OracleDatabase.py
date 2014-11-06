@@ -28,7 +28,8 @@ class OracleDatabase:
 		self.ERROR_INSUFF_PRIV_CONN = "ORA-01031: insufficient privileges"
 		self.ERROR_CONN_IMPOSS = "ORA-12541: TNS:no listener"
 		self.ERROR_XML_DB_SECU_NOT_INST = "ORA-24248: XML DB extensible security not installed"
-	
+		self.ERROR_UNABLE_TO_ACQUIRE_ENV = "Unable to acquire Oracle environment handle"	
+
 	def __generateConnectionString__(self):
 		'''
 		Generate Oracle Database connection string
@@ -56,7 +57,7 @@ class OracleDatabase:
 			if self.remoteOS == '' and self.oracleDatabaseversion=='' : self.loadInformationRemoteDatabase() 
 			return True
 		except Exception, e:
-			if self.ERROR_CONN_IMPOSS in str(e):
+			if self.ERROR_CONN_IMPOSS in str(e) or self.ERROR_UNABLE_TO_ACQUIRE_ENV in str(e):
 				logging.critical("Impossible to connect to the remost host")
 				exit(EXIT_BAD_CONNECTION)
 			elif self.ERROR_NOT_SYSDBA in str(e): 

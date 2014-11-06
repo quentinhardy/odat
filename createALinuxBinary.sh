@@ -2,7 +2,6 @@
 GLIBC_VERSION=`ldd --version | grep ldd | grep -o ')[^"]*' | sed "s/) //g"`
 VERSION="libc$GLIBC_VERSION-`uname -m`"
 PYINSTALLER="/usr/local/bin/pyinstaller" #or "/opt/python2.7.8/bin/pyinstaller"
-ORACLE_HOME="/usr/lib/oracle/11.2/client64/"
 #Creation
 if which $PYINSTALLER >/dev/null; then
 	echo "Pyinstaller has been found: good news :)"

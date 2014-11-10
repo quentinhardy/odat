@@ -309,6 +309,8 @@ def main():
 	PPstealRemotePass.add_argument('-s', dest='server', required=True, help='server')
 	PPstealRemotePass.add_argument('-p', dest='port', default=1521, required=False, help='port (Default 1521)')
 	PPstealRemotePass.add_argument('-d', dest='sid', required=False, help='Oracle System ID (SID)')
+	PPstealRemotePass.add_argument('-U', dest='user', required=False, help='Valid Oracle username')
+	PPstealRemotePass.add_argument('-P', dest='password', required=False, default=None, help='Valid Oracle password')
 	PPstealRemotePass.add_argument('--get-all-passwords',dest='get-all-passwords',action='store_true',default=None,required=False,help='get all hashed passwords thanks to the user/password list')
 	PPstealRemotePass.add_argument('--decrypt-sessions',dest='decrypt-sessions',nargs=2,metavar=('sessionList.txt','passwordList.txt'),default=None,required=False,help='decrypt sessions stored in a file')	
 	PPstealRemotePass.add_argument('--user-list',dest='user-list',required=False,metavar="FILE",default=DEFAULT_ACCOUNT_FILE,help='file containing Oracle credentials (default: %(default)s)')	

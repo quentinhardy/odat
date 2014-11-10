@@ -133,7 +133,7 @@ def anAccountIsGiven (args):
 	- oeprations muste be a list
 	- args must be a dictionnary
 	'''
-	if args['user'] == None and args['password'] == None:
+	if (args.has_key('user') ==False or args.has_key('password') == False) or (args['user'] == None and args['password'] == None):
 		logging.critical("You must give a valid account with the '-U username' option and the '-P password' option.")
 		return False
 	elif args['user'] != None and args['password'] == None:

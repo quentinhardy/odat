@@ -21,13 +21,13 @@ class OracleDatabase:
 		self.remoteOS = ''
 		self.TARGET_UNAVAILABLE = ["Connect failed because target host or object does not exist",
 									"listener could not find available handler with matching protocol stack"]
-		self.ERROR_BAD_FOLDER_OR_BAD_SYSTEM_PRIV = "ORA-29283: invalid file operation"
-		self.ERROR_NO_PRIVILEGE = "ORA-24247: network access denied"
-		self.ERROR_NO_PRIVILEGE_INVALID_ID = "ORA-00904: : invalid identifier"
-		self.ERROR_NOT_SYSDBA = "ORA-28009: connection as SYS should be as SYSDBA or SYSOPER"
-		self.ERROR_INSUFF_PRIV_CONN = "ORA-01031: insufficient privileges"
-		self.ERROR_CONN_IMPOSS = "ORA-12541: TNS:no listener"
-		self.ERROR_XML_DB_SECU_NOT_INST = "ORA-24248: XML DB extensible security not installed"
+		self.ERROR_BAD_FOLDER_OR_BAD_SYSTEM_PRIV = "ORA-29283: "
+		self.ERROR_NO_PRIVILEGE = "ORA-24247: "
+		self.ERROR_NO_PRIVILEGE_INVALID_ID = "ORA-00904: "
+		self.ERROR_NOT_SYSDBA = "ORA-28009: "
+		self.ERROR_INSUFF_PRIV_CONN = "ORA-01031: "
+		self.ERROR_CONN_IMPOSS = "ORA-12541: "
+		self.ERROR_XML_DB_SECU_NOT_INST = "ORA-24248: "
 		self.ERROR_UNABLE_TO_ACQUIRE_ENV = "Unable to acquire Oracle environment handle"	
 
 	def __generateConnectionString__(self):

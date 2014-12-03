@@ -18,8 +18,8 @@ class ExternalTable (DirectoryManagement):
 		DirectoryManagement.__init__(self,args)
 		self.tableName = self.__generateRandomString__()
 		self.__setDirectoryName__()
-		self.ERROR_EXTERNAL_TABLE_WITH_WRITE = "ORA-30653: reject limit reached"
-		self.ERROR_EXTERNAL_TABLE_READ ="ORA-29400: data cartridge error"
+		self.ERROR_EXTERNAL_TABLE_WITH_WRITE = "ORA-30653: "
+		self.ERROR_EXTERNAL_TABLE_READ ="ORA-29400: "
 
 	def __createTableForReadFile__(self,remoteNameFile):
 		'''

@@ -19,12 +19,12 @@ class Http (OracleDatabase):
 		'''
 		logging.debug("Http object created")
 		OracleDatabase.__init__(self,args)
-		self.ERROR_NO_HTTP = "ORA-29263: HTTP protocol error"
-		self.ERROR_PROTOCOL = "ORA-29259: end-of-input reached"	
-		self.ERROR_NO_OPEN = "ORA-12541: TNS:no listener"
-		self.ERROR_TIMEOUT = "ORA-12535: TNS:operation timed out"
-		self.ERROR_TRANSF_TIMEOUT = "ORA-29276: transfer timeout"
-		self.ERROR_UTL_TCP_NETWORK = "ORA-29260: network error"
+		self.ERROR_NO_HTTP = "ORA-29263: "
+		self.ERROR_PROTOCOL = "ORA-29259: "	
+		self.ERROR_NO_OPEN = "ORA-12541: "
+		self.ERROR_TIMEOUT = "ORA-12535: "
+		self.ERROR_TRANSF_TIMEOUT = "ORA-29276: "
+		self.ERROR_UTL_TCP_NETWORK = "ORA-29260: "
 
 	class scanAPort(threading.Thread):
 

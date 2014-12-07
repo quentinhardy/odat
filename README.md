@@ -1,3 +1,5 @@
+__ODAT linux standalone__ version at [https://github.com/quentinhardy/odat-standalones](https://github.com/quentinhardy/odat-standalones) 
+
 ODAT 
 ====
 

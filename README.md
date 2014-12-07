@@ -98,7 +98,7 @@ Installation (optional)
 ====
 
 This part describes how to install instantclient, CX_Oracle and some others python libraries on __Ubuntu__ in order to have the ODAT development version. 
-Don't forget that an ODAT standalone version exists in *build*: __It is not required to install something for use the standalone version :)__
+Don't forget that an ODAT standalone version exists at [https://github.com/quentinhardy/odat-standalones](https://github.com/quentinhardy/odat-standalones): __It is not required to install something for use the standalone version__
 
 * Get instant client basic, sdk (devel) and sqlplus from the Oracle web site:
  * X64: http://www.oracle.com/technetwork/topics/linuxx86-64soft-092277.html

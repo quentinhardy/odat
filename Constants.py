@@ -15,7 +15,7 @@ DESCRIPTION = ""\
 
 By Quentin Hardy (quentin.hardy@bt.com or qhardyfr@gmail.com)
 """
-CURRENT_VERSION = "Version 1.3 - 2014/10/07"
+CURRENT_VERSION = "Version 1.4 - 2014/12/07"
 DEFAULT_SID_MAX_SIZE = 2
 MAX_HELP_POSITION=60
 DEFAULT_SID_FILE = "sids.txt"

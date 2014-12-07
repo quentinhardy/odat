@@ -15,6 +15,9 @@ Tested on Oracle Database __10g__ and __11g__.
 
 Changelog
 ====
+* Version __1.4__ (__2014/12/07__) :
+ * fix some false positives
+ * improve the CVE-2012-3137 module: check more easily if the vulnerability can be exploited
 * Version __1.3__ (__2014/10/07__) : 
  * add the *-C* option in the *all* module. This module can be used to use file which contains credentials (disable the *-U* and *-P* option)
  * add the *tnscmd* module to get TNS *alias*, database *version* (thanks to VSNNUM) and TNS *status*

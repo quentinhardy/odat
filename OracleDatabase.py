@@ -28,7 +28,8 @@ class OracleDatabase:
 		self.ERROR_INSUFF_PRIV_CONN = "ORA-01031: "
 		self.ERROR_CONN_IMPOSS = "ORA-12541: "
 		self.ERROR_XML_DB_SECU_NOT_INST = "ORA-24248: "
-		self.ERROR_UNABLE_TO_ACQUIRE_ENV = "Unable to acquire Oracle environment handle"	
+		self.ERROR_UNABLE_TO_ACQUIRE_ENV = "Unable to acquire Oracle environment handle"
+		self.ERROR_NOT_CONNECTED = "ORA-03114: "
 
 	def __generateConnectionString__(self):
 		'''
@@ -47,7 +48,7 @@ class OracleDatabase:
 		If stopIfError == True, stop if connection error
 		'''
 		try: 
-			if self.args['SYSDBA'] == True :	
+			if self.args['SYSDBA'] == True :
 				self.args['dbcon'] = cx_Oracle.connect(self.args['connectionStr'], mode=cx_Oracle.SYSDBA,threaded=threaded)
 			elif self.args['SYSOPER'] == True :	
 				self.args['dbcon'] = cx_Oracle.connect(self.args['connectionStr'], mode=cx_Oracle.SYSOPER,threaded=threaded)
@@ -79,20 +80,20 @@ class OracleDatabase:
 		'''
 		Try to re connect when TARGET UNAVAILABLE
 		return status
+		return None if impossible to connect to the database server
 		'''
 		timesleep, status = 2, ''
 		for tryNum in range(nbTry):
 			logging.debug("Re connection {0} to the listener on the {1} server".format(tryNum+1, self.args['server']))
 			sleep(timesleep)
 			status = self.connection()
-			
 			if self.__needRetryConnection__(status) == False:
+				logging.debug("Re-connection done !")
 				return status
-		
 			if tryNum == nbTry-1 :
 				logging.warning("Becareful! The remote is now unavailable. {0} SID not tried. Perhaps you are doing a DOS on the listener.".format(self.args['sid']))
-
 			timesleep += 4
+			logging.debug("Impossible to re-establish the connection!")
 		return None
 	
 	def __needRetryConnection__ (self, status):
@@ -127,7 +128,14 @@ class OracleDatabase:
 			cursor.execute(query)
 		except Exception, e:
 			logging.info("Impossible to execute the query `{0}`: `{1}`".format(query, self.cleanError(e)))
-			return ErrorSQLRequest(e)
+			if self.ERROR_NOT_CONNECTED in str(e):
+				status = self.__retryConnect__(nbTry=3)
+				if status == None :
+					return ErrorSQLRequest("Disconnected. Impossible to re-establish a connection to the database server !")
+				else :
+					return self.__execThisQuery__(query=query,ld=ld,isquery=isquery)
+			else :
+				return ErrorSQLRequest(e)
 		if isquery==True :
 			try :  
 				results = cursor.fetchall()

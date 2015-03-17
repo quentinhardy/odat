@@ -11,10 +11,14 @@ Usage examples of ODAT:
 * You have a valid Oracle account and want to __execute commands on the operating system__ hosting this DB (ex: reverse shell)
 
 
-Tested on Oracle Database __10g__ and __11g__.
+Tested on Oracle Database __10g__,  __11g__ and __12c__(12.1.0.2.0).
 
 Changelog
 ====
+* Version __1.5__ (__2015/03/17__) :
+ * new module named *search* in order to search in column names
+ * some improvements done (ex: output of tables)
+ * new option : output encoding
 * Version __1.4__ (__2014/12/07__) :
  * fix some false positives
  * improve the CVE-2012-3137 module: check more easily if the vulnerability can be exploited
@@ -67,11 +71,12 @@ Thanks to ODAT, you can:
  * HttpUriType
  * UTL_TCP
 * __capture a SMB authentication__ through:
- * an index in order trigger a SMB connection (NEW : 2014/08/08)
+ * an index in order trigger a SMB connection
 * exploit the __CVE-2012-313__ (http://cvedetails.com/cve/2012-3137)
  * pickup the session key and salt for arbitrary users
  * attack by dictionary on sessions
-
+* __search in column names__ thanks to the *search* module: (NEW : 2015/03/17)
+ * search a pattern (ex: password) in column names
 ![Alt text](./pictures/ODAT_main_features_v1.1.jpg)
 
 Supported Platforms and dependencies
@@ -521,6 +526,32 @@ sudo ./odat.py stealRemotePwds -s $SERVER -d $ID --user-list accounts_small.txt 
 * To do a dictionary attack on session keys and salts:
 ```bash
 sudo chmod o+r sessions-$SERVER-1521-$SID.txt; ./odat.py stealRemotePwds -s $SERVER -d $SID --decrypt-sessions sessions-$SERVER-1521-$SID.txt dede.txt
+```
+
+ *search* module
+---
+
+This module allows you to search in column names easily.
+
+* To get column names which contains *password* *like* (ex: passwd, password, motdepasse, clave):
+```bash
+./odat.py search -s $SERVER -d $SID -U $USER -P $PASSWORD --pwd-column-names
+```
+
+By default, columns which do not contain data are not output by this module.
+To see columns which do not contain data, you should use the *--show-empty-columns* option:
+```bash
+./odat.py search -s $SERVER -d $SID -U $USER -P $PASSWORD --pwd-column-names --show-empty-columns
+```
+
+* You can search patterns in column names manually (*--columns* option). To search column names which contain the pattern '%PASSWORD%':
+```bash
+./odat.py search -s $SERVER -d $SID -U $USER -P $PASSWORD --columns '%password%'
+```
+
+* To search column names which contain password like patterns:
+```bash
+./odat.py search -s $SERVER -d $SID -U $USER -P $PASSWORD --columns '%password%'
 ```
 
 ---

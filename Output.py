@@ -25,6 +25,7 @@ class Output ():
 		'''
 		print a title
 		'''
+		m = m.encode(encoding='UTF-8',errors='ignore')
 		self.titlePos += 1
 		self.subTitlePos = 0
 		formatMesg = '\n[{0}] {1}: {2}'.format(self.titlePos,'({0}:{1})'.format(self.args['server'],self.args['port']),m)
@@ -35,6 +36,7 @@ class Output ():
 		'''
 		print a subtitle
 		'''
+		m = m.encode(encoding='UTF-8',errors='ignore')
 		self.subTitlePos += 1
 		formatMesg = '[{0}.{1}] {2}'.format(self.titlePos, self.subTitlePos, m)
 		if self.noColor == True  or TERMCOLOR_AVAILABLE == False: print formatMesg
@@ -44,6 +46,7 @@ class Output ():
 		'''
 		print a stop message
 		'''
+		m = m.encode(encoding='UTF-8',errors='ignore')
 		formatMesg = '[-] {0}'.format(m)
 		if self.noColor == True  or TERMCOLOR_AVAILABLE == False: print formatMesg
 		else : print colored(formatMesg, 'red',attrs=['bold']) 
@@ -52,6 +55,7 @@ class Output ():
 		'''
 		print good news
 		'''
+		m = m.encode(encoding='UTF-8',errors='ignore')
 		formatMesg = '[+] {0}'.format(m)
 		if self.noColor == True  or TERMCOLOR_AVAILABLE == False: print formatMesg
 		else : print colored(formatMesg, 'green',attrs=['bold']) 
@@ -60,6 +64,7 @@ class Output ():
 		'''
 		print unknow news
 		'''
+		m = m.encode(encoding='UTF-8',errors='ignore')
 		formatMesg = '[+] {0}'.format(m)
 		if self.noColor == True  or TERMCOLOR_AVAILABLE == False: print formatMesg
 		else : print colored(formatMesg, 'yellow',attrs=['bold']) 
@@ -68,4 +73,4 @@ class Output ():
 		'''
 		print the output of a OS command
 		'''
-		print m
+		print m.encode(encoding='UTF-8',errors='ignore')

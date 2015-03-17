@@ -8,6 +8,8 @@ import Queue
 from texttable import Texttable
 from Utils import areEquals
 import os
+from Constants import *
+from Utils import getScreenSize
 
 class Http (OracleDatabase):
 	'''
@@ -95,7 +97,7 @@ class Http (OracleDatabase):
 		'''
 		cleanList = []
 		results.insert(0,["PORT","PROTOCOL","STATE",'ERROR'])
-		table = Texttable(max_width=120)
+		table = Texttable(max_width=getScreenSize()[0])
 		table.set_deco(Texttable.HEADER)
 		if self.args['verbose']<2 :
 			for l in results:

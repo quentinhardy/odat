@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*
 import string
 
 DESCRIPTION = ""\
@@ -15,7 +16,7 @@ DESCRIPTION = ""\
 
 By Quentin Hardy (quentin.hardy@bt.com or qhardyfr@gmail.com)
 """
-CURRENT_VERSION = "Version 1.4 - 2014/12/07"
+CURRENT_VERSION = "Version 1.5 - 2014/03/17"
 DEFAULT_SID_MAX_SIZE = 2
 MAX_HELP_POSITION=60
 DEFAULT_SID_FILE = "sids.txt"
@@ -33,3 +34,22 @@ TIMEOUT_VALUE = 5
 PASSWORD_EXTENSION_FILE = ".odat.save"
 CHALLENGE_EXT_FILE = ".odat.challenge"
 SHOW_SQL_REQUESTS_IN_VERBOSE_MODE = False
+MAX_WIDTH_TEXTTABLES = 120
+DEFAULT_ENCODING = 'utf8'
+#SEARCH module
+PATTERNS_COLUMNS_WITH_PWDS = [
+	'%motdepasse%',
+	'%mot_de_passe%',
+	'%mdp%',
+	'%pwd%',
+	'%passswd%',
+	"%password%",
+	"%contraseña%",
+	"%clave%",
+	"%chiave%",
+	"%пароль%",
+	"%wachtwoord%",
+	"%Passwort%",
+	"%hasło%",
+	"%senha%",
+	]

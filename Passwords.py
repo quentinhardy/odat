@@ -37,7 +37,7 @@ class Passwords (OracleDatabase):
 			results = self.__execQuery__(query=req,ld=['name', 'password','spare4'])
 		else :
 			req =  "SELECT username, password FROM DBA_USERS"
-			results = self.__execQuery__(query=req,ld=['username', 'password'])		
+			results = self.__execQuery__(query=req,ld=['username', 'password'])	
 		if isinstance(results,Exception):
 			logging.info("Impossible to get hashed passwords: {0}".format(results))
 			return results

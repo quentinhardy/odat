@@ -11,6 +11,7 @@ if os.name == 'nt':
 	import ntpath
 from subprocess import STDOUT, Popen, PIPE
 from socket import inet_aton
+import os
 
 def generateUniqueNameFile ():
 	'''
@@ -27,6 +28,8 @@ class ErrorSQLRequest(Exception):
 		self.errormsg = str(e)
 		if query != None : 
 			self.query = query
+		else :
+			self.query = ""
 
 	def __str__(self):
 		'''
@@ -205,5 +208,10 @@ def checkOptionsGivenByTheUser(args,operationsAllowed,checkAccount=True):
 	elif anOperationHasBeenChosen(args,operationsAllowed) == False : return False
 	return True
 
-
+def getScreenSize ():
+	'''
+	Returns screen size (columns, lines)
+	'''
+	rows, columns = os.popen('stty size', 'r').read().split()
+	return (rows, columns)
 

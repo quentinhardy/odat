@@ -14,7 +14,7 @@ try:
 except ImportError:
 	COLORLOG_AVAILABLE = False
 
-import argparse, logging, platform, cx_Oracle, string, os
+import argparse, logging, platform, cx_Oracle, string, os, sys
 from Utils import areEquals, configureLogging,ErrorSQLRequest, sidHasBeenGiven, anAccountIsGiven, ipOrNameServerHasBeenGiven
 from sys import exit,stdout
 
@@ -40,6 +40,7 @@ from DbmsLob import DbmsLob,runDbmsLob
 from CVE_2012_3137 import CVE_2012_3137,runCVE20123137Module
 from Oradbg import Oradbg,runOradbgModule
 from UsernameLikePassword import UsernameLikePassword,runUsernameLikePassword
+from Search import runSearchModule
 
 def runClean (args):
 	'''
@@ -199,6 +200,7 @@ def main():
 	PPoptional._optionals.title = "optional arguments"
 	PPoptional.add_argument('-v', dest='verbose', action='count', default=0, help='enable verbosity')
 	PPoptional.add_argument('--sleep', dest='timeSleep', required=False, type=float, default=DEFAULT_TIME_SLEEP, help='time sleep between each test or request (default: %(default)s)')
+	PPoptional.add_argument('--encoding', dest='encoding', required=False, default=DEFAULT_ENCODING, help='output encoding (default: %(default)s)')
 	#1.1- Parent parser: connection options
 	PPconnection = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
 	PPconnection._optionals.title = "connection options"
@@ -335,7 +337,14 @@ def main():
 	PPsmb._optionals.title = "smb commands"
 	PPsmb.add_argument('--capture',dest='captureSMBAuthentication',default=None,required=False,nargs=2,metavar=('local_ip','share_name'),help='capture the smb authentication')
 	PPsmb.add_argument('--test-module',dest='test-module',action='store_true',help='test the module before use it')
-	#1.19- Parent parser: clean
+	#1.19- Parent parser: search
+	PPsearch = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
+	PPsearch._optionals.title = "search commands"
+	PPsearch.add_argument('--column-names',dest='column-names',default=None,required=False,metavar='sqlPattern',help='search pattern in all collumns')
+	PPsearch.add_argument('--pwd-column-names',dest='pwd-column-names',action='store_true',help='search password patterns in all collumns')
+	PPsearch.add_argument('--show-empty-columns',dest='show-empty-columns',action='store_true',help='show columns even if columns are empty')
+	PPsearch.add_argument('--test-module',dest='test-module',action='store_true',help='test the module before use it')
+	#1.20- Parent parser: clean
 	PPclean = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
 	PPclean._optionals.title = "clean commands"
 	PPclean.add_argument('--all',dest='all',action='store_true',required=True,help='clean all traces and logs stored locally')
@@ -401,7 +410,10 @@ def main():
 	#2.q- smb
 	parser_smb = subparsers.add_parser('smb',parents=[PPoptional,PPconnection,PPsmb,PPoutput],help='to capture the SMB authentication')
 	parser_smb.set_defaults(func=runSMBModule,auditType='smb')
-	#2.q- clean
+	#2.r- smb
+	parser_search = subparsers.add_parser('search',parents=[PPoptional,PPconnection,PPsearch,PPoutput],help='to search in databases, tables and columns')
+	parser_search.set_defaults(func=runSearchModule,auditType='search')
+	#2.s- clean
 	parser_clean = subparsers.add_parser('clean',parents=[PPoptional,PPclean,PPoutput],help='clean traces and logs')
 	parser_clean.set_defaults(func=runClean,auditType='clean')
 	#3- parse the args
@@ -411,6 +423,9 @@ def main():
 	#4- Configure logging and output
 	configureLogging(args)
 	args['print'] = Output(args)
+	#5- define encoding
+	reload(sys) 
+	sys.setdefaultencoding(args['encoding'])
 	#Start the good function
 	if args['auditType']!='clean' and ipOrNameServerHasBeenGiven(args) == False : return EXIT_MISS_ARGUMENT
 	arguments.func(args)

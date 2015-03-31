@@ -14,8 +14,7 @@ $PYINSTALLER --clean --onedir --noconfirm --distpath="./build/linux/" --workpath
 #Add a librarie manually
 cp "$ORACLE_HOME"/lib/libociei.so ./build/linux/odat-$VERSION/libociei.so
 #Required files
-cp accounts.txt ./build/linux/odat-$VERSION/accounts.txt
-cp accounts_small.txt ./build/linux/odat-$VERSION/accounts_small.txt
+cp -R accounts/ ./build/linux/odat-$VERSION/accounts
 cp sids.txt ./build/linux/odat-$VERSION/sids.txt
 chmod a+x ./build/linux/odat-$VERSION/libociei.so
 #Suppression des traces

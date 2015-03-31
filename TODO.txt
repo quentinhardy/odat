@@ -8,7 +8,6 @@
 	http://blog.red-database-security.com/2011/09/17/disable-auditing-and-running-os-commands-using-oradebug/
 	http://www.petefinnigan.com/weblog/archives/00001353.htm
 2- Remonter un le SID "BLABLA" lorsque l'alias est sous la forme '.H......"..<(DESCRIPTION=(TMP=)(VSNNUM=0)(ERR=0)(ALIAS=listener_BLABLA))'
-3- get the remote version database thanks to the banner. Tnsping can be used
 -----------
   MEDIUM
 -----------

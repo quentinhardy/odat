@@ -11,7 +11,7 @@ class UsernameLikePassword (OracleDatabase):
 	'''
 	Allow to connect to the database using each Oracle username like the password 
 	'''
-	def __init__(self,args):
+	def __init__(self,args, lowerAndUpper=True):
 		'''
 		Constructor
 		'''
@@ -19,6 +19,7 @@ class UsernameLikePassword (OracleDatabase):
 		OracleDatabase.__init__(self,args)
 		self.allUsernames = []
 		self.validAccountsList = []
+		self.lowerAndUpper=lowerAndUpper
 
 	def __loadAllUsernames__(self):
 		'''
@@ -39,11 +40,20 @@ class UsernameLikePassword (OracleDatabase):
 	def tryUsernameLikePassword(self):
 		'''
 		Try to connect to the DB with each Oracle username using the username like the password
+		if lowerAndUpper == True, the username in upper case and lower case format will be tested
+		Otherwise identical to username only
 		'''
 		accounts = []
 		self.__loadAllUsernames__()
 		passwordGuesser = PasswordGuesser(self.args,"",timeSleep=self.args['timeSleep'])
-		for usern in self.allUsernames: accounts.append([usern,usern])
+		for usern in self.allUsernames:
+			if self.lowerAndUpper == True:
+				logging.debug("Password identical (upper case and lower case) to username will be tested for '{0}'".format(usern))
+				accounts.append([usern,usern.upper()])
+				accounts.append([usern,usern.lower()])
+			else:
+				logging.debug("Password identical to username will be tested ONLY for '{0}' (option enabled)".format(usern))
+				accounts.append([usern,usern])
 		passwordGuesser.accounts = accounts
 		passwordGuesser.searchValideAccounts()
 		self.validAccountsList = passwordGuesser.valideAccounts	
@@ -58,7 +68,7 @@ def runUsernameLikePassword(args):
 	'''
 	Run the UsernameLikePassword module
 	'''
-	status = True
+	status= True
 	usernameLikePassword = UsernameLikePassword(args)
 	status = usernameLikePassword.connection(stopIfError=True)
 	#Option 1: UsernameLikePassword

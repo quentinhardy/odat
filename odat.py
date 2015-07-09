@@ -20,7 +20,7 @@ from sys import exit,stdout
 
 from Constants import *
 from Output import Output
-from Tnscmd import runTnsCmdModule
+from Tnscmd import runTnsCmdModule, runCheckTNSPoisoning
 from UtlFile import UtlFile, runUtlFileModule
 from DbmsAdvisor import DbmsAdvisor,runDbmsadvisorModule
 from DbmsScheduler import DbmsScheduler,runDbmsSchedulerModule
@@ -66,6 +66,11 @@ def runAllModules(args):
 	Run all modules
 	'''
 	connectionInformation, validSIDsList = {}, []
+	#0)TNS Poinsoning
+	if args['no-tns-poisoning-check'] == False:
+		runCheckTNSPoisoning(args)
+	else:
+		logging.info("Don't check if the target is vulnerable to TNS poisoning because the option --no-tns-poisoning-check is enabled in command line")
 	#A)SID MANAGEMENT
 	if args['sid'] == None :
 		logging.debug("Searching valid SIDs")
@@ -98,7 +103,7 @@ def runAllModules(args):
 				for aLogin, aPassword in validAccountsList.items(): 
 					if connectionInformation.has_key(sid) == False: connectionInformation[sid] = [[aLogin,aPassword]]
 					else : connectionInformation[sid].append([aLogin,aPassword])
-	else :
+	else:
 		validAccountsList = {args['user']:args['password']}
 		for aSid in validSIDsList:
 			for aLogin, aPassword in validAccountsList.items():
@@ -220,12 +225,14 @@ def main():
 	PPallModule = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
 	PPallModule._optionals.title = "all module options"
 	PPallModule.add_argument('-C', dest='credentielsFile', action='store_true', required=False, default=False, help='use credentiels stored in the --accounts-file file (disable -P and -U)')
+	PPallModule.add_argument('--no-tns-poisoning-check', dest='no-tns-poisoning-check', action='store_true', required=False, default=False, help="don't check if target is vulnreable to TNS poisoning")
 	#1.3- Parent parser: TNS cmd
 	PPTnsCmd = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
 	PPTnsCmd._optionals.title = "TNS cmd options"
 	PPTnsCmd.add_argument('--ping', dest='ping', action='store_true', required=False, default=False, help='send a TNS ping command to get alias')
 	PPTnsCmd.add_argument('--version', dest='version', action='store_true', required=False, default=False, help='send a TNS version command to try to get verion')
 	PPTnsCmd.add_argument('--status', dest='status', action='store_true', required=False, default=False, help='send a TNS status command to get the status')
+	PPTnsCmd.add_argument('--tns-poisoning', dest='checkTNSPoisoning', action='store_true', required=False, default=False, help='check if target is vulnerable to TNS Poisoning (CVE-2012-1675)')
 	#1.3- Parent parser: SID Guesser
 	PPsidguesser = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
 	PPsidguesser._optionals.title = "SID guesser options"

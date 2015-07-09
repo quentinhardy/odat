@@ -4,7 +4,7 @@
 import logging,struct, socket, re
 from Constants import *
 
-class Tnscmd ():
+class Tnscmd():
 	'''
 	Get information about the oracle database service 
 	'''
@@ -27,6 +27,7 @@ class Tnscmd ():
 	def getInformation(self,cmd='ping'):
 		'''
 		Get information about the oracle database service 
+		Return False if an error
 		'''
 		logging.info ("alias list emptied")
 		self.recvdata = ""
@@ -70,6 +71,7 @@ class Tnscmd ():
 			s.close()
 		except Exception,e:
 			logging.critical("Connection Error: {0}".format(e))
+			return False
 		# 1st 12 bytes have some meaning which so far eludes me
 		logging.info("Data received thanks to the '{1}' cmd: {0}".format(repr(self.recvdata),cmd))
 
@@ -96,12 +98,48 @@ class Tnscmd ():
 		for v in versionList : self.version += str(int(v,16)) + '.'
 		return self.version
 		
+	def isTNSListenerVulnerableToCVE_2012_1675 (self):
+		'''
+		Checks the server for TNS Poison vulnerabilities.
+		It sends to the remote listener a packet with command to register a new TNS Listener and checks
+		for response indicating an error. If there is an error in the response, the target is not vulnearble. 
+		Otherwise, the target is vulnerable.
+		Return True if vulneeable to CVE-2012-1675 (http://seclists.org/fulldisclosure/2012/Apr/204)
+		Otherwise returns False
+		return None if error
+		'''
+		ERROR_STR = "(ERROR_STACK=(ERROR="
+		status = self.getInformation(cmd='service_register_NSGR')
+		if status == False:
+			return None
+		else:
+			if ERROR_STR in self.recvdata:
+				logging.debug("'{0}' in target's response after registration command: not vulnerable".format(ERROR_STR))
+				return False
+			else:
+				logging.debug("Target is vulnerable to CVE-2012-1675 because there is no error in the reponse after registration command")
+				return True
+		
+	
+def runCheckTNSPoisoning(args):
+	'''
+	Check if target is vulnerable to Tns poisoning
+	'''
+	args['print'].title("Is the target is vulnerable to TNS poisoning (CVE-2012-1675). Keep calm because take time...")
+	tnscmd = Tnscmd(args)
+	status = tnscmd.isTNSListenerVulnerableToCVE_2012_1675()
+	if status == None:
+		pass
+	elif status == True:
+		args['print'].goodNews("The target is vulnerable to a remote TNS poisoning")
+	else :
+		args['print'].badNews("The target is not vulnerable to a remote TNS poisoning")
 		
 def runTnsCmdModule(args):
 	'''
 	run the TNS cmd module
 	'''
-	if args['ping'] == False and args['version'] == False and args['status'] == False:
+	if args['ping'] == False and args['version'] == False and args['status'] == False and args['checkTNSPoisoning'] == False:
 		logging.critical("You must choose --ping or/and --version or/and --status")
 		return EXIT_MISS_ARGUMENT
 	tnscmd = Tnscmd(args)
@@ -117,7 +155,7 @@ def runTnsCmdModule(args):
 		args['print'].title("Searching the server status of the Oracle database server ({0}) listening on the port {1}".format(args['server'],args['port']))
 		tnscmd.getInformation(cmd='status')
 		args['print'].goodNews("Data received by the database server: '{0}'".format(tnscmd.getRecvData()))
-	
-
+	if args['checkTNSPoisoning'] == True:
+		runCheckTNSPoisoning(args)
 	
 

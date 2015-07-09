@@ -15,6 +15,9 @@ Tested on Oracle Database __10g__,  __11g__ and __12c__(12.1.0.2.0).
 
 Changelog
 ====
+* Version __1.6__ (__2015/07/09__) :
+ * new feature to detect if a target is vulnerable to TNS poisoning (CVE-2012-1675) 
+ * some improvements done
 * Version __1.5__ (__2015/03/17__) :
  * new module named *search* in order to search in column names
  * some improvements done (ex: output of tables)
@@ -75,6 +78,7 @@ Thanks to ODAT, you can:
 * exploit the __CVE-2012-313__ (http://cvedetails.com/cve/2012-3137)
  * pickup the session key and salt for arbitrary users
  * attack by dictionary on sessions
+* check __CVE-2012-1675__ (http://seclists.org/fulldisclosure/2012/Apr/204)
 * __search in column names__ thanks to the *search* module: (NEW : 2015/03/17)
  * search a pattern (ex: password) in column names
 ![Alt text](./pictures/ODAT_main_features_v1.1.jpg)

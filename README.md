@@ -15,8 +15,9 @@ Tested on Oracle Database __10g__,  __11g__ and __12c__(12.1.0.2.0).
 
 Changelog
 ====
-* Version __1.6__ (__2015/07/09__) :
- * new feature to detect if a target is vulnerable to TNS poisoning (CVE-2012-1675) 
+* Version __1.6__ (__2015/07/14__) :
+ * new feature to detect if a target is vulnerable to TNS poisoning (CVE-2012-1675)
+ * new module named *unwrapper* to unwrap PL/SQL source code wrapped, from a file or a remote database
  * some improvements done
 * Version __1.5__ (__2015/03/17__) :
  * new module named *search* in order to search in column names
@@ -81,6 +82,7 @@ Thanks to ODAT, you can:
 * check __CVE-2012-1675__ (http://seclists.org/fulldisclosure/2012/Apr/204)
 * __search in column names__ thanks to the *search* module: (NEW : 2015/03/17)
  * search a pattern (ex: password) in column names
+* __unwrap__ PL/SQL source code (10g/11g and 12c)
 ![Alt text](./pictures/ODAT_main_features_v1.1.jpg)
 
 Supported Platforms and dependencies
@@ -556,6 +558,52 @@ To see columns which do not contain data, you should use the *--show-empty-colum
 * To search column names which contain password like patterns:
 ```bash
 ./odat.py search -s $SERVER -d $SID -U $USER -P $PASSWORD --columns '%password%'
+```
+
+ *unwrapper* module
+---
+This module allows you to unwrap PL/SQL source code wrapped (Oracle 10, 11 and 12).
+
+* To unwrap PL/SQL source code from a local file:
+```bash
+./odat.py unwrapper --file code.txt
+```
+
+An example of file:
+```bash
+cat code.txt
+a000000
+1
+abcd
+abcd
+abcd
+abcd
+abcd
+abcd
+abcd
+abcd
+abcd
+abcd
+abcd
+abcd
+abcd
+abcd
+abcd
+d
+140 df
+dpvm2y/8e4GQNNJr8ynRmaVUXCcwg5BK7Z7WZy9GXsE+YUtphQwUvwrjGSgSmOM9b/RUVKIU
+[...]
+2A==
+```
+
+* To unwrap PL/SQL source code from a remote database object (ex: package):
+```bash
+./odat.py unwrapper -s $SERVER -d $ID -U $USER -P $PASSWORD --object-name 'WRAPPED_OBJECT'
+```
+
+* To see the wrapped PL/SQL source code remotely:
+```sql
+SELECT text FROM all_source WHERE name='WRAPPED_OBJECT' ORDER BY line
 ```
 
 ---

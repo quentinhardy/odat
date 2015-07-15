@@ -41,6 +41,7 @@ from CVE_2012_3137 import CVE_2012_3137,runCVE20123137Module
 from Oradbg import Oradbg,runOradbgModule
 from UsernameLikePassword import UsernameLikePassword,runUsernameLikePassword
 from Search import runSearchModule
+from Unwrapper import runUnwrapperModule
 
 def runClean (args):
 	'''
@@ -209,7 +210,7 @@ def main():
 	#1.1- Parent parser: connection options
 	PPconnection = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
 	PPconnection._optionals.title = "connection options"
-	PPconnection.add_argument('-s', dest='server', required=True, help='server')
+	PPconnection.add_argument('-s', dest='server', required=False, help='server')
 	PPconnection.add_argument('-p', dest='port', default=1521, required=False, help='port (Default 1521)')
 	PPconnection.add_argument('-U', dest='user', required=False, help='Oracle username')
 	PPconnection.add_argument('-P', dest='password', required=False, default=None, help='Oracle password')
@@ -351,7 +352,13 @@ def main():
 	PPsearch.add_argument('--pwd-column-names',dest='pwd-column-names',action='store_true',help='search password patterns in all collumns')
 	PPsearch.add_argument('--show-empty-columns',dest='show-empty-columns',action='store_true',help='show columns even if columns are empty')
 	PPsearch.add_argument('--test-module',dest='test-module',action='store_true',help='test the module before use it')
-	#1.20- Parent parser: clean
+	#1.20- Parent parser: unwrapper
+	PPunwrapper = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
+	PPunwrapper._optionals.title = "unwrapper commands"
+	PPunwrapper.add_argument('--object-name',dest='object-name',default=None,required=False,help='unwrap this object stored in the database')
+	PPunwrapper.add_argument('--file',dest='file',default=None,required=False,help='unwrap the source code stored in a file')
+	PPunwrapper.add_argument('--test-module',dest='test-module',action='store_true',help='test the module before use it')
+	#1.21- Parent parser: clean
 	PPclean = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
 	PPclean._optionals.title = "clean commands"
 	PPclean.add_argument('--all',dest='all',action='store_true',required=True,help='clean all traces and logs stored locally')
@@ -417,10 +424,13 @@ def main():
 	#2.q- smb
 	parser_smb = subparsers.add_parser('smb',parents=[PPoptional,PPconnection,PPsmb,PPoutput],help='to capture the SMB authentication')
 	parser_smb.set_defaults(func=runSMBModule,auditType='smb')
-	#2.r- smb
+	#2.r- search
 	parser_search = subparsers.add_parser('search',parents=[PPoptional,PPconnection,PPsearch,PPoutput],help='to search in databases, tables and columns')
 	parser_search.set_defaults(func=runSearchModule,auditType='search')
-	#2.s- clean
+	#2.s- PPunwrapper
+	parser_unwrapper = subparsers.add_parser('unwrapper',parents=[PPoptional,PPconnection,PPunwrapper,PPoutput],help='to unwrap PL/SQL source code (no for 9i version)')
+	parser_unwrapper.set_defaults(func=runUnwrapperModule,auditType='unwrapper')
+	#2.t- clean
 	parser_clean = subparsers.add_parser('clean',parents=[PPoptional,PPclean,PPoutput],help='clean traces and logs')
 	parser_clean.set_defaults(func=runClean,auditType='clean')
 	#3- parse the args
@@ -434,7 +444,9 @@ def main():
 	reload(sys) 
 	sys.setdefaultencoding(args['encoding'])
 	#Start the good function
-	if args['auditType']!='clean' and ipOrNameServerHasBeenGiven(args) == False : return EXIT_MISS_ARGUMENT
+	if args['auditType']=='unwrapper' or args['auditType']=='clean': pass
+	else:
+		if ipOrNameServerHasBeenGiven(args) == False : return EXIT_MISS_ARGUMENT
 	arguments.func(args)
 	exit(ALL_IS_OK)
 

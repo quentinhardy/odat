@@ -25,10 +25,15 @@ class Output ():
 		'''
 		print a title
 		'''
+		server, port = "", ""
 		m = m.encode(encoding='UTF-8',errors='ignore')
 		self.titlePos += 1
 		self.subTitlePos = 0
-		formatMesg = '\n[{0}] {1}: {2}'.format(self.titlePos,'({0}:{1})'.format(self.args['server'],self.args['port']),m)
+		if self.args.has_key('server'): server = self.args['server']
+		else: server = "Unknown"
+		if self.args.has_key('port'): port = self.args['port']
+		else: port = "port"
+		formatMesg = '\n[{0}] {1}: {2}'.format(self.titlePos,'({0}:{1})'.format(server,port),m)
 		if self.noColor == True or TERMCOLOR_AVAILABLE == False: print formatMesg
 		else : print colored(formatMesg, 'white',attrs=['bold'])
 

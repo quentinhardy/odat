@@ -204,7 +204,7 @@ def main():
 	#1.0- Parent parser: optional
 	PPoptional = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
 	PPoptional._optionals.title = "optional arguments"
-	PPoptional.add_argument('-v', dest='verbose', action='count', default=0, help='enable verbosity')
+	PPoptional.add_argument('-v', dest='verbose', action='count', default=0, help='enable verbosity (-vv for more)')
 	PPoptional.add_argument('--sleep', dest='timeSleep', required=False, type=float, default=DEFAULT_TIME_SLEEP, help='time sleep between each test or request (default: %(default)s)')
 	PPoptional.add_argument('--encoding', dest='encoding', required=False, default=DEFAULT_ENCODING, help='output encoding (default: %(default)s)')
 	#1.1- Parent parser: connection options

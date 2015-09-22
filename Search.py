@@ -135,4 +135,7 @@ def runSearchModule(args):
 	if args['pwd-column-names']==True:
 		args['print'].title("Columns which contains the pattern ~password~ like (multi language)")
 		table = search.searchPwdKeyworkInColumnNames(showEmptyColumns=args['show-empty-columns'])
-		args['print'].goodNews(table)
+		if search.isEmptyTable(table) == True :
+                        args['print'].badNews("no result found")
+                else :
+                        args['print'].goodNews(table)

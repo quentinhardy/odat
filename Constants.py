@@ -38,18 +38,14 @@ MAX_WIDTH_TEXTTABLES = 120
 DEFAULT_ENCODING = 'utf8'
 #SEARCH module
 PATTERNS_COLUMNS_WITH_PWDS = [
-	'%motdepasse%',
-	'%mot_de_passe%',
 	'%mdp%',
 	'%pwd%',
-	'%passswd%',
-	"%password%",
+	'%pass%',
 	"%contraseña%",
 	"%clave%",
 	"%chiave%",
 	"%пароль%",
 	"%wachtwoord%",
-	"%Passwort%",
 	"%hasło%",
 	"%senha%",
 	]

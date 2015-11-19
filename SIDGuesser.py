@@ -133,7 +133,7 @@ def runSIDGuesserModule(args):
 	sIDGuesser = SIDGuesser(args,args['sids-file'],timeSleep=args['timeSleep'])
 	if args['no-alias-like-sid'] == False : sIDGuesser.loadSidsFromListenerAlias()
 	sIDGuesser.searchKnownSIDs()
-	for aSIDSize in range(1, args['sids-max-size']+1):
+	for aSIDSize in range(args['sids-min-size'], args['sids-max-size']+1):
 		sIDGuesser.bruteforceSIDs(size=aSIDSize, charset=args['sid-charset'])
 	validSIDsList = sIDGuesser.getValidSIDs()
 	if validSIDsList == []:

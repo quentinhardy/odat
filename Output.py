@@ -14,7 +14,7 @@ class Output ():
 	'''
 	def __init__(self, args):
 		'''
-		CONSTRUCTOR		
+		CONSTRUCTOR
 		'''
 		self.args = args
 		self.noColor = args['no-color']

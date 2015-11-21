@@ -80,8 +80,8 @@ def runAllModules(args):
 	else :
 		validSIDsList = [args['sid']]
 	#B)ACCOUNT MANAGEMENT
-	if args['credentielsFile'] == True :
-		logging.debug("Loading credentiels stored in the {0} file".format(args['accounts-file']))
+	if args['credentialsFile'] == True :
+		logging.debug("Loading credentials stored in the {0} file".format(args['accounts-file']))
 		#Load accounts from file
 		passwordGuesser = PasswordGuesser(args, args['accounts-file'])
 		validAccountsList = passwordGuesser.getAccountsFromFile()
@@ -225,7 +225,7 @@ def main():
 	#1.3- Parent parser: all option
 	PPallModule = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
 	PPallModule._optionals.title = "all module options"
-	PPallModule.add_argument('-C', dest='credentielsFile', action='store_true', required=False, default=False, help='use credentiels stored in the --accounts-file file (disable -P and -U)')
+	PPallModule.add_argument('-C', dest='credentialsFile', action='store_true', required=False, default=False, help='use credentials stored in the --accounts-file file (disable -P and -U)')
 	PPallModule.add_argument('--no-tns-poisoning-check', dest='no-tns-poisoning-check', action='store_true', required=False, default=False, help="don't check if target is vulnreable to TNS poisoning")
 	#1.3- Parent parser: TNS cmd
 	PPTnsCmd = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
@@ -237,6 +237,7 @@ def main():
 	#1.3- Parent parser: SID Guesser
 	PPsidguesser = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
 	PPsidguesser._optionals.title = "SID guesser options"
+	PPsidguesser.add_argument('--sids-min-size',dest='sids-min-size',required=False, type=int, default=DEFAULT_SID_MIN_SIZE, help='minimum size of SIDs for the bruteforce (default: %(default)s)')
 	PPsidguesser.add_argument('--sids-max-size',dest='sids-max-size',required=False, type=int, default=DEFAULT_SID_MAX_SIZE, help='maximum size of SIDs for the bruteforce (default: %(default)s)')
 	PPsidguesser.add_argument('--sid-charset',dest='sid-charset',required=False, default=DEFAULT_SID_CHARSET, help='charset for the sid bruteforce (default: %(default)s)')
 	PPsidguesser.add_argument('--sids-file',dest='sids-file',required=False,metavar="FILE",default=DEFAULT_SID_FILE, help='file containing SIDs (default: %(default)s)')

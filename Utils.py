@@ -113,13 +113,13 @@ def configureLogging(args):
 
 def execSystemCmd (cmd):
 	''' 
-	Execute a commande with popen
+	Execute a command with popen
 	Return None if an error
 	'''
 	p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True, shell=True)
 	stdout, stderr = p.communicate()
 	if stderr != "" : 
-		logging.error("Problem when execuritng the command \'{0}\':\n{1}".format(cmd, stderr[:-1]))
+		logging.error("Problem when executing the command \'{0}\':\n{1}".format(cmd, stderr[:-1]))
 		return None
 	else : 
 		if stdout != "" :
@@ -132,9 +132,9 @@ def execSystemCmd (cmd):
 def anAccountIsGiven (args):
 	'''
 	return True if an account is given in args
-	Otehrwise, return False
-	- oeprations muste be a list
-	- args must be a dictionnary
+	Otherwise, return False
+	- operations must be a list
+	- args must be a dictionary
 	'''
 	if (args.has_key('user') ==False or args.has_key('password') == False) or (args['user'] == None and args['password'] == None):
 		logging.critical("You must give a valid account with the '-U username' option and the '-P password' option.")
@@ -143,17 +143,17 @@ def anAccountIsGiven (args):
 		logging.critical("You must give a valid account with the '-P password' option.")
 		return False
 	elif args['user'] == None and args['password'] != None:
-		logging.critical("You must give a valid username thanks to the '-U username' option.")
+		logging.critical("You must give a valid username with the '-U username' option.")
 		return False
 	else :
 		return True
 	
 def anOperationHasBeenChosen(args, operations):
 	'''
-	Return True if an operation has been choosing.
+	Return True if an operation has been chosen.
 	Otherwise return False
-	- oeprations muste be a list
-	- args must be a dictionnary
+	- operations must be a list
+	- args must be a dictionary
 	'''
 	for key in operations:
 		if args.has_key(key) == True:
@@ -167,10 +167,10 @@ def ipOrNameServerHasBeenGiven(args):
 	'''
 	Return True if an ip or name server has been given
 	Otherwise return False
-	- args must be a dictionnary
+	- args must be a dictionary
 	'''
 	if args.has_key('server') == False or args['server'] == None:
-		logging.critical("The server addess must be given thanks to the '-s IPadress' option.")
+		logging.critical("The server address must be given with the '-s IPadress' option.")
 		return False
 	else :
 		try:
@@ -188,10 +188,10 @@ def sidHasBeenGiven(args):
 	'''
 	Return True if an ip has been given
 	Otherwise return False
-	- args must be a dictionnary
+	- args must be a dictionary
 	'''
 	if args.has_key('sid') == False or args['sid'] == None:
-		logging.critical("The server SID must be given thanks to the '-d SID' option.")
+		logging.critical("The server SID must be given with the '-d SID' option.")
 		return False
 	return True
 
@@ -200,7 +200,7 @@ def checkOptionsGivenByTheUser(args,operationsAllowed,checkAccount=True):
 	Return True if all options are OK
 	Otherwise return False
 	- args: list
-	- operationsAllowed : opertaions allowed with this module
+	- operationsAllowed : operations allowed with this module
 	'''
 	if ipOrNameServerHasBeenGiven(args) == False : return False
 	elif sidHasBeenGiven(args) == False : return False

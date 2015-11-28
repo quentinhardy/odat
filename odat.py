@@ -97,7 +97,7 @@ def runAllModules(args):
 			passwordGuesser.searchValideAccounts()
 			validAccountsList = passwordGuesser.valideAccounts
 			if validAccountsList == {}:
-				args['print'].badNews("No found a valid account on {0}:{1}/{2}".format(args['server'], args['port'], args['sid']))
+				args['print'].badNews("No found a valid account on {0}:{1}/{2}. You should try with the option '--accounts-file accounts/accounts_multiple.txt'".format(args['server'], args['port'], args['sid']))
 				exit(EXIT_NO_ACCOUNTS)
 			else :
 				args['print'].goodNews("Accounts found on {0}:{1}/{2}: {3}".format(args['server'], args['port'], args['sid'],validAccountsList))

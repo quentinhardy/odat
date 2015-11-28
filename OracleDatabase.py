@@ -240,6 +240,7 @@ class OracleDatabase:
 		
 	def getStandardBarStarted(self, maxvalue):
 		"""Standard status bar"""
+		logging.debug("Creating a standard Bar with number of values = {0}".format(maxvalue))
 		return ProgressBar(widgets=['', Percentage(), ' ', Bar(),' ', ETA(), ' ',''], maxval=maxvalue).start()
 
 	def cleanError(self,errorMsg):

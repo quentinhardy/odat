@@ -76,7 +76,15 @@ def runHttpUriTypeModule(args):
 		elif '-' in args['scan-ports'][1]:
 			startEnd = args['scan-ports'][1].split('-')
 			for aPort in range(int(startEnd[0]),int(startEnd[1])): ports.append(str(aPort))
-		else : logging.error("Syntax for ports given not recognized (ex: 123-2452 or 143,134,4783)")
+			if ports == []:
+				logging.critical("The second parameter ('{0}') is not a valid: cancelation...".format(args['scan-ports'][1]))
+				return -1
+		else : 
+			if args['scan-ports'][1].isdigit() == True: 
+				ports = [args['scan-ports'][1]]
+			else: 
+				logging.critical("The second parameter ('{0}') is not a valid port: cancelation...".format(args['scan-ports'][1]))
+				return -1
 		args['print'].title("Scan ports ({0}) of {1} ".format(args['scan-ports'][1],args['scan-ports'][0]))
 		resultats = httpUriType.scanTcpPorts(httpObject=httpUriType,ip=args['scan-ports'][0],ports=ports)
 		httpUriType.printScanPortResults(resultats)

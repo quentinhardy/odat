@@ -105,8 +105,14 @@ def runUtlHttpModule(args):
 		elif '-' in args['scan-ports'][1]:
 			startEnd = args['scan-ports'][1].split('-')
 			for aPort in range(int(startEnd[0]),int(startEnd[1])): ports.append(str(aPort))
-		elif  args['scan-ports'][1].isdigit() == True: ports = [args['scan-ports'][1]]
-		else : logging.error("Syntax for ports given not recognized")
+			if ports == []:
+				logging.critical("The second parameter ('{0}') is not a valid: cancelation...".format(args['scan-ports'][1]))
+				return -1
+		elif  args['scan-ports'][1].isdigit() == True: 
+			ports = [args['scan-ports'][1]]
+		else: 
+			logging.critical("The second parameter ('{0}') is not a valid port: cancelation...".format(args['scan-ports'][1]))
+			return -1
 		args['print'].title("Scan ports ({0}) of {1} ".format(args['scan-ports'][1],args['scan-ports'][0]))
 		resultats = utlHttp.scanTcpPorts(httpObject=utlHttp,ip=args['scan-ports'][0],ports=ports)
 		utlHttp.printScanPortResults(resultats)

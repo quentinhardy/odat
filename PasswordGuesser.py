@@ -5,7 +5,7 @@ from OracleDatabase import OracleDatabase
 from time import sleep
 import logging, os.path
 from Constants import *
-from Utils import sidHasBeenGiven
+from Utils import sidHasBeenGiven, stringToLinePadded
 
 class PasswordGuesser (OracleDatabase):
 	'''
@@ -67,6 +67,7 @@ class PasswordGuesser (OracleDatabase):
 			if status == True:
 				self.valideAccounts[self.args['user']] = self.args['password']
 				logging.info("Valid credential: {0} ({1})  ".format('/'.join(anAccount),self.args['connectionStr']))
+				self.args['print'].goodNews(stringToLinePadded("Valid credentials found: {0}. Continue... ".format('/'.join(anAccount))))
 			elif "connection as SYS should be as SYSDBA or SYSOPER" in str(status):
 				logging.debug("Try to connect as sysdba")
 				self.args['SYSDBA'] = True
@@ -134,7 +135,7 @@ def runPasswordGuesserModule(args):
 	passwordGuesser.searchValideAccounts()
 	validAccountsList = passwordGuesser.valideAccounts
 	if validAccountsList == {}:
-		args['print'].badNews("No found a valid account on {0}:{1}/{2}".format(args['server'], args['port'], args['sid']))
+		args['print'].badNews("No found a valid account on {0}:{1}/{2}. You should try with the option '--accounts-file accounts/accounts_multiple.txt'".format(args['server'], args['port'], args['sid']))
 	else :
 		args['print'].goodNews("Accounts found on {0}:{1}/{2}: {3}".format(args['server'], args['port'], args['sid'],validAccountsList))
 

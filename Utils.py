@@ -214,4 +214,13 @@ def getScreenSize ():
 	'''
 	rows, columns = os.popen('stty size', 'r').read().split()
 	return (rows, columns)
+	
+def stringToLinePadded(string, padValue=" "):
+	'''
+	Return the string padded with padValue until the line end of the terminal
+	'''
+	sizeTerm = int(getScreenSize()[1])
+	padding = padValue*(sizeTerm - (len(string) % sizeTerm) -4)
+	return string+padding
+	
 

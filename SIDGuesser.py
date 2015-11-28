@@ -7,6 +7,7 @@ from itertools import permutations
 import logging, string
 from Tnscmd import Tnscmd
 from Constants import *
+from Utils import stringToLinePadded
 
 class SIDGuesser (OracleDatabase):
 	'''
@@ -76,7 +77,8 @@ class SIDGuesser (OracleDatabase):
 					break
 			if no_good_sid_found == False:
 				self.appendValideSID(self.args['sid'])
-				logging.info("The {0} SID is valid (Server message: {1})".format(self.args['sid'],str(status)))
+				logging.info("'{0}' is a valid SID (Server message: {1})".format(self.args['sid'],str(status)))
+				self.args['print'].goodNews(stringToLinePadded("'{0}' is a valid SID. Continue... ".format(self.args['sid'])))
 		self.close()
 
 	def searchKnownSIDs(self):

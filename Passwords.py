@@ -24,27 +24,54 @@ class Passwords (OracleDatabase):
 		reset self.passwords
 		'''
 		self.passwords = []
+		
+	def __getLockedUsernames__(self):
+		'''
+		Returns a list which contains Oracle usernames (i.e accounts) who are locked
+		Return Empty list if an error
+		'''
+		logging.info("Getting Oracle locked accounts...")
+		lockedAccountList = []
+		req =  "SELECT username, account_status FROM dba_users WHERE account_status != 'OPEN'"
+		results = self.__execQuery__(query=req, ld=['username', 'account_status'])
+		if isinstance(results,Exception):
+			logging.info("Impossible to get locked Oracle accounts: {0}. Continue with empty list of account locked".format(results))
+			return []
+		else:
+			logging.info("List of Oracle accounts locked gotten: {0}".format(results))
+			for anAccount in results: lockedAccountList.append(anAccount['username'])
+			return lockedAccountList
 
-	def __tryToGetHashedPasswords__(self):
+	def __tryToGetHashedPasswords__(self, blacklistOfUsernames=[]):
 		'''
 		Try to get hashed password
+		If username is in the blacklist (blacklistOfUsernames), the account is not returned in results
 		In Oracle 11g-12g: select name, password, spare4 from sys.user$
 		In Oracle 9-10: SELECT username, password FROM DBA_USERS;
 		'''
+		currentUsername = ""
+		isVersion11or12 = False
 		self.__resetPasswordList__()
 		if self.args['info'].isVersion('11.') or self.args['info'].isVersion('12.'):
 			req = "SELECT name, password, spare4 FROM sys.user$"
 			results = self.__execQuery__(query=req,ld=['name', 'password','spare4'])
+			isVersion11or12 = True
 		else :
 			req =  "SELECT username, password FROM DBA_USERS"
 			results = self.__execQuery__(query=req,ld=['username', 'password'])	
+			isVersion11or12 = False
 		if isinstance(results,Exception):
 			logging.info("Impossible to get hashed passwords: {0}".format(results))
 			return results
 		else :
 			logging.info("Get hashed passwords")
-			for l in results:
-				self.passwords = results
+			for anAccount in results:
+				if isVersion11or12 == True: currentUsername = anAccount['name']
+				else: currentUsername = anAccount['username']
+				if currentUsername in blacklistOfUsernames:
+					logging.debug("The account {0} will be not in hashed password list because this account is locked".format(currentUsername))
+				else :
+					self.passwords.append(anAccount)
 		return True
 
 	def __tryToGetHashedPasswordsfromHistory__(self):
@@ -100,9 +127,10 @@ def runPasswordsModule(args):
 	Run the Passwords module
 	'''
 	status = True
-	if checkOptionsGivenByTheUser(args,["test-module","get-passwords","get-passwords-from-history"]) == False : return EXIT_MISS_ARGUMENT
+	if checkOptionsGivenByTheUser(args,["test-module","get-passwords","get-passwords-from-history", "get-passwords-not-locked"]) == False : return EXIT_MISS_ARGUMENT
 	passwords = Passwords(args)
 	status = passwords.connection(stopIfError=True)
+	passwords.__getLockedUsernames__()
 	if args.has_key('info')==False:
 		info = Info(args)
 		info.loadInformationRemoteDatabase()
@@ -114,7 +142,16 @@ def runPasswordsModule(args):
 		args['print'].title("Try to get Oracle hashed passwords")
 		status = passwords.__tryToGetHashedPasswords__()
 		if status == True :
-			args['print'].goodNews("Here are Oracle hashed passwords:")
+			args['print'].goodNews("Here are Oracle hashed passwords (some accounts can be locked):")
+			passwords.printPasswords()
+		else : 
+			args['print'].badNews("Impossible to get hashed passwords: {0}".format(status))
+	if args['get-passwords-not-locked'] == True :
+		args['print'].title("Try to get Oracle hashed passwords when the account is not locked")
+		blacklistOfUsernames = passwords.__getLockedUsernames__()
+		status = passwords.__tryToGetHashedPasswords__(blacklistOfUsernames)
+		if status == True :
+			args['print'].goodNews("Here are Oracle hashed passwords (all accounts are opened, not locked):")
 			passwords.printPasswords()
 		else : 
 			args['print'].badNews("Impossible to get hashed passwords: {0}".format(status))

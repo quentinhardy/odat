@@ -525,6 +525,11 @@ This module allows you to exploit the CVE-2012-3137 (http://www.cvedetails.com/c
 
 __Note__: Need *root* privileges in order to sniff session keys and salts from the network.
 
+* To test if the remote database is vulnerable:
+```bash
+sudo ./odat.py stealRemotePwds -s $SERVER -d $ID -U $USER -P $PASSWORD --test-module
+```
+* With the previous command, ODAT will try to get the session key and salt. If it has these 2 values for the user given in command line (ie $USER), ODAT will try to decrypt the session key with your password given in command line (ie $PASSWORD). If the session id (value decrypted) starts with '\x08\x08\x08\x08\x08\x08\x08\x08', the password given (ie $PASSWORD) for this user (ie $USER) is valid and the target database is vulnerable to this CVE.
 * To get session keys and salts of users stored in the *accounts_small.txt* file:
 ```bash
 sudo ./odat.py stealRemotePwds -s $SERVER -d $ID --user-list accounts_small.txt --get-all-passwords

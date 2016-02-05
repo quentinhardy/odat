@@ -118,6 +118,10 @@ def runUnwrapperModule(args):
 	if args['test-module'] == False and args['object-name'] == None and args['file'] == None:
 		logging.critical("You must choose --test-module or/and --object-name or/and --file")
 		return EXIT_MISS_ARGUMENT
+	if args['test-module'] == True :
+		args['print'].title("Test if the Unwrapper module can be used")
+		unwrapper = Unwrapper(args, offline=False)
+		unwrapper.testAll()
 	if args['file'] != None:
 		offline = True
 		unwrapper = Unwrapper(args, offline=True)
@@ -126,9 +130,6 @@ def runUnwrapperModule(args):
 		offline = False
 		unwrapper = Unwrapper(args, offline=False)
 		unwrapper.connection(stopIfError=True)
-	if args['test-module'] == True :
-		args['print'].title("Test if the Unwrapper module can be used")
-		unwrapper.testAll()
 	if args['object-name'] != None :
 		args['print'].title("Unwrapping PL/SQL source code of {0} stored in the remote database".format(args['object-name']))
 		code = unwrapper.unwrapRemotely(args['object-name'])

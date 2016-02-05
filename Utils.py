@@ -11,7 +11,7 @@ if os.name == 'nt':
 	import ntpath
 from subprocess import STDOUT, Popen, PIPE
 from socket import inet_aton
-import os
+import os, random, string
 
 def generateUniqueNameFile ():
 	'''
@@ -223,4 +223,8 @@ def stringToLinePadded(string, padValue=" "):
 	padding = padValue*(sizeTerm - (len(string) % sizeTerm) -4)
 	return string+padding
 	
+def generateRandomString (length=20):
+	'''
+	'''
+	return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(length))
 

@@ -42,6 +42,7 @@ from Oradbg import Oradbg,runOradbgModule
 from UsernameLikePassword import UsernameLikePassword,runUsernameLikePassword
 from Search import runSearchModule
 from Unwrapper import runUnwrapperModule
+from PrivilegeEscalation import PrivilegeEscalation, runPrivilegeEscalationModule
 
 def runClean (args):
 	'''
@@ -165,10 +166,14 @@ def runAllModules(args):
 			#SMB
 			smb = SMB(args)
 			smb.testAll()
-			smb.close() #Close the socket to the remote database
+			#Pribvilege escalation
+			privilegeEscalation = PrivilegeEscalation(args)
+			privilegeEscalation.testAll()
+			privilegeEscalation.close() #Close the socket to the remote database
 			#CVE_2012_3137
 			cve = CVE_2012_3137 (args)
 			cve.testAll()
+			
 	#usernamelikepassword
 	args['run'] = True
 	runUsernameLikePassword(args)
@@ -181,9 +186,13 @@ def configureLogging(args):
 	logformatColor   = "%(bg_black)s%(asctime)s%(reset)s %(log_color)s%(levelname)-3s%(reset)s %(bold_black)s-:%(reset)s %(log_color)s%(message)s%(reset)s"#%(bold_black)s%(name)s:%(reset)s
 	datefmt = "%H:%M:%S"
 	#Set log level
+	args['show_sql_requests'] = False
 	if args['verbose']==0: level=logging.WARNING
 	elif args['verbose']==1: level=logging.INFO
-	elif args['verbose']>=2: level=logging.DEBUG
+	elif args['verbose']==2: level=logging.DEBUG
+	elif args['verbose']>2: 
+		level=logging.DEBUG
+		args['show_sql_requests'] = True
 	#Define color for logs
 	if args['no-color'] == False and COLORLOG_AVAILABLE==True:
 		formatter = ColoredFormatter(logformatColor, datefmt=datefmt,log_colors={'CRITICAL': 'bold_red', 'ERROR': 'red', 'WARNING': 'yellow'})
@@ -347,20 +356,41 @@ def main():
 	PPsmb._optionals.title = "smb commands"
 	PPsmb.add_argument('--capture',dest='captureSMBAuthentication',default=None,required=False,nargs=2,metavar=('local_ip','share_name'),help='capture the smb authentication')
 	PPsmb.add_argument('--test-module',dest='test-module',action='store_true',help='test the module before use it')
-	#1.19- Parent parser: search
+	#1.19- Parent parser: PrivilegeEscalation
+	PPprivilegeEscalation0 = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
+	PPprivilegeEscalation0._optionals.title = "helpful privesc commands"
+	PPprivilegeEscalation0.add_argument('--test-module',dest='test-module',action='store_true',help='test the module before use it')
+	PPprivilegeEscalation0.add_argument('--get-privs',dest='get-privs',action='store_true',help='get current privileges and roles')
+	PPprivilegeEscalation0.add_argument('--get-detailed-privs',dest='get-detailed-privs',action='store_true',help='get current privileges and roles + roles and privileges of roles granted')
+	PPprivilegeEscalation = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
+	PPprivilegeEscalation._optionals.title = "privesc commands for automatic exploitation"
+	PPprivilegeEscalation.add_argument('--dba-with-execute-any-procedure',dest='dba-with-execute-any-procedure',action='store_true',help='grant DBA role to current user with CREATE/EXECUTE ANY PROCEDURE method')
+	PPprivilegeEscalation.add_argument('--alter-pwd-with-create-any-procedure',dest='alter-pwd-with-create-any-procedure',nargs=2,metavar=('user','new-password'),default=None,required=False,help='alter password of any Oracle user with CREATE ANY PROCEDURE method')	
+	PPprivilegeEscalation.add_argument('--dba-with-create-any-trigger',dest='dba-with-create-any-trigger',action='store_true',help='grant DBA role to current user with CREATE ANY TRIGGER method')
+	PPprivilegeEscalation.add_argument('--dba-with-analyze-any',dest='dba-with-analyze-any',action='store_true',help='grant DBA role to current user with ANALYZE ANY method')
+	PPprivilegeEscalation.add_argument('--dba-with-create-any-index',dest='dba-with-create-any-index',action='store_true',help='grant DBA role to current user with CREATE ANY INDEX method')
+	PPprivilegeEscalation.add_argument('--revoke-dba-role',dest='revoke-dba-role',action='store_true',help='revoke dba role from current user')
+	PPprivilegeEscalation2 = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
+	PPprivilegeEscalation2._optionals.title = "privesc commands for semi-manual exploitation"
+	PPprivilegeEscalation2.add_argument('--exec-with-execute-any-procedure',dest='exec-with-execute-any-procedure',nargs=1,metavar=('request'),help='execute this request as SYS with CREATE/EXECUTE ANY PROCEDURE method')
+	PPprivilegeEscalation2.add_argument('--exec-with-create-any-procedure',dest='exec-with-create-any-procedure',nargs=1,metavar=('request'),help='execute this request as APEX_040200 with CREATE ANY PROCEDURE method')	
+	PPprivilegeEscalation2.add_argument('--exec-with-create-any-trigger',dest='exec-with-create-any-trigger',nargs=1,metavar=('request'),help='execute this request as SYS with CREATE ANY TRIGGER method')
+	PPprivilegeEscalation2.add_argument('--exec-with-analyze-any',dest='exec-with-analyze-any',nargs=1,metavar=('request'),help='execute this request as SYS with ANALYZE ANY method')
+	PPprivilegeEscalation2.add_argument('--exec-with-create-any-index',dest='exec-with-create-any-index',nargs=1,metavar=('request'),help='execute this request as SYS with CREATE ANY INDEX method')
+	#1.20- Parent parser: search
 	PPsearch = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
 	PPsearch._optionals.title = "search commands"
 	PPsearch.add_argument('--column-names',dest='column-names',default=None,required=False,metavar='sqlPattern',help='search pattern in all collumns')
 	PPsearch.add_argument('--pwd-column-names',dest='pwd-column-names',action='store_true',help='search password patterns in all collumns')
 	PPsearch.add_argument('--show-empty-columns',dest='show-empty-columns',action='store_true',help='show columns even if columns are empty')
 	PPsearch.add_argument('--test-module',dest='test-module',action='store_true',help='test the module before use it')
-	#1.20- Parent parser: unwrapper
+	#1.22- Parent parser: unwrapper
 	PPunwrapper = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
 	PPunwrapper._optionals.title = "unwrapper commands"
 	PPunwrapper.add_argument('--object-name',dest='object-name',default=None,required=False,help='unwrap this object stored in the database')
 	PPunwrapper.add_argument('--file',dest='file',default=None,required=False,help='unwrap the source code stored in a file')
 	PPunwrapper.add_argument('--test-module',dest='test-module',action='store_true',help='test the module before use it')
-	#1.21- Parent parser: clean
+	#1.22- Parent parser: clean
 	PPclean = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
 	PPclean._optionals.title = "clean commands"
 	PPclean.add_argument('--all',dest='all',action='store_true',required=True,help='clean all traces and logs stored locally')
@@ -426,6 +456,9 @@ def main():
 	#2.q- smb
 	parser_smb = subparsers.add_parser('smb',parents=[PPoptional,PPconnection,PPsmb,PPoutput],help='to capture the SMB authentication')
 	parser_smb.set_defaults(func=runSMBModule,auditType='smb')
+	#2.q- privilegeEscalation
+	parser_privilegeEscalation = subparsers.add_parser('privesc',parents=[PPoptional,PPconnection,PPprivilegeEscalation0, PPprivilegeEscalation,PPprivilegeEscalation2,PPoutput],help='to gain elevated access')
+	parser_privilegeEscalation.set_defaults(func=runPrivilegeEscalationModule,auditType='privesc')
 	#2.r- search
 	parser_search = subparsers.add_parser('search',parents=[PPoptional,PPconnection,PPsearch,PPoutput],help='to search in databases, tables and columns')
 	parser_search.set_defaults(func=runSearchModule,auditType='search')

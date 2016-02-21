@@ -124,7 +124,7 @@ class OracleDatabase:
 		'''
 		cursor = self.args['dbcon'].cursor()
 		try:
-			if SHOW_SQL_REQUESTS_IN_VERBOSE_MODE == True: logging.info("SQL request executed: {0}".format(query))
+			if self.args['show_sql_requests'] == True: logging.info("SQL request executed: {0}".format(query))
 			cursor.execute(query)
 		except Exception, e:
 			logging.info("Impossible to execute the query `{0}`: `{1}`".format(query, self.cleanError(e)))
@@ -171,6 +171,9 @@ class OracleDatabase:
 	def __execProc__(self,proc,options=None):
 		'''
 		Execute the stored procedure
+		- proc: procedure name
+		- options: callproc parameters (see http://cx-oracle.readthedocs.org/en/latest/cursor.html)
+		Return True if no error. Otherwise returns Exception (ErrorSQLRequest)
 		'''
 		cursor = cx_Oracle.Cursor(self.args['dbcon'])
 		try:
@@ -283,6 +286,8 @@ class OracleDatabase:
 				self.remoteOS = response[0]['OS']
 				logging.info("OS version : {0}".format(self.remoteOS))
 				return True
+			else:
+				return False
 
 	def remoteSystemIsWindows(self):	
 		'''
@@ -297,3 +302,135 @@ class OracleDatabase:
 		'''
 		if "linux" in self.remoteOS.lower() or 'solaris' in self.remoteOS.lower() : return True
 		else : return False
+		
+	def hasThisRole(self, role, user=None):
+		'''
+		Returns True if user has role. Otherwise returns False
+		Returns None if error
+		If user = None, user = current user
+		'''
+		if user == None : user = self.args['user']
+		self.REQ_HAS_THIS_ROLE = "SELECT username FROM user_role_privs WHERE username='{0}' and granted_role='{1}'".format(user.upper(), role)
+		response = self.__execQuery__(query=self.REQ_HAS_THIS_ROLE,ld=['username'])
+		if isinstance(response,Exception):
+			logging.info("Impossible to know if {0} has the role {1}: {2}".format(user, role, self.cleanError(response)))
+			return None
+		else:
+			if isinstance(response,list):
+				if len(response)==0:
+					logging.debug("{0} has not the '{1}' role".format(user, role))
+					return False
+				else:
+					logging.debug("{0} has the '{1}' role".format(user, role))
+					return True
+			else:
+				logging.info("Impossible to know if {0} has the '{1}' role".format(user, role))
+				return None
+				
+	def hasThisPrivilege (self, privilege, user=None):
+		'''
+		Returns True if user has privilege. Otherwise returns False
+		Returns None if error
+		If user = None, user = current user
+		'''
+		if user == None : user = self.args['user']
+		self.REQ_HAS_THIS_PRIVILEGE = "SELECT privilege FROM user_sys_privs WHERE privilege ='{0}'".format(privilege)
+		response = self.__execQuery__(query=self.REQ_HAS_THIS_PRIVILEGE,ld=['privilege'])
+		if isinstance(response,Exception):
+			logging.info("Impossible to know if {0} has the '{1}' privilege: {2}".format(user, privilege, self.cleanError(response)))
+			return None
+		else:
+			if isinstance(response,list):
+				if len(response)==0:
+					logging.debug("{0} has not the '{1}' privilege".format(user, privilege))
+					return False
+				else:
+					logging.debug("{0} has the '{1}' privilege".format(user, privilege))
+					return True
+			else:
+				logging.info("Impossible to know if {0} has the '{1}' privilege".format(user, privilege))
+				return None
+				
+	def grantPrivilegeOnObjectToUser(self, privilege, objectname, user):
+		'''
+		Grant the privilege on objectname to user
+		Returns True ifprivilege has been granted. Otherwise returns Exception
+		If user = None, user = current user
+		'''
+		if user == None : user = self.args['user']
+		REQUEST_GRANT_PRIVILEGE_ON_OBJECT_TO_USER = "GRANT {0} ON {1} TO {2}".format(privilege, objectname, user)
+		logging.info("Trying to grant '{0}' privilege on '{1}' to '{2}'".format(privilege, objectname, user))
+		status = self.__execPLSQL__(REQUEST_GRANT_PRIVILEGE_ON_OBJECT_TO_USER)
+		if isinstance(status, Exception):
+			logging.info("Impossible to grant '{0}' privilege on '{1}' to '{2}': '{3}'".format(privilege, objectname, user, self.cleanError(status)))
+			return status
+		else : 
+			logging.debug("'{0}' privilege on '{1}' to '{2}' has been granted".format(privilege, objectname, user))
+			return True
+			
+	def dropStoredProcedure(self, procName, schema=None):
+		'''
+		returns True if dropped. Otherwise returns False
+		'''
+		if schema==None : REQUEST_DROP_STORED_PROCEDURE = "DROP PROCEDURE {0}".format(procName)
+		else: REQUEST_DROP_STORED_PROCEDURE = "DROP PROCEDURE {1}.{0}".format(procName, schema)
+		logging.info("Trying to drop the stored procedure '{0}'".format(procName))
+		status = self.__execPLSQL__(REQUEST_DROP_STORED_PROCEDURE)
+		if isinstance(status, Exception):
+			logging.info("Impossible to drop the stored procedure '{0}': '{1}'".format(procName, self.cleanError(status)))
+			return False
+		else : 
+			logging.debug("The stored procedure '{0}' has bee dropped".format(procName))
+			return True
+	
+	def dropStoredFunction(self, fctName, schema=None):
+		'''
+		returns True if dropped. Otherwise returns False
+		'''
+		if schema==None : REQUEST_DROP_STORED_FUNCTION = "DROP FUNCTION {0}".format(fctName)
+		else: REQUEST_DROP_STORED_FUNCTION = "DROP FUNCTION {1}.{0}".format(fctName, schema)
+		logging.info("Trying to drop the stored function '{0}'".format(fctName))
+		status = self.__execPLSQL__(REQUEST_DROP_STORED_FUNCTION)
+		if isinstance(status, Exception):
+			logging.info("Impossible to drop the stored function '{0}': '{1}'".format(fctName, self.cleanError(status)))
+			return False
+		else : 
+			logging.debug("The stored function '{0}' has bee dropped".format(fctName))
+			return True
+			
+	def dropIndex(self, indexName, schema=None):
+		'''
+		returns True if dropped. Otherwise returns False
+		'''
+		indexName = indexName.upper()
+		if schema==None : REQUEST_DROP_INDEX = "DROP INDEX {0}".format(indexName)
+		else: REQUEST_DROP_INDEX = "DROP INDEX {1}.{0}".format(indexName, schema)
+		logging.info("Trying to drop the index named '{0}'".format(indexName))
+		status = self.__execPLSQL__(REQUEST_DROP_INDEX)
+		if isinstance(status, Exception):
+			logging.info("Impossible to drop the index '{0}': '{1}'".format(indexName, self.cleanError(status)))
+			return False
+		else : 
+			logging.debug("The stored function '{0}' has been dropped".format(indexName))
+			return True
+			
+	def dropTrigger(self, triggerName, schema=None):
+		'''
+		returns True if dropped. Otherwise returns False
+		'''
+		triggerName = triggerName.upper()
+		if schema==None : REQUEST_DROP_TRIGGER = "DROP TRIGGER {0}".format(triggerName)
+		else: REQUEST_DROP_TRIGGER = "DROP TRIGGER {1}.{0}".format(triggerName, schema)
+		logging.info("Trying to drop the trigger named '{0}'".format(triggerName))
+		status = self.__execPLSQL__(REQUEST_DROP_TRIGGER)
+		if isinstance(status, Exception):
+			logging.info("Impossible to drop the trigger '{0}': '{1}'".format(triggerName, self.cleanError(status)))
+			return False
+		else : 
+			logging.debug("The trigger '{0}' has been dropped".format(triggerName))
+			return True
+
+
+
+
+

@@ -1,4 +1,4 @@
-__ODAT linux standalone__ version at [https://github.com/quentinhardy/odat-standalones](https://github.com/quentinhardy/odat-standalones) 
+__ODAT linux standalone__ version at [https://github.com/quentinhardy/odat/releases/download/1.6.0/odat-linux-libc2.5-x86_64-v1.6.tar.gz](https://github.com/quentinhardy/odat/releases/download/1.6.0/odat-linux-libc2.5-x86_64-v1.6.tar.gz) 
 
 ODAT 
 ====

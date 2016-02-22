@@ -1,4 +1,4 @@
-__ODAT linux standalone__ version at [https://github.com/quentinhardy/odat/releases/download/1.6.0/odat-linux-libc2.5-x86_64-v1.6.tar.gz](https://github.com/quentinhardy/odat/releases/download/1.6.0/odat-linux-libc2.5-x86_64-v1.6.tar.gz) 
+__ODAT linux standalone__ version at [https://github.com/quentinhardy/odat/releases/](https://github.com/quentinhardy/odat/releases/) 
 
 ODAT 
 ====
@@ -16,13 +16,14 @@ Changelog
 ====
 * Version __2.0__ (__2016/02/21__) :
  * A new module (_privesc_) for using system privileges of an Oracle user (e.g. CREATE ANY PROCEDURE) in order to gain privileged access (i.e. DBA). System privileges that can be used by ODAT in this version:
-   * CREATE ANY PROCEDURE: execution of arbitrary requests with APEX_040200's privileges (e.g. modification of Oracle users' passwords)
-   * CREATE PROCEDURE and EXECUTE ANY PROCEDURE: execution of arbitrary requests as SYS (e.g. gives DBA role to a user)
-   * CREATE ANY TRIGER (and CREATE PROCEDURE): execution of arbitrary requests as SYS (e.g. gives DBA role to a user)
-   * ANALYZE ANY (and CREATE PROCEDURE): execution of arbitrary requests as SYS (e.g. gives DBA role to a user)
-   * CREATE ANY INDEX (and CREATE PROCEDURE): execution of arbitrary requests as SYS (e.g. gives DBA role to a user)
+    * CREATE ANY PROCEDURE: execution of arbitrary requests with APEX_040200's privileges (e.g. modification of Oracle users' passwords)
+    * CREATE PROCEDURE and EXECUTE ANY PROCEDURE: execution of arbitrary requests as SYS (e.g. gives DBA role to a user)
+    * CREATE ANY TRIGER (and CREATE PROCEDURE): execution of arbitrary requests as SYS (e.g. gives DBA role to a user)
+    * ANALYZE ANY (and CREATE PROCEDURE): execution of arbitrary requests as SYS (e.g. gives DBA role to a user)
+    * CREATE ANY INDEX (and CREATE PROCEDURE): execution of arbitrary requests as SYS (e.g. gives DBA role to a user)
  * The module _privesc_ can be used to get all system privileges and roles granted. It shows system privileges that can be used to gain privileged access.
  * new option (-vvv) for showing SQL requests sent by ODAT in debugs
+ * standalone version moved to *releases* ([https://github.com/quentinhardy/odat/releases/](https://github.com/quentinhardy/odat/releases/))
 * Version __1.6__ (__2015/07/14__) :
  * new feature to detect if a target is vulnerable to TNS poisoning (CVE-2012-1675)
  * new module named *unwrapper* to unwrap PL/SQL source code wrapped, from a file or a remote database
@@ -106,10 +107,10 @@ Supported Platforms and dependencies
 
 ODAT is compatible with __Linux__ only.
 
-__Standalone versions__ exist in order to don't have need to install dependencies and slqplus (see [https://github.com/quentinhardy/odat-standalones](https://github.com/quentinhardy/odat-standalones)).
+__Standalone versions__ exist in order to don't have need to install dependencies and slqplus (see [https://github.com/quentinhardy/odat/releases/](https://github.com/quentinhardy/odat/releases/)).
 The ODAT standalone has been generated thanks to *pyinstaller*.
 
-If you want to have the __development version__ installed on your computer, these following tool and dependencies are needed:
+If you want to have the __development version__ installed on your computer, these following tools and dependencies are needed:
 * Langage: Python 2.7
 * Oracle dependancies: 
  * Instant Oracle basic
@@ -121,11 +122,11 @@ If you want to have the __development version__ installed on your computer, thes
  * argcomplete (recommended)
  * pyinstaller (recommended)
 
-Installation (optional)
+Installation (optional, for development version)
 ====
 
 This part describes how to install instantclient, CX_Oracle and some others python libraries on __Ubuntu__ in order to have the ODAT development version. 
-Don't forget that an ODAT standalone version exists at [https://github.com/quentinhardy/odat-standalones](https://github.com/quentinhardy/odat-standalones): __It is not required to install something for use the standalone version__
+Don't forget that an ODAT standalone version exists at [https://github.com/quentinhardy/odat/releases/](https://github.com/quentinhardy/odat/releases/): __It is not required to install something for use the standalone version__
 
 * Get instant client basic, sdk (devel) and sqlplus from the Oracle web site:
  * X64: http://www.oracle.com/technetwork/topics/linuxx86-64soft-092277.html

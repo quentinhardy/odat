@@ -241,8 +241,8 @@ It is useful __when you want to known what you can do on a database server (with
 ./odat.py all -s 192.168.142.73 -p 1521
 ```
 ODAT will search valid SID.
-It will search valid Oracle accounts on each Oracle Instance (SID) found.
-For each valid account on each valid instance (SID), it will give you what each user can do (execute system commands on the database server, read files, etc).
+It will search valid Oracle accounts on each Oracle Instance (SID) found. You can specify an option for credentials (see *--accounts-file*, *--accounts-files*, *--login-as-pwd*).
+For each valid account on each valid instance (SID), it will give you what each user can do (e.g. reverse shell, read files, become DBA).
 
 * If you known a SID (ex: *ORCL*):
 ```bash
@@ -303,6 +303,12 @@ This module has been created in order to try to guess Oracle users passwords.
 ./odat.py passwordguesser -s $MYSERVER -p $PORT --accounts-file accounts_multiple.txt
 ```
 
+* If you want to use your login file and password file:
+```bash
+./odat.py passwordguesser -s $MYSERVER -p $PORT --accounts-files accounts/logins.txt accounts/pwds.txt
+```
+
+To be sure that each login will be tested as password (uppercase and lowercase), the option _--login-as-pwd_ can be used.
 
  *dbmsscheduler* module
 ---

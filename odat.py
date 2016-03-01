@@ -94,11 +94,12 @@ def runAllModules(args):
 		for sid in validSIDsList:
 			args['print'].title("Searching valid accounts on the {0} SID".format(sid))
 			args['sid'] = sid
-			passwordGuesser = PasswordGuesser(args,args['accounts-file'])
+			if args['accounts-files'][0] != None and args['accounts-files'][1] != None : args['accounts-file'] = None
+			passwordGuesser = PasswordGuesser(args, accountsFile=args['accounts-file'], loginFile=args['accounts-files'][0], passwordFile=args['accounts-files'][1], timeSleep=args['timeSleep'], loginAsPwd=args['login-as-pwd'])
 			passwordGuesser.searchValideAccounts()
 			validAccountsList = passwordGuesser.valideAccounts
 			if validAccountsList == {}:
-				args['print'].badNews("No found a valid account on {0}:{1}/{2}. You should try with the option '--accounts-file accounts/accounts_multiple.txt'".format(args['server'], args['port'], args['sid']))
+				args['print'].badNews("No found a valid account on {0}:{1}/{2}. You should try with the option '--accounts-file accounts/accounts_multiple.txt' or '--accounts-file accounts/logins.txt accounts/pwds.txt'".format(args['server'], args['port'], args['sid']))
 				exit(EXIT_NO_ACCOUNTS)
 			else :
 				args['print'].goodNews("Accounts found on {0}:{1}/{2}: {3}".format(args['server'], args['port'], args['sid'],validAccountsList))
@@ -255,6 +256,8 @@ def main():
 	PPpassguesser = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
 	PPpassguesser._optionals.title = "password guesser options"
 	PPpassguesser.add_argument('--accounts-file',dest='accounts-file',required=False,metavar="FILE",default=DEFAULT_ACCOUNT_FILE,help='file containing Oracle credentials (default: %(default)s)')
+	PPpassguesser.add_argument('--accounts-files',dest='accounts-files',required=False,nargs=2,metavar=('loginFile','pwdFile'),default=[None, None],help='files containing logins and passwords (default: %(default)s)')
+	PPpassguesser.add_argument('--login-as-pwd',dest='login-as-pwd',action='store_true',help='each login will be tested as password (lowercase & uppercase)')
 	PPpassguesser.add_argument('--force-retry',dest='force-retry',action='store_true',help='allow to test multiple passwords for a user without ask you')
 	#1.5- Parent parser: URL_HTTP
 	PPutlhttp = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))

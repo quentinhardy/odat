@@ -11,12 +11,15 @@ class PasswordGuesser (OracleDatabase):
 	'''
 	Password guesser
 	'''
-	def __init__(self,args,accountsFile,timeSleep=0):
+	def __init__(self,args,accountsFile,loginFile,passwordFile,loginAsPwd,timeSleep=0):
 		'''
 		Constructor
 		'''
 		OracleDatabase.__init__(self,args)
 		self.accountsFile = accountsFile
+		self.loginFile = loginFile
+		self.passwordFile = passwordFile
+		self.loginAsPwd = loginAsPwd
 		if self.accountsFile == '' : self.accounts = []
 		else : self.accounts = self.__getAccounts__()
 		self.valideAccounts = {}
@@ -35,14 +38,56 @@ class PasswordGuesser (OracleDatabase):
 		return list containing accounts
 		'''
 		accounts = []
-		logging.info('Load accounts stored in the {0} file'.format(self.accountsFile))
-		f = open(self.accountsFile)
-		for l in f:
-			lsplit = l.replace('\n','').replace('\t','').split('/')
-			if isinstance(lsplit,list) and len(lsplit) == 2 :
-				accounts.append([lsplit[0],lsplit[1]])
-		f.close()
-		return sorted(accounts, key=lambda x: x[0])
+		logins, passwords, loginsAsPwdsLowercase, loginsAsPwdsUppercase = [], [], {}, {}
+		if self.accountsFile != None:
+			logging.info('Loading accounts stored in the {0} file'.format(self.accountsFile))
+			f = open(self.accountsFile)
+			for l in f:
+				lsplit = l.replace('\n','').replace('\t','').split('/')
+				if isinstance(lsplit,list) and len(lsplit) == 2 : 
+					accounts.append([lsplit[0],lsplit[1]])
+					if lsplit[0] not in logins:
+						logins.append(lsplit[0])
+						loginsAsPwdsLowercase[lsplit[0]]=False
+						loginsAsPwdsUppercase[lsplit[0]]=False
+					if lsplit[0] == lsplit[1].lower(): 
+						if loginsAsPwdsLowercase[lsplit[0]]==False: 
+							loginsAsPwdsLowercase[lsplit[0]]=True
+					if lsplit[0] == lsplit[1].upper():
+						if loginsAsPwdsUppercase[lsplit[0]]==False: 
+							loginsAsPwdsUppercase[lsplit[0]]=True
+			f.close()
+		else:
+			logging.info('Loading logins stored in {0} and passwords stored in {1}'.format(self.loginFile, self.passwordFile))
+			f = open(self.loginFile)
+			for l in f: 
+				aLogin = l.replace('\n','').replace('\t','')
+				if aLogin not in logins: 
+					logins.append(aLogin)
+					loginsAsPwdsLowercase[aLogin]=False
+					loginsAsPwdsUppercase[aLogin]=False
+			f.close()
+			f = open(self.passwordFile)
+			for l in f: passwords.append(l.replace('\n','').replace('\t',''))
+			f.close()
+			for aLogin in logins:
+				for aPwd in passwords:
+					accounts.append([aLogin,aPwd])
+					if aLogin == aPwd.lower(): 
+						if loginsAsPwdsLowercase[aLogin]==False: 
+							loginsAsPwdsLowercase[aLogin]=True
+					if aLogin == aPwd.upper():
+						if loginsAsPwdsUppercase[aLogin]==False: 
+							loginsAsPwdsUppercase[aLogin]=True
+		if self.loginAsPwd == True:
+			logging.info('Each login not in credentials list is appended as password (in lowercase and uppercase)'.format())
+			for aLogin in logins:
+				if loginsAsPwdsLowercase[aLogin]==False:
+					accounts.append([aLogin,aLogin.lower()])
+				if loginsAsPwdsUppercase[aLogin]==False:
+					accounts.append([aLogin,aLogin.upper()])
+		logging.info ("{0} paired login/password loaded".format(len(accounts)))
+		return accounts
 
 	def searchValideAccounts(self):
 		'''
@@ -131,11 +176,12 @@ def runPasswordGuesserModule(args):
 	'''
 	if sidHasBeenGiven(args) == False : return EXIT_MISS_ARGUMENT
 	args['print'].title("Searching valid accounts on the {0} server, port {1}".format(args['server'],args['port']))
-	passwordGuesser = PasswordGuesser(args,args['accounts-file'],timeSleep=args['timeSleep'])
+	if args['accounts-files'][0] != None and args['accounts-files'][1] != None : args['accounts-file'] = None
+	passwordGuesser = PasswordGuesser(args, accountsFile=args['accounts-file'], loginFile=args['accounts-files'][0], passwordFile=args['accounts-files'][1], timeSleep=args['timeSleep'], loginAsPwd=args['login-as-pwd'])
 	passwordGuesser.searchValideAccounts()
 	validAccountsList = passwordGuesser.valideAccounts
 	if validAccountsList == {}:
-		args['print'].badNews("No found a valid account on {0}:{1}/{2}. You should try with the option '--accounts-file accounts/accounts_multiple.txt'".format(args['server'], args['port'], args['sid']))
+		args['print'].badNews("No found a valid account on {0}:{1}/{2}. You should try with the option '--accounts-file accounts/accounts_multiple.txt' or '--accounts-file accounts/logins.txt accounts/pwds.txt'".format(args['server'], args['port'], args['sid']))
 	else :
 		args['print'].goodNews("Accounts found on {0}:{1}/{2}: {3}".format(args['server'], args['port'], args['sid'],validAccountsList))
 

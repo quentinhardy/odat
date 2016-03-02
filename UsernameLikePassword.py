@@ -45,7 +45,7 @@ class UsernameLikePassword (OracleDatabase):
 		'''
 		accounts = []
 		self.__loadAllUsernames__()
-		passwordGuesser = PasswordGuesser(self.args,"",timeSleep=self.args['timeSleep'])
+		passwordGuesser = PasswordGuesser(self.args,accountsFile="",loginFile=None,passwordFile=None,loginAsPwd=False,timeSleep=self.args['timeSleep'])
 		for usern in self.allUsernames:
 			if self.lowerAndUpper == True:
 				logging.debug("Password identical (upper case and lower case) to username will be tested for '{0}'".format(usern))

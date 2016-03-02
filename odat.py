@@ -84,7 +84,7 @@ def runAllModules(args):
 	if args['credentialsFile'] == True :
 		logging.debug("Loading credentials stored in the {0} file".format(args['accounts-file']))
 		#Load accounts from file
-		passwordGuesser = PasswordGuesser(args, args['accounts-file'])
+		passwordGuesser = PasswordGuesser(args, args['accounts-file'], loginFile=None ,passwordFile=None, loginAsPwd=args['login-as-pwd'])
 		validAccountsList = passwordGuesser.getAccountsFromFile()
 		for aSid in validSIDsList:
 			for anAccount in validAccountsList:

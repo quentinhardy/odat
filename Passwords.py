@@ -102,7 +102,19 @@ class Passwords (OracleDatabase):
 				if l['password']!=None : print "{0}:{1}".format(l['username'], l['password'])
 			elif l.has_key('user#'):
 				if l['password']!=None : print "{0}; {1}; {2}".format(l['user#'], l['password'], l['password_date'])
-
+		
+	def printPasswordsOclHashcat (self):
+		'''
+		print passwords
+		'''	
+		for l in self.passwords:
+			if len(l)==3 and l.has_key('name') and l.has_key('spare4'):
+				if l['password']!=None or l['spare4']!=None : print "{1}:{0}".format(l['name'], l['password'])
+			elif l.has_key('username'):
+				if l['password']!=None : print "{1}:{0}".format(l['username'], l['password'])
+			elif l.has_key('user#'):
+				if l['password']!=None : print "{0}; {1}; {2}".format(l['user#'], l['password'], l['password_date'])
+		
 	def testAll (self):
 		'''
 		Test all functions
@@ -144,6 +156,8 @@ def runPasswordsModule(args):
 		if status == True :
 			args['print'].goodNews("Here are Oracle hashed passwords (some accounts can be locked):")
 			passwords.printPasswords()
+			args['print'].goodNews("Here are 10g Oracle hashed passwords for oclHashcat (some accounts can be locked):")
+			passwords.printPasswordsOclHashcat()
 		else : 
 			args['print'].badNews("Impossible to get hashed passwords: {0}".format(status))
 	if args['get-passwords-not-locked'] == True :
@@ -153,6 +167,8 @@ def runPasswordsModule(args):
 		if status == True :
 			args['print'].goodNews("Here are Oracle hashed passwords (all accounts are opened, not locked):")
 			passwords.printPasswords()
+			args['print'].goodNews("Here are 10g Oracle hashed passwords for oclHashcat (all accounts are opened, not locked):")
+			passwords.printPasswordsOclHashcat()
 		else : 
 			args['print'].badNews("Impossible to get hashed passwords: {0}".format(status))
 	if args['get-passwords-from-history'] == True :

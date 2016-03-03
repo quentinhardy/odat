@@ -43,6 +43,7 @@ from UsernameLikePassword import UsernameLikePassword,runUsernameLikePassword
 from Search import runSearchModule
 from Unwrapper import runUnwrapperModule
 from PrivilegeEscalation import PrivilegeEscalation, runPrivilegeEscalationModule
+from CVE_XXXX_YYYY import CVE_XXXX_YYYY, runCVEXXXYYYModule
 
 def runClean (args):
 	'''
@@ -170,7 +171,10 @@ def runAllModules(args):
 			#Pribvilege escalation
 			privilegeEscalation = PrivilegeEscalation(args)
 			privilegeEscalation.testAll()
-			privilegeEscalation.close() #Close the socket to the remote database
+			#Test some CVE
+			cve = CVE_XXXX_YYYY(args)
+			cve.testAll()
+			cve.close() #Close the socket to the remote database
 			#CVE_2012_3137
 			cve = CVE_2012_3137 (args)
 			cve.testAll()
@@ -380,7 +384,12 @@ def main():
 	PPprivilegeEscalation2.add_argument('--exec-with-create-any-trigger',dest='exec-with-create-any-trigger',nargs=1,metavar=('request'),help='execute this request as SYS with CREATE ANY TRIGGER method')
 	PPprivilegeEscalation2.add_argument('--exec-with-analyze-any',dest='exec-with-analyze-any',nargs=1,metavar=('request'),help='execute this request as SYS with ANALYZE ANY method')
 	PPprivilegeEscalation2.add_argument('--exec-with-create-any-index',dest='exec-with-create-any-index',nargs=1,metavar=('request'),help='execute this request as SYS with CREATE ANY INDEX method')
-	#1.20- Parent parser: search
+	#1.20- Parent parser: CVE_XXXX_YYYY
+	PPcve = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
+	PPcve._optionals.title = "cve commands"
+	PPcve.add_argument('--test-module',dest='test-module',action='store_true',help='test the module before use it')
+	PPcve.add_argument('--set-pwd-2014-4237',dest='set-pwd-2014-4237',nargs=2,metavar=('username','password'),help="modify a Oracle user's password unsing CVE-2014-4237")
+	#1.21- Parent parser: search
 	PPsearch = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
 	PPsearch._optionals.title = "search commands"
 	PPsearch.add_argument('--column-names',dest='column-names',default=None,required=False,metavar='sqlPattern',help='search pattern in all collumns')
@@ -393,7 +402,7 @@ def main():
 	PPunwrapper.add_argument('--object-name',dest='object-name',default=None,required=False,help='unwrap this object stored in the database')
 	PPunwrapper.add_argument('--file',dest='file',default=None,required=False,help='unwrap the source code stored in a file')
 	PPunwrapper.add_argument('--test-module',dest='test-module',action='store_true',help='test the module before use it')
-	#1.22- Parent parser: clean
+	#1.23- Parent parser: clean
 	PPclean = argparse.ArgumentParser(add_help=False,formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=MAX_HELP_POSITION))
 	PPclean._optionals.title = "clean commands"
 	PPclean.add_argument('--all',dest='all',action='store_true',required=True,help='clean all traces and logs stored locally')
@@ -462,13 +471,16 @@ def main():
 	#2.q- privilegeEscalation
 	parser_privilegeEscalation = subparsers.add_parser('privesc',parents=[PPoptional,PPconnection,PPprivilegeEscalation0, PPprivilegeEscalation,PPprivilegeEscalation2,PPoutput],help='to gain elevated access')
 	parser_privilegeEscalation.set_defaults(func=runPrivilegeEscalationModule,auditType='privesc')
-	#2.r- search
+	#2.r- cve
+	parser_cve = subparsers.add_parser('cve',parents=[PPoptional,PPconnection,PPcve,PPoutput],help='to exploit a CVE')
+	parser_cve.set_defaults(func=runCVEXXXYYYModule,auditType='cve')
+	#2.s- search
 	parser_search = subparsers.add_parser('search',parents=[PPoptional,PPconnection,PPsearch,PPoutput],help='to search in databases, tables and columns')
 	parser_search.set_defaults(func=runSearchModule,auditType='search')
-	#2.s- PPunwrapper
+	#2.t- PPunwrapper
 	parser_unwrapper = subparsers.add_parser('unwrapper',parents=[PPoptional,PPconnection,PPunwrapper,PPoutput],help='to unwrap PL/SQL source code (no for 9i version)')
 	parser_unwrapper.set_defaults(func=runUnwrapperModule,auditType='unwrapper')
-	#2.t- clean
+	#2.u- clean
 	parser_clean = subparsers.add_parser('clean',parents=[PPoptional,PPclean,PPoutput],help='clean traces and logs')
 	parser_clean.set_defaults(func=runClean,auditType='clean')
 	#3- parse the args

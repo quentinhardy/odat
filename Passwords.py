@@ -96,11 +96,11 @@ class Passwords (OracleDatabase):
 		print passwords
 		'''	
 		for l in self.passwords:
-			if len(l)==3 and l.has_key('name') and l.has_key('spare4'):
-				if l['password']!=None or l['spare4']!=None : print "{0}; {1}; {2}".format(l['name'], l['password'],l['spare4'])
-			elif l.has_key('username'):
+			if len(l)==3 and l.has_key('name') and l.has_key('spare4') and l.has_key('password'):
+				if (l['password']!=None or l['spare4']!=None): print "{0}; {1}; {2}".format(l['name'], l['password'],l['spare4'])
+			elif l.has_key('username') and l.has_key('password'):
 				if l['password']!=None : print "{0}:{1}".format(l['username'], l['password'])
-			elif l.has_key('user#'):
+			elif l.has_key('user#') and l.has_key('password') and l.has_key('password_date'):
 				if l['password']!=None : print "{0}; {1}; {2}".format(l['user#'], l['password'], l['password_date'])
 		
 	def printPasswordsOclHashcat (self):
@@ -108,11 +108,11 @@ class Passwords (OracleDatabase):
 		print passwords
 		'''	
 		for l in self.passwords:
-			if len(l)==3 and l.has_key('name') and l.has_key('spare4'):
-				if l['password']!=None or l['spare4']!=None : print "{1}:{0}".format(l['name'], l['password'])
-			elif l.has_key('username'):
+			if l.has_key('name') and l.has_key('password'):
+				if l['password']!=None and ' ' not in l['password']: print "{1}:{0}".format(l['name'], l['password'])
+			elif l.has_key('username') and l.has_key('password'):
 				if l['password']!=None : print "{1}:{0}".format(l['username'], l['password'])
-			elif l.has_key('user#'):
+			elif l.has_key('user#') and l.has_key('password') and l.has_key('password_date'):
 				if l['password']!=None : print "{0}; {1}; {2}".format(l['user#'], l['password'], l['password_date'])
 		
 	def testAll (self):

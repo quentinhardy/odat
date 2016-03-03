@@ -234,8 +234,7 @@ class CVE_2012_3137 ():
 		'''
 		Test all functions
 		'''
-		self.args['print'].subtitle("Vulnerable to the CVE-2012-3137 ?")
-		#self.args['print'].unknownNews("I can't know if it is vulnerable")
+		self.args['print'].subtitle("Obtain the session key and salt for arbitrary Oracle users (CVE-2012-3137)?")
 		if self.args.has_key('user') == False or self.args.has_key('password') == False or self.args['user'] == None or self.args['password'] == None : 
 			self.args['print'].unknownNews("Impossible to know if the database is vulnreable to the CVE-2012-3137.\nYou need to give VALID credentials on the database (-U and -P). Otherwise, the tool can't know if the database is vulnerable...")
 		else:

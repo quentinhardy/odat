@@ -31,7 +31,7 @@ class Info (OracleDatabase):
 		'''
 		logging.debug ("Pickup the remote verion")
 		self.version = self.args['dbcon'].version
-		logging.debug ("Pickup the remote Operating System")
+		logging.debug ("Getting remote Operating System")
 		REQ = "select rtrim(substr(replace(banner,'TNS for ',''),1,instr(replace(banner,'TNS for ',''),':')-1)) os from v$version where  banner like 'TNS for %'"
 		response = self.__execQuery__(query=REQ,ld=['OS'])
 		if isinstance(response,Exception):
@@ -39,6 +39,7 @@ class Info (OracleDatabase):
 		else : 
 			if isinstance(response,list) and isinstance(response[0],dict):
 				self.os = response[0]['OS']
+				logging.debug ("Remote Operating System")
 		logging.info(str(self))
 		
 	def __str__(self):

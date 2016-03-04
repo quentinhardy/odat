@@ -1,4 +1,4 @@
-__ODAT linux standalone__ version at [https://github.com/quentinhardy/odat/releases/](https://github.com/quentinhardy/odat/releases/) 
+__ODAT linux standalone__ version at [https://github.com/quentinhardy/odat/releases/](https://github.com/quentinhardy/odat/releases/)
 
 ODAT 
 ====
@@ -14,6 +14,11 @@ Tested on Oracle Database __10g__,  __11g__ and __12c__(12.1.0.2.0).
 
 Changelog
 ====
+* Version __2.1__ (__2016/03/04__) :
+   * A new module (_cve_) for exploiting some CVE (Common Vulnerabilities and Exposures). CVE-2012-3137 (perhaps this number, I'm not sure...) implemented at the moment: A user authenticated can modify all tables who can select even if he can't modify them normally (no ALTER privilege).
+   * new option (__--accounts-files__) for remote authentication attack which uses 2 distinct files: a login list and password list.
+   * Print 10g passwords for oclHashcat compatibility.
+   * bug fixes (listening with __nc__).
 * Version __2.0__ (__2016/02/21__) :
  * A new module (_privesc_) for using system privileges of an Oracle user (e.g. CREATE ANY PROCEDURE) in order to gain privileged access (i.e. DBA). System privileges that can be used by ODAT in this version:
     * CREATE ANY PROCEDURE: execution of arbitrary requests with APEX_040200's privileges (e.g. modification of Oracle users' passwords)
@@ -91,9 +96,11 @@ Thanks to ODAT, you can:
  * UTL_TCP
 * __capture a SMB authentication__ through:
  * an index in order trigger a SMB connection
-* exploit the __CVE-2012-313__ (http://cvedetails.com/cve/2012-3137)
- * pickup the session key and salt for arbitrary users
- * attack by dictionary on sessions
+* exploit some CVE: 
+ * the __CVE-2012-313__ (http://cvedetails.com/cve/2012-3137)
+      * pickup the session key and salt for arbitrary users
+      * attack by dictionary on sessions
+ * the __CVE-2012-3137__? (https://twitter.com/gokhanatil/status/595853921479991297): A user authenticated can modify all tables who can select even if he can't modify them normally (no ALTER privilege). 
 * check __CVE-2012-1675__ (http://seclists.org/fulldisclosure/2012/Apr/204)
 * __search in column names__ thanks to the *search* module:
  * search a pattern (ex: password) in column names

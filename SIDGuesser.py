@@ -140,7 +140,7 @@ def runSIDGuesserModule(args):
 	validSIDsList = sIDGuesser.getValidSIDs()
 	if validSIDsList == []:
 		args['print'].badNews("No found a valid SID".format(args['server'], args['port']))
-		exit(EXIT_NO_SIDS)
+		return EXIT_NO_SIDS
 	else :
 		args['print'].goodNews("SIDs found on the {0}:{1} server: {2}".format(args['server'], args['port'], ','.join(validSIDsList)))
 	return validSIDsList

@@ -27,7 +27,8 @@ class Tnscmd():
 	def getInformation(self,cmd='ping'):
 		'''
 		Get information about the oracle database service 
-		Return False if an error
+		Returns False if an error
+		Returns True if it has a response
 		'''
 		logging.info ("alias list emptied")
 		self.recvdata = ""
@@ -58,6 +59,7 @@ class Tnscmd():
 		#logging.debug("connect to this service")
 		try: 
 			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			s.settimeout(TIMEOUT_TNS_CMD)
 			logging.debug("Connection to {0}:{1}".format(self.args['server'],int(self.args['port'])))
 			s.connect((self.args['server'],int(self.args['port'])))
 			logging.debug("writing {0} bytes: {1}".format(len(sendbuf),repr(sendbuf)))
@@ -69,11 +71,15 @@ class Tnscmd():
 				self.recvdata += data
 				if not data: break
 			s.close()
+		except socket.timeout,e:	
+			logging.critical("Connection Timeout: The server has not responded to the CONNECT_DATA packet send")
+			return False
 		except Exception,e:
 			logging.critical("Connection Error: {0}".format(e))
 			return False
 		# 1st 12 bytes have some meaning which so far eludes me
 		logging.info("Data received thanks to the '{1}' cmd: {0}".format(repr(self.recvdata),cmd))
+		return True
 
 	def getAlias(self):
 		'''

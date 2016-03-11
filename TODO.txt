@@ -4,6 +4,7 @@
 -----------
   HIGH
 -----------
+1. Windows reverse shell in the JAVA and DBMSSCHEDULER module with Powershell ?
 1. Execute SQL requests with someone other than APEX_040200 (i.e. ORDSYS) when the user has CREATE ANY PROCEDURE privilege
 2- Executing Code as SYSDBA: "oradebug setmypid", oradebug call system “/bin/touch -f /home/oracle/rds.txt”Function returned 0
 	http://blog.red-database-security.com/2011/09/17/disable-auditing-and-running-os-commands-using-oradebug/

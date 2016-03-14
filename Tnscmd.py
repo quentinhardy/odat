@@ -66,10 +66,7 @@ class Tnscmd():
 			s.sendall(sendbuf)
 			logging.debug("reading data")
 			# read until socket EOF
-			while 1:
-				data = s.recv(1024)
-				self.recvdata += data
-				if not data: break
+			self.recvdata = s.recv(999999)
 			s.close()
 		except socket.timeout,e:	
 			logging.critical("Connection Timeout: The server has not responded to the CONNECT_DATA packet send")

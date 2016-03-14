@@ -81,6 +81,8 @@ def runAllModules(args):
 		args['user'], args['password'] = None, None 
 	else :
 		validSIDsList = [args['sid']]
+	if validSIDsList == []:
+		exit(EXIT_NO_SIDS)
 	#B)ACCOUNT MANAGEMENT
 	if args['credentialsFile'] == True :
 		logging.debug("Loading credentials stored in the {0} file".format(args['accounts-file']))

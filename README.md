@@ -208,7 +208,7 @@ python -c 'import cx_Oracle'
 * Install some python libraries:
 ```bash
 sudo apt-get install python-scapy
-sudo pip install colorlog termcolor pycrypto
+sudo pip install colorlog termcolor pycrypto passlib
 sudo pip install argcomplete && sudo activate-global-python-argcomplete
 ```
 

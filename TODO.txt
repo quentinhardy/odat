@@ -31,3 +31,4 @@
 3- Vérifier comment st stockés les mots de passe dans l'application
 5- Execute command system with "alter system set “_oradbg_pathname”=‘/tmp/debug.sh’;" 
 	Alter system set is an undocumented parameter (since Oracle 10g) that allows you to specify the name of
+6- Additional SMB Auth method with set_log, compatible with 8-9 only : https://erpscan.com/press-center/blog/smbrelay-bible-3-smbrelay-by-oracle/ (thanks to Lexus89)

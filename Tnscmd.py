@@ -3,6 +3,7 @@
 
 import logging,struct, socket, re
 from Constants import *
+from Utils import checkOptionsGivenByTheUser
 
 class Tnscmd():
 	'''
@@ -17,6 +18,7 @@ class Tnscmd():
 		self.recvdata = ""
 		self.alias = []
 		self.version = ""
+		self.localIP = ""
 		
 	def getRecvData(self):
 		'''
@@ -62,6 +64,7 @@ class Tnscmd():
 			s.settimeout(TIMEOUT_TNS_CMD)
 			logging.debug("Connection to {0}:{1}".format(self.args['server'],int(self.args['port'])))
 			s.connect((self.args['server'],int(self.args['port'])))
+			self.localIP = s.getsockname()[0]
 			logging.debug("writing {0} bytes: {1}".format(len(sendbuf),repr(sendbuf)))
 			s.sendall(sendbuf)
 			logging.debug("reading data")
@@ -100,7 +103,8 @@ class Tnscmd():
 		versionList = re.findall('..?',hexversion)
 		for v in versionList : self.version += str(int(v,16)) + '.'
 		return self.version
-		
+	
+"""	
 	def isTNSListenerVulnerableToCVE_2012_1675 (self):
 		'''
 		Checks the server for TNS Poison vulnerabilities.
@@ -122,7 +126,6 @@ class Tnscmd():
 			else:
 				logging.debug("Target is vulnerable to CVE-2012-1675 because there is no error in the reponse after registration command")
 				return True
-		
 	
 def runCheckTNSPoisoning(args):
 	'''
@@ -137,14 +140,16 @@ def runCheckTNSPoisoning(args):
 		args['print'].goodNews("The target is vulnerable to a remote TNS poisoning")
 	else :
 		args['print'].badNews("The target is not vulnerable to a remote TNS poisoning")
+"""
 		
 def runTnsCmdModule(args):
 	'''
 	run the TNS cmd module
 	'''
-	if args['ping'] == False and args['version'] == False and args['status'] == False and args['checkTNSPoisoning'] == False:
-		logging.critical("You must choose --ping or/and --version or/and --status")
-		return EXIT_MISS_ARGUMENT
+	if checkOptionsGivenByTheUser(args,["version","status","ping"],checkAccount=False) == False : return EXIT_MISS_ARGUMENT
+	#if args['ping'] == False and args['version'] == False and args['status'] == False and args['checkTNSPoisoning'] == False:
+	#	logging.critical("You must choose --ping or/and --version or/and --status")
+	#	return EXIT_MISS_ARGUMENT
 	tnscmd = Tnscmd(args)
 	if args['ping'] == True:
 		args['print'].title("Searching ALIAS on the {0} server, port {1}".format(args['server'],args['port']))
@@ -158,7 +163,5 @@ def runTnsCmdModule(args):
 		args['print'].title("Searching the server status of the Oracle database server ({0}) listening on the port {1}".format(args['server'],args['port']))
 		tnscmd.getInformation(cmd='status')
 		args['print'].goodNews("Data received by the database server: '{0}'".format(tnscmd.getRecvData()))
-	if args['checkTNSPoisoning'] == True:
-		runCheckTNSPoisoning(args)
 	
 

@@ -224,10 +224,10 @@ python setup.py install
 
 > __Good job if you have not errors:)__
 
-Examples
+Docs and examples
 ====
 
-Examples are on the wiki: [https://github.com/quentinhardy/odat/wiki/ODAT-Home](https://github.com/quentinhardy/odat/wiki/ODAT-Home) 
+Docs and examples are on the [__WIKI__](https://github.com/quentinhardy/odat/wiki) 
 
 ---
 | __Quentin HARDY__    |

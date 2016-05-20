@@ -18,6 +18,7 @@ Changelog
   * A new module (_tnspoison_) for exploiting the TNS listener poisoning attack (CVE-2012-1675). Big thanks to [Joxean Koret](http://seclists.org/fulldisclosure/2012/Apr/204) and [donctl](https://github.com/donctl).
   * Some bug fixes
   * Better help menu
+  * [__WIKI__ pages](https://github.com/quentinhardy/odat/wiki) in the ODAT repository
 * Version __2.1__ (__04/03/2016__) :
   * A new module (_cve_) for exploiting some CVE (Common Vulnerabilities and Exposures). CVE-2012-3137 (perhaps this number, I'm not sure...) implemented at the moment: A user authenticated can modify all tables who can select even if he can't modify them normally (no ALTER privilege).
   * new option (__--accounts-files__) for remote authentication attack which uses 2 distinct files: a login list and password list.

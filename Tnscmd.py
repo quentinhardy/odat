@@ -146,7 +146,7 @@ def runTnsCmdModule(args):
 	'''
 	run the TNS cmd module
 	'''
-	if checkOptionsGivenByTheUser(args,["version","status","ping"],checkAccount=False) == False : return EXIT_MISS_ARGUMENT
+	if checkOptionsGivenByTheUser(args,["version","status","ping"],checkSID=False,checkAccount=False) == False : return EXIT_MISS_ARGUMENT
 	#if args['ping'] == False and args['version'] == False and args['status'] == False and args['checkTNSPoisoning'] == False:
 	#	logging.critical("You must choose --ping or/and --version or/and --status")
 	#	return EXIT_MISS_ARGUMENT

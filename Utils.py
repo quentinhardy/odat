@@ -195,7 +195,7 @@ def sidHasBeenGiven(args):
 		return False
 	return True
 
-def checkOptionsGivenByTheUser(args,operationsAllowed,checkAccount=True):
+def checkOptionsGivenByTheUser(args,operationsAllowed,checkSID=True,checkAccount=True):
 	'''
 	Return True if all options are OK
 	Otherwise return False
@@ -203,7 +203,7 @@ def checkOptionsGivenByTheUser(args,operationsAllowed,checkAccount=True):
 	- operationsAllowed : operations allowed with this module
 	'''
 	if ipOrNameServerHasBeenGiven(args) == False : return False
-	elif sidHasBeenGiven(args) == False : return False
+	elif checkSID==True and sidHasBeenGiven(args) == False : return False
 	elif checkAccount==True and anAccountIsGiven(args) == False : return False
 	elif anOperationHasBeenChosen(args,operationsAllowed) == False : return False
 	return True

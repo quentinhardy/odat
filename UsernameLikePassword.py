@@ -3,7 +3,7 @@
 
 from OracleDatabase import OracleDatabase
 import logging,cx_Oracle
-from Utils import ErrorSQLRequest, checkOptionsGivenByTheUser
+from Utils import ErrorSQLRequest, checkOptionsGivenByTheUser, getCredentialsFormated
 from Constants import *
 from PasswordGuesser import PasswordGuesser, runPasswordGuesserModule
 
@@ -78,6 +78,6 @@ def runUsernameLikePassword(args):
 		if usernameLikePassword.validAccountsList == {}:
 			args['print'].badNews("No found a valid account on {0}:{1}/{2}".format(args['server'], args['port'], args['sid']))
 		else :
-			args['print'].goodNews("Accounts found on {0}:{1}/{2}: {3}".format(args['server'], args['port'], args['sid'],usernameLikePassword.validAccountsList))
+			args['print'].goodNews("Accounts found on {0}:{1}/{2}: {3}".format(args['server'], args['port'], args['sid'],getCredentialsFormated(usernameLikePassword.validAccountsList)))
 
 

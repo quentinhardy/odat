@@ -15,7 +15,7 @@ except ImportError:
 	COLORLOG_AVAILABLE = False
 
 import argparse, logging, platform, cx_Oracle, string, os, sys
-from Utils import areEquals, configureLogging,ErrorSQLRequest, sidHasBeenGiven, anAccountIsGiven, ipOrNameServerHasBeenGiven
+from Utils import areEquals, configureLogging,ErrorSQLRequest, sidHasBeenGiven, anAccountIsGiven, ipOrNameServerHasBeenGiven, getCredentialsFormated
 from sys import exit,stdout
 
 from Constants import *
@@ -134,7 +134,7 @@ def runAllModules(args):
 				args['print'].badNews("No found a valid account on {0}:{1}/{2}. You should try with the option '--accounts-file accounts/accounts_multiple.txt' or '--accounts-file accounts/logins.txt accounts/pwds.txt'".format(args['server'], args['port'], args['sid']))
 				exit(EXIT_NO_ACCOUNTS)
 			else :
-				args['print'].goodNews("Accounts found on {0}:{1}/{2}: {3}".format(args['server'], args['port'], args['sid'],validAccountsList))
+				args['print'].goodNews("Accounts found on {0}:{1}/{2}: {3}".format(args['server'], args['port'], args['sid'],getCredentialsFormated(validAccountsList)))
 				for aLogin, aPassword in validAccountsList.items(): 
 					if connectionInformation.has_key(sid) == False: connectionInformation[sid] = [[aLogin,aPassword]]
 					else : connectionInformation[sid].append([aLogin,aPassword])

@@ -5,7 +5,7 @@ from OracleDatabase import OracleDatabase
 from time import sleep
 import logging, os.path
 from Constants import *
-from Utils import sidHasBeenGiven, stringToLinePadded
+from Utils import sidHasBeenGiven, stringToLinePadded, getCredentialsFormated
 
 class PasswordGuesser (OracleDatabase):
 	'''
@@ -183,7 +183,7 @@ def runPasswordGuesserModule(args):
 	if validAccountsList == {}:
 		args['print'].badNews("No found a valid account on {0}:{1}/{2}. You should try with the option '--accounts-file accounts/accounts_multiple.txt' or '--accounts-file accounts/logins.txt accounts/pwds.txt'".format(args['server'], args['port'], args['sid']))
 	else :
-		args['print'].goodNews("Accounts found on {0}:{1}/{2}: {3}".format(args['server'], args['port'], args['sid'],validAccountsList))
+		args['print'].goodNews("Accounts found on {0}:{1}/{2}: {3}".format(args['server'], args['port'], args['sid'],getCredentialsFormated(validAccountsList)))
 
 
 

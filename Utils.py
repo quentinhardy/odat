@@ -228,3 +228,11 @@ def generateRandomString (length=20):
 	'''
 	return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(length))
 
+def getCredentialsFormated(dico):
+	'''
+	dico ex: {'user1': 'pwd1', 'user2': 'pwd2'}
+	returns a string
+	'''
+	stringV = "\n"
+	for aLogin in dico: stringV += "{0}/{1}\n".format(aLogin, dico[aLogin])
+	return stringV

@@ -25,7 +25,7 @@ class SIDGuesser (OracleDatabase):
 		self.args['SYSDBA'] = False
 		self.args['SYSOPER'] = False
 		self.timeSleep = timeSleep
-		self.NO_GOOD_SID_STRING_LIST = ["listener does not currently know of service requested"]
+		self.NO_GOOD_SID_STRING_LIST = ["listener does not currently know of service requested","connection to server failed"]
 
 	def getValidSIDs(self):
 		'''

@@ -20,6 +20,7 @@ class ExternalTable (DirectoryManagement):
 		self.__setDirectoryName__()
 		self.ERROR_EXTERNAL_TABLE_WITH_WRITE = "ORA-30653: "
 		self.ERROR_EXTERNAL_TABLE_READ ="ORA-29400: "
+		self.ERROR_ODCIEXTTABLEOPEN="ORA-29913: "
 
 	def __createTableForReadFile__(self,remoteNameFile):
 		'''
@@ -114,14 +115,14 @@ class ExternalTable (DirectoryManagement):
 		self.args['print'].subtitle("External table to read files ?")
 		logging.info("Simulate the file reading in the {0} folder thanks to an external table".format(folder))
 		status = self.getFile (remotePath=folder, remoteNameFile='data.txt', localFile="test.txt")
-		if status == True or self.ERROR_EXTERNAL_TABLE_WITH_WRITE in str(status) or self.ERROR_EXTERNAL_TABLE_READ in str(status):
+		if (status == True or self.ERROR_EXTERNAL_TABLE_WITH_WRITE in str(status) or self.ERROR_EXTERNAL_TABLE_READ in str(status)) and (self.ERROR_ODCIEXTTABLEOPEN not in str(status)):
 			self.args['print'].goodNews("OK")
 		else : 
 			self.args['print'].badNews("KO")
 		self.args['print'].subtitle("External table to execute system commands ?")
 		logging.info("Simulate the file execution thanks to an external table")
 		status = self.execute (remotePath=folder, remoteNameFile='test')
-		if status == True or self.ERROR_EXTERNAL_TABLE_WITH_WRITE in str(status) or self.ERROR_EXTERNAL_TABLE_READ in str(status):
+		if (status == True or self.ERROR_EXTERNAL_TABLE_WITH_WRITE in str(status) or self.ERROR_EXTERNAL_TABLE_READ in str(status)) and (self.ERROR_ODCIEXTTABLEOPEN not in str(status)):
 			self.args['print'].goodNews("OK")
 		else : 
 			self.args['print'].badNews("KO")

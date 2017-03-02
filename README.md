@@ -249,5 +249,5 @@ Docs and examples are on the [__WIKI__](https://github.com/quentinhardy/odat/wik
 | __Quentin HARDY__    |
 | ------------- |
 | __quentin.hardy@bt.com__    |
-| __qhardyfr@gmail.com__  |
+| __quentin.hardy@protonmail.com__  |
 

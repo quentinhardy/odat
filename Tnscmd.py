@@ -98,7 +98,10 @@ class Tnscmd():
 		self.version = ""
 		self.getInformation(cmd='version')
 		vsnnum = re.findall(r'(?<=VSNNUM=).+?(?=\))', self.recvdata, flags=re.IGNORECASE)
-		hexversion = str(hex(int(vsnnum[0])))[2:]
+		if vsnnum == []:
+			return "Unknown"
+		else:
+			hexversion = str(hex(int(vsnnum[0])))[2:]
 		if len(hexversion)%2 !=0 : hexversion='0'+hexversion
 		versionList = re.findall('..?',hexversion)
 		for v in versionList : self.version += str(int(v,16)) + '.'

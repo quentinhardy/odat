@@ -14,6 +14,16 @@ Tested on Oracle Database __10g__,  __11g__ and __12c__(12.1.0.2.0).
 
 Changelog
 ====
+* Version __2.2.1__ (__12/04/2017__):
+  * Bug fixes: 
+    * Version in tnscmd (https://github.com/quentinhardy/odat/commit/9b7ec57cfed0fe74381edff28b73532562acaa2c)
+    * External module (Catch an Oracle error)
+    * Catch error when "connection to server failed"
+    * Tnscmd: "The server SID must be given with the '-d SID' option
+    * TypeError Bug Fix in tnspoison module
+    * TNS poisoning module when port!=1521 (Integer bug) 
+  * Improvements:
+    * New SIDs
 * Version __2.2__ (__25/03/2016__):
   * A new module (_tnspoison_) for exploiting the TNS listener poisoning attack (CVE-2012-1675). Big thanks to [Joxean Koret](http://seclists.org/fulldisclosure/2012/Apr/204) and [donctl](https://github.com/donctl).
   * Some bug fixes

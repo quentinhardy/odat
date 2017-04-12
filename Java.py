@@ -29,7 +29,7 @@ CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
           String systemRootvariable;
           try {systemRootvariable = System.getenv("SystemRoot");} 
           catch (ClassCastException e) {
-	   systemRootvariable = System.getProperty("SystemRoot");
+	        systemRootvariable = System.getProperty("SystemRoot");
           }
           finalCommand = new String[4];
           finalCommand[0] = systemRootvariable+"\\\system32\\\cmd.exe";
@@ -55,6 +55,7 @@ CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
           }
           br_in.close();
         } catch (IOException ioe) {
+          sb.append("IOException in input stream: ").append(ioe.getMessage());
           System.out.println("Error printing process output.");
           ioe.printStackTrace();
         } finally {
@@ -75,6 +76,7 @@ CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
           }
           br_err.close();
         } catch (IOException ioe) {
+          sb.append("IOException in error stream: ").append(ioe.getMessage());
           System.out.println("Error printing execution errors.");
           ioe.printStackTrace();
         } finally {
@@ -84,6 +86,7 @@ CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
         }
       }
       catch (Exception ex) {
+        sb.append("Exception: ").append(ex.getMessage());
         System.out.println(ex.getLocalizedMessage());
       }
       return sb.toString();
@@ -252,7 +255,7 @@ def runjavaModule(args):
 	Run the JAVA module
 	'''
 	status = True
-	if checkOptionsGivenByTheUser(args,["test-module","shell","reverse-shell"]) == False : return EXIT_MISS_ARGUMENT
+	if checkOptionsGivenByTheUser(args,["test-module", "shell", "reverse-shell", "exec"]) == False : return EXIT_MISS_ARGUMENT
 	java = Java(args)
 	status = java.connection(stopIfError=True)
 	if args['test-module'] == True :

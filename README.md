@@ -16,7 +16,7 @@ Changelog
 ====
 * Version __2.2.1__ (__12/04/2017__):
   * Bug fixes: 
-    * Version in tnscmd (https://github.com/quentinhardy/odat/commit/9b7ec57cfed0fe74381edff28b73532562acaa2c)
+    * Version in tnscmd ([info](https://github.com/quentinhardy/odat/commit/9b7ec57cfed0fe74381edff28b73532562acaa2c))
     * External module (Catch an Oracle error)
     * Catch error when "connection to server failed"
     * Tnscmd: "The server SID must be given with the '-d SID' option
@@ -35,38 +35,38 @@ Changelog
   * Print 10g passwords for oclHashcat compatibility.
   * bug fixes (listening with __nc__).
 * Version __2.0__ (__21/02/2016__) :
- * A new module (_privesc_) for using system privileges of an Oracle user (e.g. CREATE ANY PROCEDURE) in order to gain privileged access (i.e. DBA). System privileges that can be used by ODAT in this version:
+  * A new module (_privesc_) for using system privileges of an Oracle user (e.g. CREATE ANY PROCEDURE) in order to gain privileged access (i.e. DBA). System privileges that can be used by ODAT in this version:
     * CREATE ANY PROCEDURE: execution of arbitrary requests with APEX_040200's privileges (e.g. modification of Oracle users' passwords)
     * CREATE PROCEDURE and EXECUTE ANY PROCEDURE: execution of arbitrary requests as SYS (e.g. gives DBA role to a user)
     * CREATE ANY TRIGER (and CREATE PROCEDURE): execution of arbitrary requests as SYS (e.g. gives DBA role to a user)
     * ANALYZE ANY (and CREATE PROCEDURE): execution of arbitrary requests as SYS (e.g. gives DBA role to a user)
     * CREATE ANY INDEX (and CREATE PROCEDURE): execution of arbitrary requests as SYS (e.g. gives DBA role to a user)
- * The module _privesc_ can be used to get all system privileges and roles granted. It shows system privileges that can be used to gain privileged access.
- * new option (-vvv) for showing SQL requests sent by ODAT in debugs
- * standalone version moved to *releases* ([https://github.com/quentinhardy/odat/releases/](https://github.com/quentinhardy/odat/releases/))
+  * The module _privesc_ can be used to get all system privileges and roles granted. It shows system privileges that can be used to gain privileged access.
+  * new option (-vvv) for showing SQL requests sent by ODAT in debugs
+  * standalone version moved to *releases* ([https://github.com/quentinhardy/odat/releases/](https://github.com/quentinhardy/odat/releases/))
 * Version __1.6__ (__14/07/2015__) :
- * new feature to detect if a target is vulnerable to TNS poisoning (CVE-2012-1675)
- * new module named *unwrapper* to unwrap PL/SQL source code wrapped, from a file or a remote database
- * some improvements done
+  * new feature to detect if a target is vulnerable to TNS poisoning (CVE-2012-1675)
+  * new module named *unwrapper* to unwrap PL/SQL source code wrapped, from a file or a remote database
+  * some improvements done
 * Version __1.5__ (__17/03/2015__) :
- * new module named *search* in order to search in column names
- * some improvements done (ex: output of tables)
- * new option : output encoding
+  * new module named *search* in order to search in column names
+  * some improvements done (ex: output of tables)
+  * new option : output encoding
 * Version __1.4__ (__07/12/2014__) :
- * fix some false positives
- * improve the CVE-2012-3137 module: check more easily if the vulnerability can be exploited
+  * fix some false positives
+  * improve the CVE-2012-3137 module: check more easily if the vulnerability can be exploited
 * Version __1.3__ (__07/10/2014__) : 
- * add the *-C* option in the *all* module. This module can be used to use file which contains credentials (disable the *-U* and *-P* option)
- * add the *tnscmd* module to get TNS *alias*, database *version* (thanks to VSNNUM) and TNS *status*
- * bug fix: name server can be given to the *-s* option
+  * add the *-C* option in the *all* module. This module can be used to use file which contains credentials (disable the *-U* and *-P* option)
+  * add the *tnscmd* module to get TNS *alias*, database *version* (thanks to VSNNUM) and TNS *status*
+  * bug fix: name server can be given to the *-s* option
 * Version __1.2__ (__08/08/2014__) : 
- * add the *SMB* module to capture a SMB authentication
- * add an option (*SHOW_SQL_REQUESTS_IN_VERBOSE_MODE*) in *Constants.py* to show SQL requests sent to the database server
+  * add the *SMB* module to capture a SMB authentication
+  * add an option (*SHOW_SQL_REQUESTS_IN_VERBOSE_MODE*) in *Constants.py* to show SQL requests sent to the database server
 * Version __1.1__ (__28/07/2014__) : 
- * add the *DBMS_LOB* module useful in order to download files stored on a remote server through Oracle Database.
- * bug fix: java source code: "getenv no longer supported, use properties and -D instead"
+  * add the *DBMS_LOB* module useful in order to download files stored on a remote server through Oracle Database.
+  * bug fix: java source code: "getenv no longer supported, use properties and -D instead"
 * Version __1.0__ (__26/06/2014__) : 
- * first ODAT version.
+  * first ODAT version.
 
 Features
 ====

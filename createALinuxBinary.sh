@@ -10,9 +10,12 @@ else
 	exit 0
 fi
 mkdir -p ./build/linux/
-$PYINSTALLER --clean --onedir --noconfirm --distpath="./build/linux/" --workpath="./build/" --name="odat-$VERSION" odat.py --additional-hooks-dir='/usr/lib/python2.7/dist-packages/scapy/layers/' --strip
+$PYINSTALLER --clean --onedir --noconfirm --distpath="./build/linux/" --workpath="./build/" --name="odat-$VERSION" odat.py --strip
 #Add a librarie manually
 cp "$ORACLE_HOME"/lib/libociei.so ./build/linux/odat-$VERSION/libociei.so
+cp "$ORACLE_HOME"/lib/libclntsh.so.12.1 ./build/linux/odat-$VERSION/libclntsh.so.12.1
+cp "$ORACLE_HOME"/lib/libnnz12.so ./build/linux/odat-$VERSION/libnnz12.so
+cp "$ORACLE_HOME"/lib/libons.so ./build/linux/odat-$VERSION/libons.so
 #Required files
 cp -R accounts/ ./build/linux/odat-$VERSION/accounts
 cp sids.txt ./build/linux/odat-$VERSION/sids.txt

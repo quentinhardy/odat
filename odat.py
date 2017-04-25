@@ -259,7 +259,7 @@ def main():
 	PPconnection = argparse.ArgumentParser(add_help=False,formatter_class=myFormatterClass)
 	PPconnection._optionals.title = "connection options"
 	PPconnection.add_argument('-s', dest='server', required=False, help='server')
-	PPconnection.add_argument('-p', dest='port', default=1521, required=False, help='port (Default 1521)')
+	PPconnection.add_argument('-p', dest='port', default=1521, type=int, required=False, help='port (Default 1521)')
 	PPconnection.add_argument('-U', dest='user', required=False, help='Oracle username')
 	PPconnection.add_argument('-P', dest='password', required=False, default=None, help='Oracle password')
 	PPconnection.add_argument('-d', dest='sid', required=False, help='Oracle System ID (SID)')

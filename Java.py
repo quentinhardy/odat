@@ -44,6 +44,7 @@ CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
         }
         // Execute the command...
         final Process pr = Runtime.getRuntime().exec(finalCommand);
+        pr.waitFor();
         // Capture output from STDOUT
         BufferedReader br_in = null;
         try {
@@ -51,7 +52,7 @@ CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
           String buff = null;
           while ((buff = br_in.readLine()) != null) {
             sb.append(buff); sb.append("\\n");
-            try {Thread.sleep(100);} catch(Exception e) {}
+            //try {Thread.sleep(100);} catch(Exception e) {}
           }
           br_in.close();
         } catch (IOException ioe) {
@@ -72,7 +73,7 @@ CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
             sb.append("stderr:");
             sb.append(buff);
             sb.append("\\n");
-            try {Thread.sleep(100);} catch(Exception e) {}
+            //try {Thread.sleep(100);} catch(Exception e) {}
           }
           br_err.close();
         } catch (IOException ioe) {

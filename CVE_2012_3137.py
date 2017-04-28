@@ -185,7 +185,7 @@ class CVE_2012_3137 ():
 			for session in fsession:
 				user, session_hex, salt_hex = session.replace('\n','').replace('\t','').split(self.separator)
 				if session_hex=='[]' or salt_hex=='[]':
-					logging.info("There is not salt or session for '{0}', nothing to do!".format(user))
+					logging.warning("There is not salt or session for '{0}', nothing to do! Probably not vulnerable...".format(user))
 				else:
 					self.args['print'].subtitle("Searching the password of the {0} user".format(user))
 					fpasswd = open(passwdFile)

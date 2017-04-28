@@ -14,6 +14,11 @@ master
 michael
 oracle
 oracle1A
+Oracle
 password
 qwerty
 shadow
+Password
+PasswOrd
+PasswOrd!
+Password!

@@ -122,6 +122,7 @@ class OracleDatabase:
 		Si ld != [], active le chargement dans un dictionnaire des
 		resultats
 		'''
+		results = []
 		cursor = self.args['dbcon'].cursor()
 		try:
 			if self.args['show_sql_requests'] == True: logging.info("SQL request executed: {0}".format(query))
@@ -138,9 +139,10 @@ class OracleDatabase:
 				return ErrorSQLRequest(e)
 		if isquery==True :
 			try :  
+				cursor.arraysize = 256
 				results = cursor.fetchall()
 			except Exception, e:
-				logging.info("Impossible to fetch all the rows of the query {0}: `{1}`".format(query, self.cleanError(e)))
+				logging.warning("Impossible to fetch all the rows of the query {0}: `{1}`".format(query, self.cleanError(e)))
 				return ErrorSQLRequest(e)
 		else : 
 			cursor.close()

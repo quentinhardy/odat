@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import logging,struct, socket, re
+import logging,struct, socket, re, struct
 from Constants import *
 from Utils import checkOptionsGivenByTheUser
 
@@ -101,58 +101,16 @@ class Tnscmd():
 		if vsnnum == []:
 			return "Unknown"
 		else:
-			hexversion = str(hex(int(vsnnum[0])))[2:]
-		if len(hexversion)%2 !=0 : hexversion='0'+hexversion
-		versionList = re.findall('..?',hexversion)
-		for v in versionList : self.version += str(int(v,16)) + '.'
-		return self.version
-	
-"""	
-	def isTNSListenerVulnerableToCVE_2012_1675 (self):
-		'''
-		Checks the server for TNS Poison vulnerabilities.
-		It sends to the remote listener a packet with command to register a new TNS Listener and checks
-		for response indicating an error. If there is an error in the response, the target is not vulnearble. 
-		Otherwise, the target is vulnerable.
-		Return True if vulneeable to CVE-2012-1675 (http://seclists.org/fulldisclosure/2012/Apr/204)
-		Otherwise returns False
-		return None if error
-		'''
-		ERROR_STR = "(ERROR_STACK=(ERROR="
-		status = self.getInformation(cmd='service_register_NSGR')
-		if status == False:
-			return None
-		else:
-			if ERROR_STR in self.recvdata:
-				logging.debug("'{0}' in target's response after registration command: not vulnerable".format(ERROR_STR))
-				return False
-			else:
-				logging.debug("Target is vulnerable to CVE-2012-1675 because there is no error in the reponse after registration command")
-				return True
-	
-def runCheckTNSPoisoning(args):
-	'''
-	Check if target is vulnerable to Tns poisoning
-	'''
-	args['print'].title("Is the target is vulnerable to TNS poisoning (CVE-2012-1675). Keep calm because take time...")
-	tnscmd = Tnscmd(args)
-	status = tnscmd.isTNSListenerVulnerableToCVE_2012_1675()
-	if status == None:
-		pass
-	elif status == True:
-		args['print'].goodNews("The target is vulnerable to a remote TNS poisoning")
-	else :
-		args['print'].badNews("The target is not vulnerable to a remote TNS poisoning")
-"""
+			hexVsnnum = str(hex(int(vsnnum[0])))[2:]
+			hexVersionList = struct.unpack('cc2sc2s',hexVsnnum)
+			for v in hexVersionList : self.version += str(int(v,16)) + '.'
+			return self.version
 		
 def runTnsCmdModule(args):
 	'''
 	run the TNS cmd module
 	'''
 	if checkOptionsGivenByTheUser(args,["version","status","ping"],checkSID=False,checkAccount=False) == False : return EXIT_MISS_ARGUMENT
-	#if args['ping'] == False and args['version'] == False and args['status'] == False and args['checkTNSPoisoning'] == False:
-	#	logging.critical("You must choose --ping or/and --version or/and --status")
-	#	return EXIT_MISS_ARGUMENT
 	tnscmd = Tnscmd(args)
 	if args['ping'] == True:
 		args['print'].title("Searching ALIAS on the {0} server, port {1}".format(args['server'],args['port']))

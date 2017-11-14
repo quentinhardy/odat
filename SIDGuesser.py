@@ -3,7 +3,7 @@
 
 from OracleDatabase import OracleDatabase
 from time import sleep
-from itertools import permutations
+from itertools import product
 import logging, string
 from Tnscmd import Tnscmd
 from Constants import *
@@ -107,7 +107,7 @@ class SIDGuesser (OracleDatabase):
 		self.args['print'].subtitle("Searching valid SIDs thanks to a brute-force attack on {2} chars now ({0}:{1})".format(self.args['server'], self.args['port'], size))
 		pbar,nb = self.getStandardBarStarted(len(charset)**size), 0
 		logging.info('Start the research')
-		for aSID in permutations(list(charset), size):
+		for aSID in product(list(charset), repeat=size):
 			nb +=1
 			pbar.update(nb)
 			self.args['sid'] = ''.join(aSID)

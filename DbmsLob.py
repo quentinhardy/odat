@@ -28,45 +28,32 @@ class DbmsLob (DirectoryManagement):
 		#Get data of the remote file
 		DBMS_LOB_GET_FILE ="""
 		DECLARE	
-			bu RAW(32766);
-			-- Separator Character between words is a BLANK
-			l_seb       CONSTANT RAW(100) := UTL_RAW.CAST_TO_RAW(CHR(32));
-			-- Character at the end of the file is NEWLINE
-			l_sen       CONSTANT RAW(100) := UTL_RAW.CAST_TO_RAW(CHR(10));
-			-- Pointer to the BFILE
-			l_loc       BFILE;
-			-- Current position in the file (file begins at position 1)
-			l_pos       NUMBER := 1;
-			-- Amount of characters have been read
-			l_sum       BINARY_INTEGER := 0;
-			-- Read Buffer
-			l_buf       VARCHAR2(10000);
-			-- End of the current word which will be read
-			l_end       NUMBER;
-			-- Return value
-			l_ret       BOOLEAN := FALSE;
-		BEGIN
-			l_loc := BFILENAME('{0}','{1}');
-			DBMS_LOB.OPEN(l_loc,DBMS_LOB.LOB_READONLY);
+                        -- Pointer to the BFILE
+                        l_loc       BFILE;
+                        -- Current position in the file (file begins at position 1)
+                        l_pos       NUMBER := 1;
+                        -- Amount of characters to read
+                        l_sum       BINARY_INTEGER;
+                        -- Read Buffer
+                        l_buf       VARCHAR2(32767);
+			l_stat		BINARY_INTEGER := 16383;
+                BEGIN
+                        l_loc := BFILENAME('{0}','{1}');
+                        DBMS_LOB.OPEN(l_loc,DBMS_LOB.LOB_READONLY);
+			l_sum := dbms_lob.getlength(l_loc);
 			LOOP
-			 -- Calculate the end of the current word
-			 l_end := DBMS_LOB.INSTR(l_loc,l_seb,l_pos,1);
-			 -- Process end-of-file
-			 IF (l_end = 0) THEN
-				l_end := DBMS_LOB.INSTR(l_loc,l_sen,l_pos,1);
-				l_sum := l_end - l_pos ;
+			IF (l_sum < 16383) THEN
 				DBMS_LOB.READ(l_loc,l_sum,l_pos,l_buf);
-				dbms_output.put_line(UTL_RAW.CAST_TO_VARCHAR2(l_buf));
+				dbms_output.put_line(UTL_RAW.CAST_TO_VARCHAR2(l_buf));     	
 				EXIT;
-			 END IF;
-			 -- Read until end-of-file
-			 l_sum := l_end - l_pos;
-			 DBMS_LOB.READ(l_loc,l_sum,l_pos,l_buf);
-			 dbms_output.put_line(UTL_RAW.CAST_TO_VARCHAR2(l_buf));
-			 l_pos := l_pos + l_sum + 1;
-			END LOOP;
-			 DBMS_LOB.CLOSE(l_loc);
-		END;
+			END IF;
+			l_sum := l_sum - 16383;
+			DBMS_LOB.READ(l_loc,l_stat,l_pos,l_buf);
+			l_pos := l_pos + 16383;
+			dbms_output.put_line(UTL_RAW.CAST_TO_VARCHAR2(l_buf));
+                        END LOOP;
+                        DBMS_LOB.CLOSE(l_loc);
+                END;
 		"""
 		isFileExist= self.getFileExist (remotePath, remoteNameFile)
 		if isFileExist == True :

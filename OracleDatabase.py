@@ -30,12 +30,16 @@ class OracleDatabase:
 		self.ERROR_XML_DB_SECU_NOT_INST = "ORA-24248: "
 		self.ERROR_UNABLE_TO_ACQUIRE_ENV = "Unable to acquire Oracle environment handle"
 		self.ERROR_NOT_CONNECTED = "ORA-03114: "
+		self.ERROR_SHARED_MEMORY = "ORA-27101: "
 
 	def __generateConnectionString__(self):
 		'''
 		Generate Oracle Database connection string
 		'''
-		self.args['connectionStr'] = "{0}/{1}@{2}:{3}/{4}".format(self.args['user'],self.args['password'],self.args['server'],self.args['port'],self.args['sid'])
+		if self.args['tnsConnectionStringMode'] == True:
+			self.args['connectionStr'] = "{0}/{1}@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(Host={2})(Port={3})))(CONNECT_DATA=(SID={4})))".format(self.args['user'],self.args['password'],self.args['server'],self.args['port'],self.args['sid'])
+		else:
+			self.args['connectionStr'] = "{0}/{1}@{2}:{3}/{4}".format(self.args['user'],self.args['password'],self.args['server'],self.args['port'],self.args['sid'])
 		logging.debug('Oracle connection string: {0}'.format(self.args['connectionStr']))
 		return self.args['connectionStr']
 	
@@ -70,6 +74,11 @@ class OracleDatabase:
 				self.args['SYSDBA'] = False
 				self.args['SYSOPER'] = False
 				return self.connection(threaded=threaded, stopIfError=stopIfError)
+			elif self.ERROR_SHARED_MEMORY in str(e):
+				logging.critical("Error server side ('ORA-27101: shared memory realm does not exist').")
+				logging.critical("You should try to use a TNS Connection String instead of a connection sting as 'server:port/instance_name'")
+				logging.critical("You have to TRY WITH '-t' option!")
+				exit(EXIT_BAD_CONNECTION)
 			elif stopIfError == True: 
 				logging.critical("Impossible to connect to the remote database: {0}".format(self.cleanError(e)))
 				exit(EXIT_BAD_CONNECTION)

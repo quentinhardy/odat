@@ -1,3 +1,8 @@
+| __Quentin HARDY__    |
+| ------------- |
+| __quentin.hardy@bt.com__    |
+| __quentin.hardy@protonmail.com__  |
+
 __ODAT linux standalone__ version at [https://github.com/quentinhardy/odat/releases/](https://github.com/quentinhardy/odat/releases/)
 
 ODAT 
@@ -254,10 +259,4 @@ Docs and examples
 ====
 
 Docs and examples are on the [__WIKI__](https://github.com/quentinhardy/odat/wiki) 
-
----
-| __Quentin HARDY__    |
-| ------------- |
-| __quentin.hardy@bt.com__    |
-| __quentin.hardy@protonmail.com__  |
 

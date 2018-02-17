@@ -260,3 +260,9 @@ Docs and examples
 
 Docs and examples are on the [__WIKI__](https://github.com/quentinhardy/odat/wiki) 
 
+
+Donation
+====
+If you want to support my work doing a donation, I will appreciate a lot:
+
+* Via BTC: 36FugL6SnFrFfbVXRPcJATK9GsXEY6mJbf

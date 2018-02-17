@@ -3,8 +3,6 @@
 | __quentin.hardy@bt.com__    |
 | __quentin.hardy@protonmail.com__  |
 
-__ODAT linux standalone__ version at [https://github.com/quentinhardy/odat/releases/](https://github.com/quentinhardy/odat/releases/)
-
 ODAT 
 ====
 
@@ -16,6 +14,9 @@ Usage examples of ODAT:
 * You have a Oracle account and you want to __execute system commands__ (e.g. __reverse shell__) in order to move forward on the operating system hosting the database
 
 Tested on Oracle Database __10g__,  __11g__ and __12c__(12.1.0.2.0).
+
+~~__ODAT linux standalone__ version at [https://github.com/quentinhardy/odat/releases/](https://github.com/quentinhardy/odat/releases/)~~
+(__Deprecated at this time__)
 
 Changelog
 ====

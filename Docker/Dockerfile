@@ -20,9 +20,9 @@ RUN bash -c 'echo "export PATH=\$ORACLE_HOME/bin:\$PATH" >> /etc/profile'
 RUN bash -c 'echo "/usr/lib/oracle/12.1/client64/lib/" > /etc/ld.so.conf.d/oracle.conf'
 RUN bash -c 'ldconfig'
 # Install CX_Oracle
-RUN bash -cl 'pip install cx_Oracle'
+RUN bash -cl 'pip install cx_Oracle -i https://pypi.python.org/simple/'
 # Install some python libraries and pyinstaller
-RUN pip install colorlog termcolor pycrypto argcomplete pyinstaller
+RUN pip install colorlog termcolor pycrypto argcomplete pyinstaller -i https://pypi.python.org/simple/
 RUN activate-global-python-argcomplete
 # Change to /root et clone odat project
 WORKDIR /root

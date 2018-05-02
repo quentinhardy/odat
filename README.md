@@ -80,51 +80,51 @@ Features
 Thanks to ODAT, you can:
 
 * search __valid SID__ on a remote Oracle Database listener via:
- * a dictionary attack
- * a brute force attack
- * ALIAS of the listener
+  * a dictionary attack
+  * a brute force attack
+  * ALIAS of the listener
 * search Oracle __accounts__ using:
- * a dictionary attack
- * each Oracle user like the password (need an account before to use this attack)
+  * a dictionary attack
+  * each Oracle user like the password (need an account before to use this attack)
 * __execute system commands__ on the database server using:
- * DBMS_SCHEDULER
- * JAVA
- * external tables
- * oradbg
+  * DBMS_SCHEDULER
+  * JAVA
+  * external tables
+  * oradbg
 * __download files__ stored on the database server using:
- * UTL_FILE
- * external tables
- * CTXSYS
- * DBMS_LOB
+  * UTL_FILE
+  * external tables
+  * CTXSYS
+  * DBMS_LOB
 * __upload files__ on the database server using:
- * UTL_FILE
- * DBMS_XSLPROCESSOR
- * DBMS_ADVISOR
+  * UTL_FILE
+  * DBMS_XSLPROCESSOR
+  * DBMS_ADVISOR
 * __delete files__ using:
- * UTL_FILE
+  * UTL_FILE
 * __gain privileged access__ using these following system privileges combinations (see help for *privesc* module commands): (__NEW__ : 2016/02/21)
- * CREATE ANY PROCEDURE
- * CREATE PROCEDURE and EXECUTE ANY PROCEDURE
- * CREATE ANY TRIGER (and CREATE PROCEDURE)
- * ANALYZE ANY (and CREATE PROCEDURE)
- * CREATE ANY INDEX (and CREATE PROCEDURE)
+  * CREATE ANY PROCEDURE
+  * CREATE PROCEDURE and EXECUTE ANY PROCEDURE
+  * CREATE ANY TRIGER (and CREATE PROCEDURE)
+  * ANALYZE ANY (and CREATE PROCEDURE)
+  * CREATE ANY INDEX (and CREATE PROCEDURE)
 * __send/reveive HTTP requests__ from the database server using:
- * UTL_HTTP
- * HttpUriType
+  * UTL_HTTP
+  * HttpUriType
 * __scan ports__ of the local server or a remote server using:
- * UTL_HTTP
- * HttpUriType
- * UTL_TCP
+  * UTL_HTTP
+  * HttpUriType
+  * UTL_TCP
 * __capture a SMB authentication__ through:
- * an index in order trigger a SMB connection
+  * an index in order trigger a SMB connection
 * exploit some CVE: 
- * the [__CVE-2012-3137__](http://cvedetails.com/cve/2012-3137)
+  * the [__CVE-2012-3137__](http://cvedetails.com/cve/2012-3137)
       * pickup the session key and salt for arbitrary users
       * attack by dictionary on sessions
- * the [__CVE-2012-????__](https://twitter.com/gokhanatil/status/595853921479991297): A user authenticated can modify all tables who can select even if he can't modify them normally (no ALTER privilege). 
- * the [__CVE-2012-1675__](http://seclists.org/fulldisclosure/2012/Apr/204) (aka TNS poisoning attack) (__NEW__ : 25/03/2016)
+  * the [__CVE-2012-????__](https://twitter.com/gokhanatil/status/595853921479991297): A user authenticated can modify all tables who can select even if he can't modify them normally (no ALTER privilege). 
+  * the [__CVE-2012-1675__](http://seclists.org/fulldisclosure/2012/Apr/204) (aka TNS poisoning attack) (__NEW__ : 25/03/2016)
 * __search in column names__ thanks to the *search* module:
- * search a pattern (ex: password) in column names
+  * search a pattern (ex: password) in column names
 * __unwrap__ PL/SQL source code (10g/11g and 12c)
 * get __system privileges__ and __roles granted__. It is possible to get privileges and roles of roles granted also (__NEW__ : 21/02/2016)
 
@@ -141,17 +141,17 @@ The ODAT standalone has been generated thanks to *pyinstaller*.
 If you want to have the __development version__ installed on your computer, these following tools and dependencies are needed:
 * Langage: Python 2.7
 * Oracle dependancies: 
- * Instant Oracle basic
- * Instant Oracle sdk
+  * Instant Oracle basic
+  * Instant Oracle sdk
 * Python libraries: 
- * cx_Oracle
- * passlib
- * pycrypto
- * python-scapy
- * colorlog (recommended)
- * termcolor (recommended)
- * argcomplete (recommended)
- * pyinstaller (recommended)
+  * cx_Oracle
+  * passlib
+  * pycrypto
+  * python-scapy
+  * colorlog (recommended)
+  * termcolor (recommended)
+  * argcomplete (recommended)
+  * pyinstaller (recommended)
 
 Installation (optional, for development version)
 ====
@@ -172,8 +172,8 @@ git submodule update
 ```
 
 * Get instant client basic, sdk (devel) and sqlplus from the Oracle web site:
- * X64: http://www.oracle.com/technetwork/topics/linuxx86-64soft-092277.html
- * X86: http://www.oracle.com/technetwork/topics/linuxsoft-082809.html
+  * X64: http://www.oracle.com/technetwork/topics/linuxx86-64soft-092277.html
+  * X86: http://www.oracle.com/technetwork/topics/linuxsoft-082809.html
 
 * Install *python-dev*, *alien* and *libaio1* package (for sqlplus):
 ```bash

@@ -310,16 +310,17 @@ class Tnspoison (Tnscmd):
 		Returns -1 if an error occured with the TNS command
 		Returns True if no problem
 		'''
-		ERROR_STR = "(ERROR_STACK=(ERROR="
+		ERROR_STR = ["(ERROR_STACK=(ERROR=","(DESCRIPTION=(ERR="]
 		logging.info("Checking if the target is vulnerable to TNS poisoning attack...")
 		status = self.getInformation(cmd='service_register_NSGR')
 		if status == False:
 			logging.debug("Error unknow with the TNS command sent")
 			return -1
 		else:
-			if ERROR_STR in self.recvdata:
-				logging.debug("'{0}' in target's response after registration command: not vulnerable".format(ERROR_STR))
-				return False
+			for anError in ERROR_STR:
+				if anError in self.recvdata:
+					logging.debug("'{0}' in target's response after registration command: not vulnerable".format(ERROR_STR))
+					return False
 			else:
 				logging.debug("Target is vulnerable to CVE-2012-1675 because there is no error in the reponse after registration command")
 				if checkOnly == True: 

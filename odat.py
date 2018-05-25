@@ -515,7 +515,7 @@ def main():
 	parser_usernamelikepassword = subparsers.add_parser('userlikepwd',parents=[PPoptional,PPconnection,PPusernamelikepassword,PPoutput], formatter_class=mySubFormatterClass, help='to try each Oracle username stored in the DB like the corresponding pwd')
 	parser_usernamelikepassword.set_defaults(func=runUsernameLikePassword,auditType='usernamelikepassword')
 	#2.q- smb
-	parser_smb = subparsers.add_parser('smb',parents=[PPoptional,PPconnection,PPsmb], formatter_class=mySubFormatterClass, help='to capture the SMB authentication')
+	parser_smb = subparsers.add_parser('smb',parents=[PPoptional,PPconnection,PPsmb,PPoutput], formatter_class=mySubFormatterClass, help='to capture the SMB authentication')
 	parser_smb.set_defaults(func=runSMBModule,auditType='smb')
 	#2.q- privilegeEscalation
 	parser_privilegeEscalation = subparsers.add_parser('privesc',parents=[PPoptional,PPconnection,PPprivilegeEscalation0, PPprivilegeEscalation,PPprivilegeEscalation2,PPoutput], formatter_class=mySpecialSubFormatterClass, help='to gain elevated access')

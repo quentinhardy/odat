@@ -108,7 +108,7 @@ class PasswordGuesser (OracleDatabase):
 			if userChoice == 0 : 
 				logging.info("The attack is aborded because you choose to stop (s/S)")
 				break
-			status = self.connection()
+			status = self.connection(threaded=False)
 			if status == True:
 				self.valideAccounts[self.args['user']] = self.args['password']
 				logging.info("Valid credential: {0} ({1})  ".format('/'.join(anAccount),self.args['connectionStr']))
@@ -123,6 +123,8 @@ class PasswordGuesser (OracleDatabase):
 				self.args['SYSDBA'] = False
 			elif self.__needRetryConnection__(status) == True:
 				status = self.__retryConnect__(nbTry=4)
+			else:
+				logging.debug("Error during connection with this account: {0}".format(status))
 			self.close()
 			sleep(self.timeSleep)
 		pbar.finish()

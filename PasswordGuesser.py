@@ -99,6 +99,8 @@ class PasswordGuesser (OracleDatabase):
 		for anAccount in self.accounts :
 			nb += 1
 			pbar.update(nb)
+			self.args['SYSDBA'] = False
+			self.args['SYSOPER'] = False
 			logging.debug("Try to connect with {0}".format('/'.join(anAccount)))
 			self.args['user'], self.args['password'] = anAccount[0], anAccount[1]
 			self.__generateConnectionString__()

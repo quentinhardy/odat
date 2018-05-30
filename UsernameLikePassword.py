@@ -37,7 +37,7 @@ class UsernameLikePassword (OracleDatabase):
 				for e in response : self.allUsernames.append(e['username']) 
 		logging.info("Oracle usernames stored in the ALL_USERS table: {0}".format(self.allUsernames))
 
-	def tryUsernameLikePassword(self):
+	def tryUsernameLikePassword(self, additionalPwd=[]):
 		'''
 		Try to connect to the DB with each Oracle username using the username like the password
 		if lowerAndUpper == True, the username in upper case and lower case format will be tested
@@ -51,6 +51,9 @@ class UsernameLikePassword (OracleDatabase):
 				logging.debug("Password identical (upper case and lower case) to username will be tested for '{0}'".format(usern))
 				accounts.append([usern,usern.upper()])
 				accounts.append([usern,usern.lower()])
+				logging.debug("These passwords will be tested for {0} also: {1}".format(usern, additionalPwd))
+				for anAdditionalPwd in additionalPwd:
+					accounts.append([usern,anAdditionalPwd])
 			else:
 				logging.debug("Password identical to username will be tested ONLY for '{0}' (option enabled)".format(usern))
 				accounts.append([usern,usern])
@@ -73,11 +76,13 @@ def runUsernameLikePassword(args):
 	status = usernameLikePassword.connection(stopIfError=True)
 	#Option 1: UsernameLikePassword
 	if args['run'] !=None :
+		additionalPwd = []
 		args['print'].title("Oracle users have not the password identical to the username ?")
-		usernameLikePassword.tryUsernameLikePassword()
+		if args.has_key('additional-pwd') and args['additional-pwd'] != None:
+			additionalPwd = args['additional-pwd']
+		usernameLikePassword.tryUsernameLikePassword(additionalPwd = additionalPwd)
 		if usernameLikePassword.validAccountsList == {}:
 			args['print'].badNews("No found a valid account on {0}:{1}/{2}".format(args['server'], args['port'], args['sid']))
 		else :
 			args['print'].goodNews("Accounts found on {0}:{1}/{2}: {3}".format(args['server'], args['port'], args['sid'],getCredentialsFormated(usernameLikePassword.validAccountsList)))
-
 

@@ -53,8 +53,10 @@ class OracleDatabase:
 		'''
 		try: 
 			if self.args['SYSDBA'] == True :
+				logging.debug("Connecting as SYSDBA to the database")
 				self.args['dbcon'] = cx_Oracle.connect(self.args['connectionStr'], mode=cx_Oracle.SYSDBA,threaded=threaded)
 			elif self.args['SYSOPER'] == True :	
+				logging.debug("Connecting as SYSOPER to the database")
 				self.args['dbcon'] = cx_Oracle.connect(self.args['connectionStr'], mode=cx_Oracle.SYSOPER,threaded=threaded)
 			else :
 				self.args['dbcon'] = cx_Oracle.connect(self.args['connectionStr'],threaded=threaded)

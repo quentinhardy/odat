@@ -105,13 +105,25 @@ class Passwords (OracleDatabase):
 		
 	def printPasswordsOclHashcat (self):
 		'''
-		print passwords
+		print 10g Oracle hashed for hashcat
 		'''	
 		for l in self.passwords:
 			if l.has_key('name') and l.has_key('password'):
 				if l['password']!=None and ' ' not in l['password']: print "{1}:{0}".format(l['name'], l['password'])
 			elif l.has_key('username') and l.has_key('password'):
 				if l['password']!=None : print "{1}:{0}".format(l['username'], l['password'])
+			elif l.has_key('user#') and l.has_key('password') and l.has_key('password_date'):
+				if l['password']!=None : print "{0}; {1}; {2}".format(l['user#'], l['password'], l['password_date'])
+
+	def printPasswordsJohn (self):
+		'''
+		print 10g Oracle hashed for john the ripper
+		'''	
+		for l in self.passwords:
+			if l.has_key('name') and l.has_key('password'):
+				if l['password']!=None and ' ' not in l['password']: print "{0}:{1}".format(l['name'], l['password'])
+			elif l.has_key('username') and l.has_key('password'):
+				if l['password']!=None : print "{0}:{1}".format(l['username'], l['password'])
 			elif l.has_key('user#') and l.has_key('password') and l.has_key('password_date'):
 				if l['password']!=None : print "{0}; {1}; {2}".format(l['user#'], l['password'], l['password_date'])
 		
@@ -158,6 +170,8 @@ def runPasswordsModule(args):
 			passwords.printPasswords()
 			args['print'].goodNews("Here are 10g Oracle hashed passwords for oclHashcat (some accounts can be locked):")
 			passwords.printPasswordsOclHashcat()
+			args['print'].goodNews("Here are 10g Oracle hashed passwords for John the Ripper (some accounts can be locked):")
+			passwords.printPasswordsJohn()
 		else : 
 			args['print'].badNews("Impossible to get hashed passwords: {0}".format(status))
 	if args['get-passwords-not-locked'] == True :
@@ -169,6 +183,8 @@ def runPasswordsModule(args):
 			passwords.printPasswords()
 			args['print'].goodNews("Here are 10g Oracle hashed passwords for oclHashcat (all accounts are opened, not locked):")
 			passwords.printPasswordsOclHashcat()
+			args['print'].goodNews("Here are 10g Oracle hashed passwords for John the Ripper (all accounts are opened, not locked):")
+			passwords.printPasswordsJohn()
 		else : 
 			args['print'].badNews("Impossible to get hashed passwords: {0}".format(status))
 	if args['get-passwords-from-history'] == True :

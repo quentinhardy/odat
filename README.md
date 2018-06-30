@@ -15,11 +15,22 @@ Usage examples of ODAT:
 
 Tested on Oracle Database __10g__,  __11g__ and __12c__(12.1.0.2.0).
 
-~~__ODAT linux standalone__ version at [https://github.com/quentinhardy/odat/releases/](https://github.com/quentinhardy/odat/releases/)~~
-(__Deprecated at this time__)
+__ODAT linux standalone__ version at [https://github.com/quentinhardy/odat/releases/](https://github.com/quentinhardy/odat/releases/). Notice it is recommended to use the development version (*git clone*).
+~~(__Deprecated at this time__)~~
 
 Changelog
 ====
+* Version __2.3__ (__06/03/2018__):
+  * Bug fixes:
+    * Some database credentials could not be detected in passwordguesser module (when it tries to connect as SYSDBA/SYSOPER before). Important bug fix!
+    * PPoutput missing in smb module (thx to dirkjanm)
+    * False positive in tnspoison module
+    * Sometimes, impossible to get version from VSNNUM
+  * Improvements:
+    * Performence improvements when you bruteforce accounts.
+    * Option for connection with a TNS Connection String
+    * New trivial credentials in accounts file
+    * Better read file method in dbmsLob module (thx to omair2084)
 * Version __2.2.1__ (__12/04/2017__):
   * Bug fixes: 
     * Version in tnscmd ([info](https://github.com/quentinhardy/odat/commit/9b7ec57cfed0fe74381edff28b73532562acaa2c))

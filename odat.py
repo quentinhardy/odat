@@ -440,7 +440,9 @@ def main():
 	PPsearch._optionals.title = "search commands"
 	PPsearch.add_argument('--column-names',dest='column-names',default=None,required=False,metavar='sqlPattern',help='search pattern in all collumns')
 	PPsearch.add_argument('--pwd-column-names',dest='pwd-column-names',action='store_true',help='search password patterns in all collumns')
+	PPsearch.add_argument('--desc-tables',dest='desc-tables',action='store_true',help='describe each table which is accessible')
 	PPsearch.add_argument('--show-empty-columns',dest='show-empty-columns',action='store_true',help='show columns even if columns are empty')
+	PPsearch.add_argument('--without-example',dest='without-example',action='store_true',help="don't get an example value when column matches")
 	PPsearch.add_argument('--test-module',dest='test-module',action='store_true',help='test the module before use it')
 	#1.22- Parent parser: unwrapper
 	PPunwrapper = argparse.ArgumentParser(add_help=False,formatter_class=myFormatterClass)

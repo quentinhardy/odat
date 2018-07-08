@@ -154,7 +154,7 @@ CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
 			logging.info('The system command output is empty')
 			return ''
 		else : 
-			logging.info('The system command output is: `{0}`...'.format(data[0][0][:50]))
+			logging.info('The system command output is: `{0}`...'.format(data[0][0][:100]))
 			if printResponse == True : self.args['print'].printOSCmdOutput("{0}".format(data[0][0]))
 			return data[0][0]
 

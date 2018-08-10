@@ -14,9 +14,9 @@ DESCRIPTION = ""\
  \_/racle |__/atabase |_n_|ttacking |_|ool 
 -------------------------------------------
 
-By Quentin Hardy (quentin.hardy@bt.com or quentin.hardy@protonmail.com)
+By Quentin Hardy (quentin.hardy@protonmail.com or quentin.hardy@bt.com)
 """
-CURRENT_VERSION = "Version 2.3 - 2018/06/03"
+CURRENT_VERSION = "Version 2.3.1 - 2018/08/10"
 DEFAULT_SID_MIN_SIZE = 1
 DEFAULT_SID_MAX_SIZE = 2
 MAX_HELP_POSITION=22

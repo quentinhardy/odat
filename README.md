@@ -175,7 +175,7 @@ Don't forget that an ODAT standalone version exists at [https://github.com/quent
 
 * Clone the repository to get the ODAT source code:
 ```bash
-git clone git clone https://github.com/quentinhardy/odat.git
+git clone https://github.com/quentinhardy/odat.git
 ```
 
 * Update wiki pages in this repository for getting the ODAT documentation locally:

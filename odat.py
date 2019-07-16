@@ -435,7 +435,8 @@ def main():
 	PPcve = argparse.ArgumentParser(add_help=False,formatter_class=myFormatterClass)
 	PPcve._optionals.title = "cve commands"
 	PPcve.add_argument('--test-module',dest='test-module',action='store_true',help='test the module before use it')
-	PPcve.add_argument('--set-pwd-2014-4237',dest='set-pwd-2014-4237',nargs=2,metavar=('username','password'),help="modify a Oracle user's password unsing CVE-2014-4237")
+	PPcve.add_argument('--set-pwd-2014-4237',dest='set-pwd-2014-4237',nargs=2,metavar=('username','password'),help="modify a Oracle user's password using CVE-2014-4237")
+	PPcve.add_argument('--cve-2018-3004',dest='cve-2018-3004',nargs=2,metavar=('path','dataInFile'),help="create/modify a text file on the target using CVE-2018-3004")
 	#1.21- Parent parser: search
 	PPsearch = argparse.ArgumentParser(add_help=False,formatter_class=myFormatterClass)
 	PPsearch._optionals.title = "search commands"

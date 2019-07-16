@@ -21,6 +21,9 @@ __ODAT linux standalone__ version at [https://github.com/quentinhardy/odat/relea
 
 Changelog
 ====
+* Version __2.3.2__ (__16/07/2019__):
+  * Bug fixes:
+    * external table and false negative
 * Version __2.3.1__ (__10/08/2018__):
   * New option in Java module for exploiting CVE-2018-3004: It allows an authenticated user to arbitrarily write to files on the OS (Privilege escalation with bypass built in Oracle JVM security). More details [http://obtruse.syfrtext.com/2018/07/oracle-privilege-escalation-via.html](http://obtruse.syfrtext.com/2018/07/oracle-privilege-escalation-via.html). 
 * Version __2.3__ (__06/03/2018__):

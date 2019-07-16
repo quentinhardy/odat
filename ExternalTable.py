@@ -114,15 +114,15 @@ class ExternalTable (DirectoryManagement):
 		folder = self.__generateRandomString__()	
 		self.args['print'].subtitle("External table to read files ?")
 		logging.info("Simulate the file reading in the {0} folder thanks to an external table".format(folder))
-		status = self.getFile (remotePath=folder, remoteNameFile='data.txt', localFile="test.txt")
-		if (status == True or self.ERROR_EXTERNAL_TABLE_WITH_WRITE in str(status) or self.ERROR_EXTERNAL_TABLE_READ in str(status)) and (self.ERROR_ODCIEXTTABLEOPEN not in str(status)):
+		status = self.getFile(remotePath=folder, remoteNameFile='data.txt', localFile="test.txt")
+		if (status == True or self.ERROR_EXTERNAL_TABLE_WITH_WRITE in str(status) or self.ERROR_EXTERNAL_TABLE_READ in str(status)):
 			self.args['print'].goodNews("OK")
 		else : 
 			self.args['print'].badNews("KO")
 		self.args['print'].subtitle("External table to execute system commands ?")
 		logging.info("Simulate the file execution thanks to an external table")
 		status = self.execute (remotePath=folder, remoteNameFile='test')
-		if (status == True or self.ERROR_EXTERNAL_TABLE_WITH_WRITE in str(status) or self.ERROR_EXTERNAL_TABLE_READ in str(status)) and (self.ERROR_ODCIEXTTABLEOPEN not in str(status)):
+		if (status == True or self.ERROR_EXTERNAL_TABLE_WITH_WRITE in str(status) or self.ERROR_EXTERNAL_TABLE_READ in str(status)):
 			self.args['print'].goodNews("OK")
 		else : 
 			self.args['print'].badNews("KO")

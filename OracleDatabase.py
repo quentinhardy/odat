@@ -346,6 +346,13 @@ class OracleDatabase:
         if "linux" in self.remoteOS.lower() or 'solaris' in self.remoteOS.lower() : return True
         else : return False
         
+    def isDBVersion(self, version=None):
+		'''
+		Return True if remote database version is version given in parameter
+		'''
+		if version in self.oracleDatabaseversion : return True
+		else: return False
+        
     def hasThisRole(self, role, user=None):
         '''
         Returns True if user has role. Otherwise returns False

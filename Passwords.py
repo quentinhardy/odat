@@ -52,7 +52,7 @@ class Passwords (OracleDatabase):
 		currentUsername = ""
 		isVersion11or12 = False
 		self.__resetPasswordList__()
-		if self.args['info'].isVersion('11.') or self.args['info'].isVersion('12.'):
+		if self.isDBVersion('11.') or self.isDBVersion('12.') or self.isDBVersion('18.'):
 			req = "SELECT name, password, spare4 FROM sys.user$"
 			results = self.__execQuery__(query=req,ld=['name', 'password','spare4'])
 			isVersion11or12 = True

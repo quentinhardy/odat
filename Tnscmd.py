@@ -102,7 +102,10 @@ class Tnscmd():
 			return "Unknown"
 		else:
 			hexVsnnum = str(hex(int(vsnnum[0])))[2:]
-			hexVersionList = struct.unpack('cc2sc2s',hexVsnnum)
+			if len(hexVsnnum) == 7:
+				hexVersionList = struct.unpack('cc2sc2s',hexVsnnum)
+			elif len(hexVsnnum) == 8:
+				hexVersionList = struct.unpack('2sc2sc2s',hexVsnnum)
 			for v in hexVersionList : self.version += str(int(v,16)) + '.'
 			return self.version
 		

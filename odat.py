@@ -27,7 +27,6 @@ from DbmsScheduler import DbmsScheduler,runDbmsSchedulerModule
 from UtlHttp import UtlHttp,runUtlHttpModule
 from HttpUriType import HttpUriType,runHttpUriTypeModule
 from Java import Java,runjavaModule
-from Info import Info
 from PasswordGuesser import PasswordGuesser, runPasswordGuesserModule
 from SIDGuesser import SIDGuesser, runSIDGuesserModule
 from SMB import SMB, runSMBModule
@@ -45,6 +44,7 @@ from Unwrapper import runUnwrapperModule
 from PrivilegeEscalation import PrivilegeEscalation, runPrivilegeEscalationModule
 from CVE_XXXX_YYYY import CVE_XXXX_YYYY, runCVEXXXYYYModule
 from Tnspoison import Tnspoison, runTnsPoisonModule
+from OracleDatabase import OracleDatabase
 
 class MyFormatter(argparse.RawTextHelpFormatter):
     """
@@ -152,13 +152,10 @@ def runAllModules(args):
 			args['sid'] , args['user'], args['password'] = aSid, loginAndPass[0],loginAndPass[1]
 			args['print'].title("Testing all modules on the {0} SID with the {1}/{2} account".format(args['sid'],args['user'],args['password']))
 			#INFO ABOUT REMOTE SERVER
-			info = Info(args)
-			status = info.connection()
+			status = OracleDatabase(args).connection()
 			if isinstance(status,Exception):
 				args['print'].badNews("Impossible to connect to the remote database: {0}".format(str(status).replace('\n','')))
 				break
-			info.loadInformationRemoteDatabase()
-			args['info'] = info
 			#UTL_HTTP
 			utlHttp = UtlHttp(args)
 			status = utlHttp.connection()

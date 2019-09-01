@@ -24,7 +24,7 @@ class Info (OracleDatabase):
 		if version in self.version : return True
 		else: return False
 
-
+	"""
 	def loadInformationRemoteDatabase(self):
 		'''
 		Get the oracle versions
@@ -41,6 +41,7 @@ class Info (OracleDatabase):
 				self.os = response[0]['OS']
 				logging.debug ("Remote Operating System")
 		logging.info(str(self))
+	"""
 		
 	def __str__(self):
 		'''

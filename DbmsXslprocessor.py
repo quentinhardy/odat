@@ -47,7 +47,7 @@ class DbmsXslprocessor (DirectoryManagement):
 		logging.info("Simulate the file creation in the {0} folder with DBMS_XSLPROCESSOR".format(folder))
 		logging.info('The file is not created remotly because the folder should not exist')
 		status = self.putFile(folder,'temp.txt',data='data in file')
-		if status == True or self.ERROR_BAD_FOLDER_OR_BAD_SYSTEM_PRIV in str(status):
+		if status == True or self.ERROR_BAD_FOLDER_OR_BAD_SYSTEM_PRIV in str(status) or self.ERROR_FILEOPEN_FAILED in str(status):
 			self.args['print'].goodNews("OK")
 		else : 
 			self.args['print'].badNews("KO")

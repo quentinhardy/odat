@@ -14,13 +14,16 @@ Usage examples of ODAT:
 * You have a valid Oracle account on a database and want to __escalate your privileges__ to become DBA or SYSDBA
 * You have a Oracle account and you want to __execute system commands__ (e.g. __reverse shell__) in order to move forward on the operating system hosting the database
 
-Tested on Oracle Database __10g__,  __11g__ and __12c__.
+Tested on Oracle Database __10g__,  __11g__,  __12c__ and 18c.
 
 __ODAT linux standalone__ version at [https://github.com/quentinhardy/odat/releases/](https://github.com/quentinhardy/odat/releases/). Notice it is recommended to use the development version (*git clone*).
 ~~(__Deprecated at this time__)~~
 
 Changelog
 ====
+* Version __3.0__ (__01/09/2019__):
+  * Compatible with Oracle Database 18c
+  * New option in Java module for setting the path to shell (e.g. /usr/bin/sh when CentOS)
 * Version __2.3.2__ (__16/07/2019__):
   * Bug fixes:
     * external table and false negative

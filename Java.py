@@ -105,7 +105,8 @@ CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
 		CREATE AND COMPILE JAVA CLASS and CREATE FUNCTION TO CALL JAVA
 		'''
 		logging.info("Create and compile the java class")
-		self.SOURCE_OS_COMMAND_CLASS = self.SOURCE_OS_COMMAND_CLASS.replace('"/bin/sh"','"'+self.args["path-shell"]+'"')
+		if "path-shell" in self.args:
+			self.SOURCE_OS_COMMAND_CLASS = self.SOURCE_OS_COMMAND_CLASS.replace('"/bin/sh"','"'+self.args["path-shell"]+'"')
 		status = self.__execPLSQL__(self.SOURCE_OS_COMMAND_CLASS)
 		if isinstance(status,Exception):
 			logging.info("Impossible to create and compile the java class: {0}".format(self.cleanError(status)))

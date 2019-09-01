@@ -294,8 +294,8 @@ class OracleDatabase:
         response = self.__execQuery__(query=REQ,ld=['OS'])
         if isinstance(response,Exception):
             return False
-        else : 
-            if isinstance(response,list) and isinstance(response[0],dict):
+        else :
+            if isinstance(response,list) and len(response)>0 and isinstance(response[0],dict):
                 self.remoteOS = response[0]['OS']
                 logging.info("OS version : {0}".format(self.remoteOS))
                 return True

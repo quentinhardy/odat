@@ -37,7 +37,7 @@ class Info (OracleDatabase):
 		if isinstance(response,Exception):
 			pass
 		else : 
-			if isinstance(response,list) and isinstance(response[0],dict):
+			if isinstance(response,list) and len(response)>0 and isinstance(response[0],dict):
 				self.os = response[0]['OS']
 				logging.debug ("Remote Operating System")
 		logging.info(str(self))

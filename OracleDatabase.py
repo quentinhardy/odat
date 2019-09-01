@@ -279,6 +279,22 @@ class OracleDatabase:
             logging.warning('Error during the writing of the {0} file: {1}'.format(nameFile,self.cleanError(e)))
             return False
         return True
+        
+    def getDatabasePlatfromName(self):
+        """
+        Return platform_name string from v$database.
+        It is possible the current user has not privileges on table v$database.
+        Return "" if an error
+        """
+        REQ = "SELECT platform_name FROM v$database"
+        response = self.__execQuery__(query=REQ, ld=['platform_name'])
+        if isinstance(response,Exception):
+            return ""
+        else:
+            if len(response)>0 and isinstance(response[0],dict):
+                return response[0]['platform_name']
+            else:
+                return ""
 
     def loadInformationRemoteDatabase(self):
         '''
@@ -290,6 +306,10 @@ class OracleDatabase:
         logging.debug ("Pickup the remote verion")
         self.oracleDatabaseversion = self.args['dbcon'].version
         logging.debug ("Pickup the remote Operating System")
+        self.remoteOS = self.getDatabasePlatfromName()
+        if self.remoteOS != "":
+            logging.info("OS version : {0}".format(self.remoteOS))
+            return True
         REQ = "select rtrim(substr(replace(banner,'TNS for ',''),1,instr(replace(banner,'TNS for ',''),':')-1)) os from v$version where  banner like 'TNS for %'"
         response = self.__execQuery__(query=REQ,ld=['OS'])
         if isinstance(response,Exception):
@@ -305,6 +325,7 @@ class OracleDatabase:
     def remoteSystemIsWindows(self):    
         '''
         Return True if Windows
+        select * from v$transportable_platform; can be used for get all strings possible
         '''
         if self.remoteOS == "":
             self.loadInformationRemoteDatabase()
@@ -316,6 +337,7 @@ class OracleDatabase:
     def remoteSystemIsLinux(self):  
         '''
         Return True if Linux
+        select * from v$transportable_platform; can be used for get all strings possible
         '''
         if self.remoteOS == "":
             self.loadInformationRemoteDatabase()

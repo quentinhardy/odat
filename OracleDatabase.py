@@ -297,6 +297,24 @@ class OracleDatabase:
             else:
                 return ""
 
+    def getOSFromPortString(self):
+        """
+        Return OS string from dbms_utility.port_string
+        All users have access to this information
+        The DBMS_UTILITY.port_string function returns the operating 
+        system and the TWO TASK PROTOCOL version of the database.
+        Return "" if an error
+        """
+        REQ = "SELECT dbms_utility.port_string FROM dual"
+        response = self.__execQuery__(query=REQ, ld=['PORT_STRING'])
+        if isinstance(response,Exception):
+            return ""
+        else:
+            if len(response)>0 and isinstance(response[0],dict):
+                return response[0]['PORT_STRING']
+            else:
+                return ""
+
     def loadInformationRemoteDatabase(self):
         '''
         Get the oracle versions
@@ -309,7 +327,11 @@ class OracleDatabase:
         logging.debug ("Pickup the remote Operating System")
         self.remoteOS = self.getDatabasePlatfromName()
         if self.remoteOS != "":
-            logging.info("OS version : {0}".format(self.remoteOS))
+            logging.info("OS version from getDatabasePlatfromName(): {0}".format(self.remoteOS))
+            return True
+        self.remoteOS = self.getOSFromPortString()
+        if self.remoteOS != "":
+            logging.info("OS version from getOSFromPortString: {0}".format(self.remoteOS))
             return True
         REQ = "select rtrim(substr(replace(banner,'TNS for ',''),1,instr(replace(banner,'TNS for ',''),':')-1)) os from v$version where  banner like 'TNS for %'"
         response = self.__execQuery__(query=REQ,ld=['OS'])

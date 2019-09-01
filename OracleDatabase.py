@@ -22,6 +22,7 @@ class OracleDatabase:
         self.TARGET_UNAVAILABLE = ["Connect failed because target host or object does not exist",
                                     "listener could not find available handler with matching protocol stack"]
         self.ERROR_BAD_FOLDER_OR_BAD_SYSTEM_PRIV = "ORA-29283: "
+        self.ERROR_FILEOPEN_FAILED = "ORA-22288: "
         self.ERROR_NO_PRIVILEGE = "ORA-24247: "
         self.ERROR_NO_PRIVILEGE_INVALID_ID = "ORA-00904: "
         self.ERROR_NOT_SYSDBA = "ORA-28009: "

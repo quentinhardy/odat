@@ -197,43 +197,30 @@ git submodule update
 sudo apt-get install libaio1 python-dev alien python-pip
 ```
 
-* Generate DEB files from RPM files thanks to :
+* Generate DEB files from RPM files with :
 ```bash
-sudo alien --to-deb oracle-instantclient11.2-basic-???.x???.rpm
-sudo alien --to-deb oracle-instantclient11.2-sqlplus-???.x???.rpm
-sudo alien --to-deb oracle-instantclient11.2-devel-???.x???.rpm
+sudo alien --to-deb oracle-instantclient19.3-basic-???.x???.rpm
+sudo alien --to-deb oracle-instantclient19.3-devel-???.x???.rpm
 ```
 
 * Install instant client basic, sdk and sqlplus:
 ```bash
-sudo dpkg -i oracle-instantclient11.2-basic-???.x???.deb
-sudo dpkg -i oracle-instantclient11.2-sqlplus-???.x???.deb
-sudo dpkg -i oracle-instantclient11.2-devel_???_???.deb
+sudo dpkg -i oracle-instantclient19.3-basic-???.x???.deb
+sudo dpkg -i oracle-instantclient19.3-devel_???_???.deb
 ```
 
 * Put these lines in your */etc/profile* file in order to define Oracle *env* variables:
 ```bash
-export ORACLE_HOME=/usr/lib/oracle/11.2/client64/
+export ORACLE_HOME=/usr/lib/oracle/19.3/client64/
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ORACLE_HOME/lib
 export PATH=$ORACLE_HOME/bin:$PATH
 ```
 
-* Restart your session (to apply env variables)  and run *sqlplus*:
-```bash
-sqlplus
-```
-
-> If nor error: good job, Continue...
-
-* Create a symlink to your so file.
-```bash
-cd $ORACLE_HOME/lib/
-sudo ln -s libclntsh.so.11.1   libclntsh.so
-```
+* Restart your session (to apply env variables)
 
 * Create the */etc/ld.so.conf.d/oracle.conf* file and add the path to Oracle home:
 ```
-/usr/lib/oracle/11.2/client64/lib/
+/usr/lib/oracle/19.3/client64/lib/
 ```
 
 * Update the ldpath using:

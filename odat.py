@@ -335,6 +335,7 @@ def main():
 	PPjava._optionals.title = "java commands"
 	PPjava.add_argument('--exec',dest='exec',default=None,required=False,help='execute a system command on the remote system')
 	PPjava.add_argument('--shell',dest='shell',action='store_true',required=False,help='get a shell on the remote system')
+	PPjava.add_argument('--path-shell',dest='path-shell',default="/bin/sh",required=False,help='specify path to shell (default: %(default)s)')
 	PPjava.add_argument('--reverse-shell',dest='reverse-shell',required=False,nargs=2,metavar=('ip','port'),help='get a reverse shell')
 	PPjava.add_argument('--create-file-CVE-2018-3004',dest='create-file-CVE-2018-3004',required=False,nargs=2,metavar=('data','filename'),help='create (or append to) a file with CVE-2018-3004 (Bypass built in Oracle JVM security)')
 	PPjava.add_argument('--test-module',dest='test-module',action='store_true',help='test the module before use it')	

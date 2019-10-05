@@ -146,7 +146,7 @@ def runExternalTableModule (args):
 			args['print'].badNews("There is an error: {0}".format(data))
 		else:
 			args['print'].goodNews("Data stored in the remote file {0} stored in {1}".format(args['getFile'][1],args['getFile'][0]))
-			print data
+			print(data)
 	#Option 2: exec a script or command
 	if args['exec'] != None:
 		args['print'].title("Execute the {0} command stored in the {1} path".format(args['exec'][1],args['exec'][0]))

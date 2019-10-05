@@ -96,7 +96,7 @@ class UtlFile (DirectoryManagement):
 			cursor.callproc("dbms_output.enable")
 			try:
 				cursor.execute(UTL_FILE_GET_FILE.format(self.directoryName, remoteNameFile))
-			except Exception, e:
+			except Exception as e:
 				logging.info("Impossible to execute the query `{0}`: {1}".format(UTL_FILE_GET_FILE, self.cleanError(e)))
 				self.__dropDirectory__()
 				return ErrorSQLRequest(e)
@@ -112,7 +112,7 @@ class UtlFile (DirectoryManagement):
 						line = ''
 					data += line.decode('hex')+'\n'
 				cursor.close()
-		except Exception, e: 
+		except Exception as e: 
 			self.__dropDirectory__()
 			return ErrorSQLRequest(e)
 		self.__dropDirectory__()
@@ -141,7 +141,7 @@ class UtlFile (DirectoryManagement):
 				while currentByte < length:
 					try:
 						cursor.execute(UTL_FILE_GET_FILE.format(self.directoryName, remoteNameFile,currentByte))
-					except Exception, e:
+					except Exception as e:
 						logging.info("Impossible to execute the query `{0}`: {1}".format(UTL_FILE_GET_FILE, self.cleanError(e)))
 						self.__dropDirectory__()
 						return ErrorSQLRequest(e)
@@ -178,7 +178,7 @@ class UtlFile (DirectoryManagement):
 			cursor.callproc("dbms_output.enable")
 			try:
 				cursor.execute(UTL_FILE_GET_LENGTH.format(self.directoryName, remoteNameFile))
-			except Exception, e:
+			except Exception as e:
 				logging.info("Impossible to execute the query `{0}`: {1}".format(UTL_FILE_GET_LENGTH, self.cleanError(e)))
 				self.__dropDirectory__()
 				return ErrorSQLRequest(e)
@@ -195,7 +195,7 @@ class UtlFile (DirectoryManagement):
 					logging.info("The file length is: {0}".format(line))
 					return int(line)
 			cursor.close()
-		except Exception, e: 
+		except Exception as e: 
 			self.__dropDirectory__()
 			return ErrorSQLRequest(e)
 		self.__dropDirectory__()
@@ -216,7 +216,7 @@ class UtlFile (DirectoryManagement):
 			cursor.callproc("dbms_output.enable")
 			try:
 				cursor.execute(UTL_FILE_EXIST.format(self.directoryName, remoteNameFile))
-			except Exception, e:
+			except Exception as e:
 				logging.info("Impossible to execute the query `{0}`: {1}".format(UTL_FILE_EXIST, self.cleanError(e)))
 				self.__dropDirectory__()
 				return ErrorSQLRequest(e)
@@ -237,7 +237,7 @@ class UtlFile (DirectoryManagement):
 						return False
 					else : return ''
 			cursor.close()
-		except Exception, e: 
+		except Exception as e: 
 			self.__dropDirectory__()
 			return ErrorSQLRequest(e)
 		self.__dropDirectory__()

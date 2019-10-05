@@ -32,7 +32,7 @@ class DbmsScheduler (OracleDatabase):
 		try :
 			if self.args['show_sql_requests'] == True: logging.info("SQL request executed: DBMS_SCHEDULER.create_job with these parameters: {0}".format(parameters))
 			cursor.callproc(name="DBMS_SCHEDULER.create_job",keywordParameters=parameters)
-		except Exception,e: 
+		except Exception as e: 
 			logging.info('Error with DBMS_SCHEDULER.create_job:{0}'.format(self.cleanError(e)))
 			return ErrorSQLRequest(e)
 		else :
@@ -42,7 +42,7 @@ class DbmsScheduler (OracleDatabase):
 					try :
 						if self.args['show_sql_requests'] == True: logging.info("SQL request executed: DBMS_SCHEDULER.set_job_argument_value with these parameters: {0}".format(parameters))
 						cursor.callproc(name="DBMS_SCHEDULER.set_job_argument_value",keywordParameters=parameters)
-					except Exception,e: 
+					except Exception as e: 
 						logging.info('Error with DBMS_SCHEDULER.set_job_argument_value:{0}'.format(self.cleanError(e)))
 						return ErrorSQLRequest(e)
 		return True
@@ -55,7 +55,7 @@ class DbmsScheduler (OracleDatabase):
 		cursor = cx_Oracle.Cursor(self.args['dbcon'])
 		try :
 			cursor.callproc(name="DBMS_SCHEDULER.enable",keywordParameters={'name':self.jobName})
-		except Exception,e: 
+		except Exception as e: 
 			logging.info('DBMS_SCHEDULER.enable:{0}'.format(self.cleanError(e)))
 			return ErrorSQLRequest(e)
 		return True

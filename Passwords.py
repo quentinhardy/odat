@@ -96,36 +96,36 @@ class Passwords (OracleDatabase):
 		print passwords
 		'''	
 		for l in self.passwords:
-			if len(l)==3 and l.has_key('name') and l.has_key('spare4') and l.has_key('password'):
-				if (l['password']!=None or l['spare4']!=None): print "{0}; {1}; {2}".format(l['name'], l['password'],l['spare4'])
-			elif l.has_key('username') and l.has_key('password'):
-				if l['password']!=None : print "{0}:{1}".format(l['username'], l['password'])
-			elif l.has_key('user#') and l.has_key('password') and l.has_key('password_date'):
-				if l['password']!=None : print "{0}; {1}; {2}".format(l['user#'], l['password'], l['password_date'])
+			if len(l)==3 and 'name' in l and 'spare4' in l and 'password' in l:
+				if (l['password']!=None or l['spare4']!=None): print("{0}; {1}; {2}".format(l['name'], l['password'],l['spare4']))
+			elif 'username' in l and 'password' in l:
+				if l['password']!=None : print("{0}:{1}".format(l['username'], l['password']))
+			elif 'user#' in l and 'password' in l and 'password_date' in l:
+				if l['password']!=None : print("{0}; {1}; {2}".format(l['user#'], l['password'], l['password_date']))
 		
 	def printPasswordsOclHashcat (self):
 		'''
 		print 10g Oracle hashed for hashcat
 		'''	
 		for l in self.passwords:
-			if l.has_key('name') and l.has_key('password'):
-				if l['password']!=None and ' ' not in l['password']: print "{1}:{0}".format(l['name'], l['password'])
-			elif l.has_key('username') and l.has_key('password'):
-				if l['password']!=None : print "{1}:{0}".format(l['username'], l['password'])
-			elif l.has_key('user#') and l.has_key('password') and l.has_key('password_date'):
-				if l['password']!=None : print "{0}; {1}; {2}".format(l['user#'], l['password'], l['password_date'])
+			if 'name' in l and 'password' in l:
+				if l['password']!=None and ' ' not in l['password']: print("{1}:{0}".format(l['name'], l['password']))
+			elif 'username' in l and 'password' in l:
+				if l['password']!=None : print("{1}:{0}".format(l['username'], l['password']))
+			elif 'user#' in l and 'password' in l and 'password_date' in l:
+				if l['password']!=None : print("{0}; {1}; {2}".format(l['user#'], l['password'], l['password_date']))
 
 	def printPasswordsJohn (self):
 		'''
 		print 10g Oracle hashed for john the ripper
 		'''	
 		for l in self.passwords:
-			if l.has_key('name') and l.has_key('password'):
-				if l['password']!=None and ' ' not in l['password']: print "{0}:{1}".format(l['name'], l['password'])
-			elif l.has_key('username') and l.has_key('password'):
-				if l['password']!=None : print "{0}:{1}".format(l['username'], l['password'])
-			elif l.has_key('user#') and l.has_key('password') and l.has_key('password_date'):
-				if l['password']!=None : print "{0}; {1}; {2}".format(l['user#'], l['password'], l['password_date'])
+			if 'name' in l and 'password' in l:
+				if l['password']!=None and ' ' not in l['password']: print("{0}:{1}".format(l['name'], l['password']))
+			elif 'username' in l and 'password' in l:
+				if l['password']!=None : print("{0}:{1}".format(l['username'], l['password']))
+			elif 'user#' in l and 'password' in l and 'password_date' in l:
+				if l['password']!=None : print("{0}; {1}; {2}".format(l['user#'], l['password'], l['password_date']))
 		
 	def testAll (self):
 		'''
@@ -155,7 +155,7 @@ def runPasswordsModule(args):
 	passwords = Passwords(args)
 	status = passwords.connection(stopIfError=True)
 	passwords.__getLockedUsernames__()
-	if args.has_key('info')==False:
+	if ('info' in args)==False:
 		info = Info(args)
 		info.loadInformationRemoteDatabase()
 		args['info'] = info

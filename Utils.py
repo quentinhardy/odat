@@ -98,7 +98,7 @@ def getOracleConnection(args, connectId):
 			return cx_Oracle.connect(connectId, mode=cx_Oracle.SYSOPER)
 		else :
 			return cx_Oracle.connect(connectId)
-	except Exception, e:
+	except Exception as e:
 		logging.error("Impossible to connect to the database: {0}".format(str(e)))
 		exit(-1)
 
@@ -136,7 +136,7 @@ def anAccountIsGiven (args):
 	- operations must be a list
 	- args must be a dictionary
 	'''
-	if (args.has_key('user') ==False or args.has_key('password') == False) or (args['user'] == None and args['password'] == None):
+	if (('user' in args) ==False or ('password' in args) == False) or (args['user'] == None and args['password'] == None):
 		logging.critical("You must give a valid account with the '-U username' option and the '-P password' option.")
 		return False
 	elif args['user'] != None and args['password'] == None:
@@ -156,7 +156,7 @@ def anOperationHasBeenChosen(args, operations):
 	- args must be a dictionary
 	'''
 	for key in operations:
-		if args.has_key(key) == True:
+		if (key in args) == True:
 			if key == "test-module":
 				if args[key] == True: return True
 			elif args[key] != None and args[key] != False : return True
@@ -169,17 +169,17 @@ def ipOrNameServerHasBeenGiven(args):
 	Otherwise return False
 	- args must be a dictionary
 	'''
-	if args.has_key('server') == False or args['server'] == None:
+	if ('server' in args) == False or args['server'] == None:
 		logging.critical("The server address must be given with the '-s IPadress' option.")
 		return False
 	else :
 		try:
 			inet_aton(args['server'])
-		except Exception,e:
+		except Exception as e:
 			try:
 				ip = gethostbyname(args['server'])
 				args['server'] = ip
-			except Exception,e:
+			except Exception as e:
 				logging.critical("There is an error with the name server or ip address: '{0}'".format(e))
 				return False
 	return True
@@ -190,7 +190,7 @@ def sidHasBeenGiven(args):
 	Otherwise return False
 	- args must be a dictionary
 	'''
-	if args.has_key('sid') == False or args['sid'] == None:
+	if ('sid' in args) == False or args['sid'] == None:
 		logging.critical("The server SID must be given with the '-d SID' option.")
 		return False
 	return True

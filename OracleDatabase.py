@@ -64,7 +64,7 @@ class OracleDatabase:
             self.args['dbcon'].autocommit = True
             if self.remoteOS == '' and self.oracleDatabaseversion=='' : self.loadInformationRemoteDatabase() 
             return True
-        except Exception, e:
+        except Exception as e:
             if self.ERROR_CONN_IMPOSS in str(e) or self.ERROR_UNABLE_TO_ACQUIRE_ENV in str(e):
                 logging.critical("Impossible to connect to the remost host")
                 exit(EXIT_BAD_CONNECTION)
@@ -122,10 +122,10 @@ class OracleDatabase:
         '''
         Close connection to the database
         '''
-        if self.args.has_key('dbcon'):
+        if 'dbcon' in self.args:
             try:
                 self.args['dbcon'].close()
-            except Exception, e:
+            except Exception as e:
                 logging.debug("Impossible to close the connection to the database: {0}".format(e))
 
     def __execThisQuery__(self,query=None,ld=[],isquery=True):
@@ -139,7 +139,7 @@ class OracleDatabase:
         try:
             if self.args['show_sql_requests'] == True: logging.info("SQL request executed: {0}".format(query))
             cursor.execute(query)
-        except Exception, e:
+        except Exception as e:
             logging.info("Impossible to execute the query `{0}`: `{1}`".format(query, self.cleanError(e)))
             if self.ERROR_NOT_CONNECTED in str(e):
                 status = self.__retryConnect__(nbTry=3)
@@ -153,7 +153,7 @@ class OracleDatabase:
             try :  
                 cursor.arraysize = 256
                 results = cursor.fetchall()
-            except Exception, e:
+            except Exception as e:
                 logging.warning("Impossible to fetch all the rows of the query {0}: `{1}`".format(query, self.cleanError(e)))
                 return ErrorSQLRequest(e)
         else : 
@@ -195,7 +195,7 @@ class OracleDatabase:
                 cursor.callproc(proc)
             else:
                 cursor.callproc(proc,options)
-        except Exception, e:
+        except Exception as e:
             logging.info("Impossible to execute the procedure `{0}`: {1}".format(proc, self.cleanError(e)))
             cursor.close()
             return ErrorSQLRequest(e)
@@ -212,7 +212,7 @@ class OracleDatabase:
             cursor.callproc("dbms_output.enable")
             try:
                 cursor.execute(request)
-            except Exception, e:
+            except Exception as e:
                 logging.info("Impossible to execute the query `{0}`: {1}".format(request, self.cleanError(e)))
                 return ErrorSQLRequest(e)
             else :
@@ -228,7 +228,7 @@ class OracleDatabase:
                     responsedata += line
                     if addLineBreak == True : responsedata +='\n'
                 cursor.close()
-        except Exception, e: 
+        except Exception as e: 
             logging.info("Error with the request: {0}".format(str(e)))
             return ErrorSQLRequest(e)
         return responsedata
@@ -250,7 +250,7 @@ class OracleDatabase:
             f = open(localFile,'rb')
             data = f.read()
             f.close()
-        except Exception, e: 
+        except Exception as e: 
             logging.warning('Error during the read: {0}'.format(str(e)))
             return e
         return data
@@ -276,7 +276,7 @@ class OracleDatabase:
             f = open(nameFile,'w')
             f.write(data)
             f.close()
-        except Exception, e: 
+        except Exception as e: 
             logging.warning('Error during the writing of the {0} file: {1}'.format(nameFile,self.cleanError(e)))
             return False
         return True
@@ -370,11 +370,11 @@ class OracleDatabase:
         else : return False
         
     def isDBVersion(self, version=None):
-		'''
-		Return True if remote database version is version given in parameter
-		'''
-		if version in self.oracleDatabaseversion : return True
-		else: return False
+        '''
+        Return True if remote database version is version given in parameter
+        '''
+        if version in self.oracleDatabaseversion : return True
+        else: return False
         
     def hasThisRole(self, role, user=None):
         '''

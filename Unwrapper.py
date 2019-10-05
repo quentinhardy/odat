@@ -68,7 +68,7 @@ class Unwrapper (OracleDatabase):
 						b64len-=1
 						b64str += lines[i+j]
 					return(self.__decodeBase64Package__(b64str))
-		except Exception,e:
+		except Exception as e:
 			logging.error("Impossible to parse the correctly the PL/SQL source code: '{0}'".format(e)) 
 		return None
 		
@@ -101,7 +101,7 @@ class Unwrapper (OracleDatabase):
 			b64dec = base64.decodestring(b64str)[20:] # we strip the first 20 chars (SHA1 hash, I don't bother checking it at the moment)
 			for byte in range(0, len(b64dec)): decoded += chr(self.CHAR_MAP_SUBSTITUTION[ord(b64dec[byte])])
 			datadec = zlib.decompress(decoded)
-		except Exception,e:
+		except Exception as e:
 			logging.error("Impossible to decompress data: '{0}'".format(e)) 
 			return None
 		return datadec

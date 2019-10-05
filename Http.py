@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*
 
 from OracleDatabase import OracleDatabase
-import threading, thread
+import threading, _thread
 import logging
-import Queue
+import queue
 from texttable import Texttable
 from Utils import areEquals
 import os
@@ -43,16 +43,16 @@ class Http (OracleDatabase):
 		def run(self):
 			protocol, status, info = None, None, None
 			while True:
-				if self.portsQueue.empty(): thread.exit()
+				if self.portsQueue.empty(): _thread.exit()
 				try :
 					port = self.portsQueue.get(block=False)
-				except Exception, e:
-					thread.exit()
+				except Exception as e:
+					_thread.exit()
 				url = 'http://{0}:{1}/'.format(self.ip, port)
 				logging.debug("Scanning "+url+' ... (response in max 60 secs)')
 				try:
 					response = self.utlHttpObject.tryToConnect(self.ip, port)
-				except Exception,e:
+				except Exception as e:
 					response = self.utlHttpObject.sendGetRequest(url)
 				if isinstance(response,Exception):
 					logging.debug('Error returned: {0}'.format(response))
@@ -76,15 +76,15 @@ class Http (OracleDatabase):
 		'''
 		Scan tcp port of the ip system
 		'''
-		pbar,nb = self.getStandardBarStarted(len(ports)),Queue.Queue(1)
-		threads, portStatusQueue, portsQueue = [], Queue.Queue(), Queue.Queue()
+		pbar,nb = self.getStandardBarStarted(len(ports)),queue.Queue(1)
+		threads, portStatusQueue, portsQueue = [], queue.Queue(), queue.Queue()
 		queueLock = threading.Lock()
 		nb.put(0)
 		for aPort in ports : portsQueue.put(aPort)
 		for i in range(nbThread):
 			thread = httpObject.scanAPort(httpObject,ip,ports,portStatusQueue,pbar,nb, portsQueue,queueLock)
 			threads += [thread]
-			thread.start()
+			_thread.start()
 		portsQueue.join()
 		pbar.finish()		
 		portStatus = [item for item in portStatusQueue.queue]

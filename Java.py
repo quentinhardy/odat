@@ -194,7 +194,7 @@ CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
 						return False
 					needCreateClassFunctions = False
 				else :
-					cmd = raw_input('{0}$ '.format(self.args['server']))
+					cmd = input('{0}$ '.format(self.args['server']))
 					output = self.execOSCommand(cmd=cmd,printResponse=True, needCreateClassAndFunction = False, needDeleteClassAndFunction = False)
 			except KeyboardInterrupt:
 				status = self.deleteClassAndFunctionToExecOsCmd()

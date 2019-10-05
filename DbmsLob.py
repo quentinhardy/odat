@@ -63,7 +63,7 @@ class DbmsLob (DirectoryManagement):
 			cursor.callproc("dbms_output.enable")
 			try:
 				cursor.execute(DBMS_LOB_GET_FILE.format(self.directoryName, remoteNameFile))
-			except Exception, e:
+			except Exception as e:
 				logging.info("Impossible to execute the query `{0}`: {1}".format(DBMS_LOB_GET_FILE, self.cleanError(e)))
 				self.__dropDirectory__()
 				return ErrorSQLRequest(e)
@@ -98,7 +98,7 @@ class DbmsLob (DirectoryManagement):
 			cursor.callproc("dbms_output.enable")
 			try:
 				cursor.execute(DBMS_LOB_FILE_EXISTS.format(self.directoryName, remoteNameFile))
-			except Exception, e:
+			except Exception as e:
 				logging.info("Impossible to execute the query `{0}`: {1}".format(DBMS_LOB_FILE_EXISTS, self.cleanError(e)))
 				returnedValue = ErrorSQLRequest(e)
 			else :
@@ -119,7 +119,7 @@ class DbmsLob (DirectoryManagement):
 					logging.warning("Can't know if the file exist. There is an error: {0}".format(line)) 
 					returnedValue = ErrorSQLRequest(line)
 			cursor.close()
-		except Exception, e: 
+		except Exception as e: 
 			returnedValue = ErrorSQLRequest(e)
 		self.__dropDirectory__()
 		return returnedValue

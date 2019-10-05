@@ -55,7 +55,7 @@ class UtlHttp (Http):
 		params = self.parseRequest(nameFileRequest=filename)
 		if params == None : return False
 		request = "DECLARE req utl_http.req; res utl_http.resp; buffer varchar2(4000); BEGIN req := utl_http.begin_request('http://{0}:{1}{2}', '{3}','{4}');".format(ip,port,params['url'],params['method'],params['version'])
-		for key in params['header'].keys():
+		for key in list(params['header'].keys()):
 			request += "utl_http.set_header(req, '{0}','{1}');".format(key,params['header'][key])
 		if params['body'] != None:
 			request += "utl_http.write_text(req, '{0}');".format(params['body'])

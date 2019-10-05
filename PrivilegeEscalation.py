@@ -55,8 +55,8 @@ class PrivilegeEscalation (OracleDatabase):
 				return results1
 			else:
 				for aPriv in results1:
-					if aPriv['privilege'] in EXPLOITABLE_SYSTEM_PRIVILEGES: print "{0}system privege: {1}\t <-- exploitable".format(tabulation, self.args['print'].getColoredString(aPriv['privilege'], 'green'))
-					else: print "{0}system privege: {1}".format(tabulation, aPriv['privilege'])
+					if aPriv['privilege'] in EXPLOITABLE_SYSTEM_PRIVILEGES: print("{0}system privege: {1}\t <-- exploitable".format(tabulation, self.args['print'].getColoredString(aPriv['privilege'], 'green')))
+					else: print("{0}system privege: {1}".format(tabulation, aPriv['privilege']))
 			
 		def __printRolesOfThisRole__(role, tabulation='', tabSize='\t'):
 			'''
@@ -69,7 +69,7 @@ class PrivilegeEscalation (OracleDatabase):
 				return results1
 			else:
 				for aRole in results1:
-					print '{0}role: {1}'.format(tabulation, aRole['granted_role'])
+					print('{0}role: {1}'.format(tabulation, aRole['granted_role']))
 		
 		
 		REQ_GET_CURRENT_PRIVS = "SELECT DISTINCT privilege FROM user_sys_privs order by 1"
@@ -88,15 +88,15 @@ class PrivilegeEscalation (OracleDatabase):
 				logging.info("Roles of current Oracle user gotten: {0}".format(results2))
 				#print "System privileges granted the current user ({0}):".format(self.args['user'])
 				for aPriv in results1:
-					if aPriv['privilege'] in EXPLOITABLE_SYSTEM_PRIVILEGES: print "- system privege: {0}\t <-- exploitable".format(self.args['print'].getColoredString(aPriv['privilege'], 'green'))
-					else: print "- system privege: {0}".format(aPriv['privilege'])
+					if aPriv['privilege'] in EXPLOITABLE_SYSTEM_PRIVILEGES: print("- system privege: {0}\t <-- exploitable".format(self.args['print'].getColoredString(aPriv['privilege'], 'green')))
+					else: print("- system privege: {0}".format(aPriv['privilege']))
 				if len(results2)==0:
 					#print "Roles granted to the current user ({0}): Not one.".format(self.args['user'])
 					pass
 				else:
 					#print "Roles granted to the current user ({0}):".format(self.args['user'])
 					for aRole in results2:
-						print "- role: {0}".format(aRole['granted_role'])
+						print("- role: {0}".format(aRole['granted_role']))
 						if deep == True:
 							logging.info("Searching system privileges and roles of this role {0}".format(aRole['granted_role']))
 							__printPrivsOfThisRole__(role=aRole['granted_role'],tabulation='\t- ')

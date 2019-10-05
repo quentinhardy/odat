@@ -6,7 +6,7 @@ import logging, cx_Oracle
 from Utils import ErrorSQLRequest, checkOptionsGivenByTheUser
 from Constants import *
 
-import threading, thread
+import threading, _thread
 
 class UtlTcp (Http):
 	'''

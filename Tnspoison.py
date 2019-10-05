@@ -89,7 +89,7 @@ class receiver(asyncore.dispatcher):
 		self.nbRcvd += 1
 		if self.args['no-color'] == True : printableData = repr(read)
 		else : printableData = self.args['print'].getColoredString(repr(read), 'green')
-		print "[{0}|{1}:{2}-->] {3}".format(str(self.nbRcvd).zfill(4), self.peerIP, self.peerPort, printableData)
+		print("[{0}|{1}:{2}-->] {3}".format(str(self.nbRcvd).zfill(4), self.peerIP, self.peerPort, printableData))
 		
 
 	def writable(self):
@@ -106,7 +106,7 @@ class receiver(asyncore.dispatcher):
 		printableData = ""
 		if self.args['no-color'] == True : printableData = repr(self.to_remote_buffer)
 		else : printableData = self.args['print'].getColoredString(repr(self.to_remote_buffer), 'blue')
-		print "[{0}|{1}:{2}<--] {3}".format(str(self.nbSent).zfill(4), self.peerIP, self.peerPort, printableData)
+		print("[{0}|{1}:{2}<--] {3}".format(str(self.nbSent).zfill(4), self.peerIP, self.peerPort, printableData))
 		self.to_remote_buffer = self.to_remote_buffer[sent:]
 		self.nbSent += 1
 

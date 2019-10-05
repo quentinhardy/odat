@@ -45,6 +45,7 @@ from PrivilegeEscalation import PrivilegeEscalation, runPrivilegeEscalationModul
 from CVE_XXXX_YYYY import CVE_XXXX_YYYY, runCVEXXXYYYModule
 from Tnspoison import Tnspoison, runTnsPoisonModule
 from OracleDatabase import OracleDatabase
+import imp
 
 class MyFormatter(argparse.RawTextHelpFormatter):
     """
@@ -84,7 +85,7 @@ def runClean (args):
 		for currentFile in files:
 			logging.debug("Processing file: {0}".format(currentFile))
 			if any(currentFile.lower().endswith(ext) for ext in exts):
-				rep = raw_input("Do you want to delete this file (Y for yes): {0}/{1}? ".format(root, currentFile))
+				rep = input("Do you want to delete this file (Y for yes): {0}/{1}? ".format(root, currentFile))
 				if rep.replace('\n','') == 'Y' : 
 					os.remove(os.path.join(root, currentFile))
 					logging.info("Removing {0}/{1}".format(root, currentFile))
@@ -120,7 +121,7 @@ def runAllModules(args):
 		validAccountsList = passwordGuesser.getAccountsFromFile()
 		for aSid in validSIDsList:
 			for anAccount in validAccountsList:
-				if connectionInformation.has_key(aSid) == False: connectionInformation[aSid] = [[anAccount[0], anAccount[1]]]
+				if (aSid in connectionInformation) == False: connectionInformation[aSid] = [[anAccount[0], anAccount[1]]]
 				else : connectionInformation[aSid].append([anAccount[0], anAccount[1]])
 	elif args['user'] == None and args['password'] == None:
 		for sid in validSIDsList:
@@ -135,19 +136,19 @@ def runAllModules(args):
 				exit(EXIT_NO_ACCOUNTS)
 			else :
 				args['print'].goodNews("Accounts found on {0}:{1}/{2}: {3}".format(args['server'], args['port'], args['sid'],getCredentialsFormated(validAccountsList)))
-				for aLogin, aPassword in validAccountsList.items(): 
-					if connectionInformation.has_key(sid) == False: connectionInformation[sid] = [[aLogin,aPassword]]
+				for aLogin, aPassword in list(validAccountsList.items()): 
+					if (sid in connectionInformation) == False: connectionInformation[sid] = [[aLogin,aPassword]]
 					else : connectionInformation[sid].append([aLogin,aPassword])
 	else:
 		validAccountsList = {args['user']:args['password']}
 		for aSid in validSIDsList:
-			for aLogin, aPassword in validAccountsList.items():
-				if connectionInformation.has_key(aSid) == False: connectionInformation[aSid] = [[aLogin,aPassword]]
+			for aLogin, aPassword in list(validAccountsList.items()):
+				if (aSid in connectionInformation) == False: connectionInformation[aSid] = [[aLogin,aPassword]]
 				else : connectionInformation[aSid].append([aLogin,aPassword])
 	#C)ALL OTHERS MODULES
 	if sidHasBeenGiven(args) == False : return EXIT_MISS_ARGUMENT
 	#elif anAccountIsGiven(args) == False : return EXIT_MISS_ARGUMENT
-	for aSid in connectionInformation.keys():
+	for aSid in list(connectionInformation.keys()):
 		for loginAndPass in connectionInformation[aSid]:
 			args['sid'] , args['user'], args['password'] = aSid, loginAndPass[0],loginAndPass[1]
 			args['print'].title("Testing all modules on the {0} SID with the {1}/{2} account".format(args['sid'],args['user'],args['password']))
@@ -220,16 +221,20 @@ def configureLogging(args):
 	datefmt = "%H:%M:%S"
 	#Set log level
 	args['show_sql_requests'] = False
-	if args['verbose']==0: level=logging.WARNING
-	elif args['verbose']==1: level=logging.INFO
-	elif args['verbose']==2: level=logging.DEBUG
-	elif args['verbose']>2: 
-		level=logging.DEBUG
-		args['show_sql_requests'] = True
+	if "verbose" in args:
+		if args['verbose']==0: level=logging.WARNING
+		elif args['verbose']==1: level=logging.INFO
+		elif args['verbose']==2: level=logging.DEBUG
+		elif args['verbose']>2: 
+			level=logging.DEBUG
+			args['show_sql_requests'] = True
+	else:
+		level=level=logging.WARNING
 	#Define color for logs
-	if args['no-color'] == False and COLORLOG_AVAILABLE==True:
+	if 'no-color' in args and args['no-color'] == False and COLORLOG_AVAILABLE==True:
 		formatter = ColoredFormatter(logformatColor, datefmt=datefmt,log_colors={'CRITICAL': 'bold_red', 'ERROR': 'red', 'WARNING': 'yellow'})
 	else : 
+		args['no-color']=True
 		formatter = logging.Formatter(logformatNoColor, datefmt=datefmt)
 	stream = logging.StreamHandler()
 	#stream.setLevel(level)
@@ -543,10 +548,10 @@ def main():
 	configureLogging(args)
 	args['print'] = Output(args)
 	#5- define encoding
-	reload(sys) 
-	sys.setdefaultencoding(args['encoding'])
+	#imp.reload(sys) 
+	#sys.setdefaultencoding(args['encoding'])
 	#Start the good function
-	if args['auditType']=='unwrapper' or args['auditType']=='clean': pass
+	if 'auditType' in args and (args['auditType']=='unwrapper' or args['auditType']=='clean'): pass
 	else:
 		if ipOrNameServerHasBeenGiven(args) == False : return EXIT_MISS_ARGUMENT
 	arguments.func(args)

@@ -45,7 +45,7 @@ class SIDGuesser (OracleDatabase):
 		User and password random
 		'''
 		self.args['user'] = self.__generateRandomString__(nb=10)
-	 	self.args['password'] = self.__generateRandomString__(nb=10)
+		self.args['password'] = self.__generateRandomString__(nb=10)
 		
 
 	def __loadSIDsFromFile__(self):

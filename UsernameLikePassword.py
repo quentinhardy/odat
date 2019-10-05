@@ -78,7 +78,7 @@ def runUsernameLikePassword(args):
 	if args['run'] !=None :
 		additionalPwd = []
 		args['print'].title("Oracle users have not the password identical to the username ?")
-		if args.has_key('additional-pwd') and args['additional-pwd'] != None:
+		if 'additional-pwd' in args and args['additional-pwd'] != None:
 			additionalPwd = args['additional-pwd']
 		usernameLikePassword.tryUsernameLikePassword(additionalPwd = additionalPwd)
 		if usernameLikePassword.validAccountsList == {}:

@@ -29,7 +29,7 @@ class Ctxsys (OracleDatabase):
 		cursor = cx_Oracle.Cursor(self.args['dbcon'])
 		try :
 			cursor.callproc(name="ctxsys.ctx_adm.set_parameter",keywordParameters=parameters)
-		except Exception,e: 
+		except Exception as e: 
 			logging.info('Error with ctxsys.ctx_adm.set_parameter{0}'.format(self.cleanError(e)))
 			return ErrorSQLRequest(e)
 		return True

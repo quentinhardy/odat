@@ -17,10 +17,11 @@ Usage examples of ODAT:
 Tested on Oracle Database __10g__,  __11g__,  __12c__ and __18c__.
 
 __ODAT linux standalone__ version at [https://github.com/quentinhardy/odat/releases/](https://github.com/quentinhardy/odat/releases/). Notice it is recommended to use the development version (*git clone*).
-~~(__Deprecated at this time__)~~
 
 Changelog
 ====
+* Version __4.0__ (__08/10/2019__):
+  * Odat with python 3, stable version
 * Version __3.0__ (__01/09/2019__):
   * Compatible with Oracle Database 18c
   * New option in Java module for setting the path to shell (e.g. /usr/bin/sh when CentOS)
@@ -195,9 +196,9 @@ git submodule update
   * X64: http://www.oracle.com/technetwork/topics/linuxx86-64soft-092277.html
   * X86: http://www.oracle.com/technetwork/topics/linuxsoft-082809.html
 
-* Install *python-dev*, *alien* and *libaio1* package (for sqlplus):
+* Install *python3-dev*, *alien* and *libaio1* package (for sqlplus):
 ```bash
-sudo apt-get install libaio1 python-dev alien python-pip
+sudo apt-get install libaio1 python3-dev alien python3-pip
 ```
 
 * Generate DEB files from RPM files with :
@@ -235,25 +236,30 @@ sudo ldconfig
 ```bash
 sudo -s
 source /etc/profile
-pip install cx_Oracle
+pip3 install cx_Oracle
 ```
 
 * Test if all is good:
 ```bash
-python -c 'import cx_Oracle' 
+python3 -c 'import cx_Oracle' 
 ```
 > This command should *just return* without errors.
 
 * Install some python libraries:
 ```bash
-sudo apt-get install python-scapy
-sudo pip install colorlog termcolor pycrypto passlib
-sudo pip install argcomplete && sudo activate-global-python-argcomplete
+sudo apt-get install python3-scapy
+sudo pip3 install colorlog termcolor pycrypto passlib
+sudo pip3 install argcomplete && sudo activate-global-python-argcomplete
 ```
 
-* Install the __development__ version of pyinstaller (http://www.pyinstaller.org/).
+* Download and install the __development__ version of pyinstaller (http://www.pyinstaller.org/) for python 3.
 ```bash
 python setup.py install
+```
+
+* or install through pip:
+```bash
+pip3 install pyinstaller
 ```
 
 * Run ODAT:

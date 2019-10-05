@@ -16,7 +16,7 @@ DESCRIPTION = ""\
 
 By Quentin Hardy (quentin.hardy@protonmail.com or quentin.hardy@bt.com)
 """
-CURRENT_VERSION = "Version 3.O - 2019/09/01"
+CURRENT_VERSION = "Version 4.O - 2019/10/05"
 DEFAULT_SID_MIN_SIZE = 1
 DEFAULT_SID_MAX_SIZE = 2
 MAX_HELP_POSITION=22

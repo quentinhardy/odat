@@ -159,7 +159,7 @@ __Standalone versions__ exist in order to don't have need to install dependencie
 The ODAT standalone has been generated thanks to *pyinstaller*.
 
 If you want to have the __development version__ installed on your computer, these following tools and dependencies are needed:
-* Langage: Python 2.7
+* Langage: Python 2.7 & Python 3
 * Oracle dependancies: 
   * Instant Oracle basic
   * Instant Oracle sdk

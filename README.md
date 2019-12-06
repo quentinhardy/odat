@@ -16,8 +16,9 @@ Usage examples of ODAT:
 
 Tested on Oracle Database __10g__,  __11g__,  __12c__ and __18c__.
 
-__ODAT linux standalone__ version at [https://github.com/quentinhardy/odat/releases/](https://github.com/quentinhardy/odat/releases/). Notice it is recommended to use the development version (*git clone*).
-~~(__Deprecated at this time__)~~
+Compatible with both python 2.7 ([master branch](https://github.com/quentinhardy/odat/tree/master)) and __python 3__ ([master-python3 branch](https://github.com/quentinhardy/odat/tree/master-python3)).
+
+__ODAT linux standalone__ version at [https://github.com/quentinhardy/odat/releases/](https://github.com/quentinhardy/odat/releases/). Notice it is recommended to use the development version (*git clone*), with the [master-python3 branch](https://github.com/quentinhardy/odat/tree/master-python3).
 
 Changelog
 ====

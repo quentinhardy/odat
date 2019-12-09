@@ -35,7 +35,8 @@ class UtlFile (DirectoryManagement):
 		#2.b- Append to the remote file
 		UTL_FILE_CREATE_FILE = "DECLARE fi UTL_FILE.FILE_TYPE; bu RAW(32766); BEGIN bu:=hextoraw('{0}'); fi:=UTL_FILE.fopen('{1}','{2}','ab',32766); UTL_FILE.put_raw(fi,bu,TRUE); UTL_FILE.fclose(fi); END;"
 		for aPart in [data[i:i+3000] for i in range(0, len(data), 3000)]:
-			request = UTL_FILE_CREATE_FILE.format(aPart.encode("hex"), self.directoryName, nameFile)
+			print(repr(aPart),type(aPart))
+			request = UTL_FILE_CREATE_FILE.format(aPart.hex(), self.directoryName, nameFile)
 			response = self.__execPLSQL__(request)
 			if isinstance(response,Exception):
 				logging.info('Impossible to append to the file: {0}'.format(self.cleanError(response)))
@@ -124,13 +125,14 @@ class UtlFile (DirectoryManagement):
 		Return False if file not exist
 		'''
 		logging.info("Read the {0} remote file stored in {1}".format(remoteNameFile,remotePath))
-		data, currentByte = "", 0
+		data, currentByte = b"", 0
 		self.__setDirectoryName__()
 		status = self.__createOrRemplaceDirectory__(remotePath)
 		if isinstance(status,Exception): return status
 		#Get data of the remote file
 		#UTL_FILE_GET_FILE = "DECLARE l_fileID UTL_FILE.FILE_TYPE; l_buffer VARCHAR2(32000); hexdata VARCHAR2(32000); l_exists BOOLEAN; l_file_length NUMBER; l_blocksize NUMBER; BEGIN UTL_FILE.fgetattr('{0}', '{1}', l_exists, l_file_length, l_blocksize); l_fileID := UTL_FILE.FOPEN ('{0}', '{1}', 'r', 1000); UTL_FILE.FSEEK(l_fileID,0,{2}); LOOP UTL_FILE.GET_LINE(l_fileID, l_buffer, 32000); select RAWTOHEX(l_buffer,{2}) into hexdata from dual; dbms_output.put_line(hexdata); END LOOP; EXCEPTION WHEN NO_DATA_FOUND THEN UTL_FILE.fclose(l_fileID); NULL; END;"
-		UTL_FILE_GET_FILE = "DECLARE l_fileID UTL_FILE.FILE_TYPE; l_buffer VARCHAR2(5000); hexdata VARCHAR2(10000); BEGIN l_fileID := UTL_FILE.FOPEN ('{0}', '{1}', 'r', 5000); UTL_FILE.FSEEK(l_fileID,{2},0); UTL_FILE.GET_LINE(l_fileID, l_buffer, 5000); select RAWTOHEX(l_buffer) into hexdata from dual; dbms_output.put_line(hexdata); UTL_FILE.fclose(l_fileID); END;"				
+		#UTL_FILE_GET_FILE = "DECLARE l_fileID UTL_FILE.FILE_TYPE; l_buffer VARCHAR2(5000); hexdata VARCHAR2(10000); BEGIN l_fileID := UTL_FILE.FOPEN ('{0}', '{1}', 'r', 5000); UTL_FILE.FSEEK(l_fileID,{2},0); UTL_FILE.GET_LINE(l_fileID, l_buffer, 5000); select RAWTOHEX(l_buffer) into hexdata from dual; dbms_output.put_line(hexdata); UTL_FILE.fclose(l_fileID); END;"				
+		UTL_FILE_GET_FILE = "DECLARE l_fileID UTL_FILE.FILE_TYPE; l_buffer RAW(500); hexdata VARCHAR2(1000); BEGIN l_fileID := UTL_FILE.FOPEN ('{0}', '{1}', 'r', 32767); UTL_FILE.FSEEK(l_fileID,{2},0); UTL_FILE.GET_RAW(l_fileID, l_buffer, 500); select RAWTOHEX(l_buffer) into hexdata from dual; dbms_output.put_line(hexdata); UTL_FILE.fclose(l_fileID); END;"	
 		if self.getFileExist (remotePath, remoteNameFile) == True :	
 			length = self.getLength (remotePath, remoteNameFile)
 			if length <= 0:	
@@ -138,9 +140,10 @@ class UtlFile (DirectoryManagement):
 			else :
 				cursor = cx_Oracle.Cursor(self.args['dbcon'])
 				cursor.callproc("dbms_output.enable")
+				nbNewLine=0
 				while currentByte < length:
 					try:
-						cursor.execute(UTL_FILE_GET_FILE.format(self.directoryName, remoteNameFile,currentByte))
+						cursor.execute(UTL_FILE_GET_FILE.format(self.directoryName, remoteNameFile, currentByte+nbNewLine))
 					except Exception as e:
 						logging.info("Impossible to execute the query `{0}`: {1}".format(UTL_FILE_GET_FILE, self.cleanError(e)))
 						self.__dropDirectory__()
@@ -152,10 +155,12 @@ class UtlFile (DirectoryManagement):
 							cursor.callproc("dbms_output.get_line", (lineVar, statusVar))
 							if statusVar.getvalue() != 0: break
 							line = lineVar.getvalue()
-							if line == None : line = ''
-							data += line.decode('hex')+'\n'
-							currentByte += len(line.decode('hex')+'\n')
-							logging.info(line.decode('hex'))
+							lineBytes = bytes.fromhex(line)
+							nbNewLine += lineBytes.count(b'\n')
+							data += lineBytes
+							currentByte += len(lineBytes)
+							logging.info(bytes.fromhex(line))
+						currentByte += 0
 				cursor.close()
 		else : data = False
 		self.__dropDirectory__()
@@ -298,7 +303,7 @@ def runUtlFileModule(args):
 			elif data == '' : args['print'].badNews("The {0} file is empty".format(args['getFile']))
 			else :
 				args['print'].goodNews("Data stored in the {0} file sored in {1} (copied in {2} locally):\n{3}".format(args['getFile'][1],args['getFile'][0],args['getFile'][2],data))
-				utlFile.writeFile(args['getFile'][2],data)
+				utlFile.writeFile(args['getFile'][2],data, mode='wb')
 	#Option 2: put file
 	if args['putFile'] !=None :
 		args['print'].title("Put the {0} local file in the {1} folder like {2} on the {3} server".format(args['putFile'][2],args['putFile'][0],args['putFile'][1],args['server']))

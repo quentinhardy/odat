@@ -266,14 +266,14 @@ class OracleDatabase:
         '''
         return str(errorMsg).replace('\n',' ').replace('\t',' ')
 
-    def writeFile(self,nameFile, data):
+    def writeFile(self,nameFile, data, mode='w'):
         '''
         Write a new file named nameFile containing data
         Return True if Good, otherwise return False
         '''
         logging.info("Create the {0} file".format(nameFile))
         try:
-            f = open(nameFile,'w')
+            f = open(nameFile,mode)
             f.write(data)
             f.close()
         except Exception as e: 

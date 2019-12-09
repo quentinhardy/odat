@@ -35,7 +35,6 @@ class UtlFile (DirectoryManagement):
 		#2.b- Append to the remote file
 		UTL_FILE_CREATE_FILE = "DECLARE fi UTL_FILE.FILE_TYPE; bu RAW(32766); BEGIN bu:=hextoraw('{0}'); fi:=UTL_FILE.fopen('{1}','{2}','ab',32766); UTL_FILE.put_raw(fi,bu,TRUE); UTL_FILE.fclose(fi); END;"
 		for aPart in [data[i:i+3000] for i in range(0, len(data), 3000)]:
-			print(repr(aPart),type(aPart))
 			request = UTL_FILE_CREATE_FILE.format(aPart.hex(), self.directoryName, nameFile)
 			response = self.__execPLSQL__(request)
 			if isinstance(response,Exception):

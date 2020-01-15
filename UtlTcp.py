@@ -35,10 +35,15 @@ class UtlTcp (Http):
 		Send a packet to the server, on the specific port
 		'''
 		responsedata = ""
-		if filename==None and data==None : logging.error("To send a packet via UTL_TCP, you must choose between a name file or data")
-		if filename != None: data = self.__loadFile__(filename)
-		elif data == None: data = ""
-		data = data.encode("hex")
+		if filename==None and data==None :
+			logging.error("To send a packet via UTL_TCP, you must choose between a name file or data")
+		if filename != None:
+			data = self.__loadFile__(filename)
+		elif data == None:
+			data = ""
+		if isinstance(data,Exception):
+			return data
+		data = data.hex()
 		request = "DECLARE c  utl_tcp.connection; ret_val pls_integer; bu RAW(32766); BEGIN c := utl_tcp.open_connection('{0}',{1}); bu:=hextoraw('{2}'); ret_val := utl_tcp.write_raw(c, bu); ret_val := utl_tcp.write_line(c); BEGIN LOOP dbms_output.put_line(utl_tcp.get_line(c, TRUE)); END LOOP; EXCEPTION WHEN utl_tcp.end_of_input THEN NULL; END; utl_tcp.close_connection(c); END;".format(server, port,data)
 		logging.info("Send the packet")		
 		data = self.__execPLSQLwithDbmsOutput__(request,addLineBreak=True)

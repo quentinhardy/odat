@@ -35,6 +35,9 @@ class Search (OracleDatabase):
 		'''
 		logging.info("Searching pattern '{0}' in column names".format(sqlPattern.upper()))
 		results = self.__execQuery__(query=self.REQ_INFO_FROM_COLUMN_NAMES.format(sqlPattern.upper()), ld=['owner', 'table_name', 'column_name'])
+		if isinstance(results, Exception):
+			logging.error("Impossible to continue in searchInColumns(): {0}".format(results))
+			return []
 		table = self.getInfoIntable(results, ["owner","table_name","column_name", "example"], showEmptyColumns=showEmptyColumns, withoutExample=withoutExample)
 		return table
 		

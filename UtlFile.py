@@ -140,9 +140,14 @@ class UtlFile (DirectoryManagement):
 				cursor = cx_Oracle.Cursor(self.args['dbcon'])
 				cursor.callproc("dbms_output.enable")
 				nbNewLine=0
-				while currentByte < length:
+				logging.debug("Reading the entire file ({0} bytes)...".format(length))
+				while currentByte+nbNewLine < length:
+					logging.debug("Reading 500 next bytes (max) from {0}...".format(currentByte+nbNewLine))
 					try:
-						cursor.execute(UTL_FILE_GET_FILE.format(self.directoryName, remoteNameFile, currentByte+nbNewLine))
+						request = UTL_FILE_GET_FILE.format(self.directoryName, remoteNameFile, currentByte+nbNewLine)
+						if self.args['show_sql_requests'] == True:
+							logging.debug("Executing: {0}".format(request))
+						cursor.execute(request)
 					except Exception as e:
 						logging.info("Impossible to execute the query `{0}`: {1}".format(UTL_FILE_GET_FILE, self.cleanError(e)))
 						self.__dropDirectory__()
@@ -158,7 +163,7 @@ class UtlFile (DirectoryManagement):
 							nbNewLine += lineBytes.count(b'\n')
 							data += lineBytes
 							currentByte += len(lineBytes)
-							logging.info(bytes.fromhex(line))
+							logging.info(lineBytes)
 						currentByte += 0
 				cursor.close()
 		else : data = False

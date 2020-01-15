@@ -1,6 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from sys import exit,stdout,version_info
+if version_info[0] < 3:
+	print("ERROT: Python 3 has to be used for this version of ODAT")
+	exit(99)
+
 #PYTHON_ARGCOMPLETE_OK
 try:
 	import argcomplete
@@ -16,7 +21,6 @@ except ImportError:
 
 import argparse, logging, platform, cx_Oracle, string, os, sys
 from Utils import areEquals, configureLogging,ErrorSQLRequest, sidHasBeenGiven, anAccountIsGiven, ipOrNameServerHasBeenGiven, getCredentialsFormated
-from sys import exit,stdout
 
 from Constants import *
 from Output import Output

@@ -32,6 +32,8 @@ class OracleDatabase:
         self.ERROR_UNABLE_TO_ACQUIRE_ENV = "Unable to acquire Oracle environment handle"
         self.ERROR_NOT_CONNECTED = "ORA-03114: "
         self.ERROR_SHARED_MEMORY = "ORA-27101: "
+        self.encoding = args['encoding']
+        self.nencoding = args['encoding']
 
     def __generateConnectionString__(self):
         '''
@@ -44,23 +46,42 @@ class OracleDatabase:
         logging.debug('Oracle connection string: {0}'.format(self.args['connectionStr']))
         return self.args['connectionStr']
     
-    def connection(self,threaded =True, stopIfError=False):
+    def connection(self,threaded =True, stopIfError=False, encoding=None, nencoding=None):
         '''
         Connection to the database
         'The threaded argument is expected to be a boolean expression which indicates whether or not Oracle
         should use the mode OCI_THREADED to wrap accesses to connections with a mutex. Doing so in single threaded
         applications imposes a performance penalty of about 10-15% which is why the default is False.'
         If stopIfError == True, stop if connection error
+
+        The 'encoding' parameter affects character data such as VARCHAR2 and CLOB columns ("UTF-8" by default).
+        The 'nencoding' parameter affects “National Character” data such as NVARCHAR2 and NCLOB ("UTF-8" by default).
         '''
+        if encoding == None:
+            encoding = self.encoding
+        if nencoding == None:
+            nencoding =self.nencoding
+        logging.debug("Connection encoding set to {0}/{1}".format(repr(encoding), repr(nencoding)))
         try: 
             if self.args['SYSDBA'] == True :
                 logging.debug("Connecting as SYSDBA to the database")
-                self.args['dbcon'] = cx_Oracle.connect(self.args['connectionStr'], mode=cx_Oracle.SYSDBA,threaded=threaded)
+                self.args['dbcon'] = cx_Oracle.connect(self.args['connectionStr'],
+                                                       mode=cx_Oracle.SYSDBA,
+                                                       threaded=threaded,
+                                                       encoding=encoding,
+                                                       nencoding=nencoding)
             elif self.args['SYSOPER'] == True : 
                 logging.debug("Connecting as SYSOPER to the database")
-                self.args['dbcon'] = cx_Oracle.connect(self.args['connectionStr'], mode=cx_Oracle.SYSOPER,threaded=threaded)
+                self.args['dbcon'] = cx_Oracle.connect(self.args['connectionStr'],
+                                                       mode=cx_Oracle.SYSOPER,
+                                                       threaded=threaded,
+                                                       encoding=encoding,
+                                                       nencoding=nencoding)
             else :
-                self.args['dbcon'] = cx_Oracle.connect(self.args['connectionStr'],threaded=threaded)
+                self.args['dbcon'] = cx_Oracle.connect(self.args['connectionStr'],
+                                                       threaded=threaded,
+                                                       encoding=encoding,
+                                                       nencoding=nencoding)
             self.args['dbcon'].autocommit = True
             if self.remoteOS == '' and self.oracleDatabaseversion=='' : self.loadInformationRemoteDatabase() 
             return True

@@ -84,7 +84,7 @@ class Http (OracleDatabase):
 		for i in range(nbThread):
 			thread = httpObject.scanAPort(httpObject,ip,ports,portStatusQueue,pbar,nb, portsQueue,queueLock)
 			threads += [thread]
-			_thread.start()
+			thread.start()
 		portsQueue.join()
 		pbar.finish()		
 		portStatus = [item for item in portStatusQueue.queue]

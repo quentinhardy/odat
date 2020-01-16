@@ -20,6 +20,10 @@ __ODAT linux standalone__ version at [https://github.com/quentinhardy/odat/relea
 
 Changelog
 ====
+* Version __4.1__ (__01/15/2020__):
+  * Option for connection with SERVICE NAME instead of SID
+  * Encoding set to UTF-8 by default for some operations (e.g. NVARCHAR2 and NCLOB, VARCHAR2 and CLOB)
+  * Multiple bug fixes (encoding problems)
 * Version __4.0__ (__08/10/2019__):
   * Odat with python 3, stable version
 * Version __3.0__ (__01/09/2019__):

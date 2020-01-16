@@ -269,6 +269,7 @@ def main():
 	PPconnection.add_argument('-U', dest='user', required=False, help='Oracle username')
 	PPconnection.add_argument('-P', dest='password', required=False, default=None, help='Oracle password')
 	PPconnection.add_argument('-d', dest='sid', required=False, help='Oracle System ID (SID)')
+	PPconnection.add_argument('-n', dest='sidAsServiceName', required=False, action='store_true', help='SID (-d) used as a Service Name for connection')
 	PPconnection.add_argument('-t', dest='tnsConnectionStringMode', action='store_true', default=False, help='connection with a TNS connection sting')
 	PPconnection.add_argument('--sysdba', dest='SYSDBA', action='store_true', default=False, help='connection as SYSDBA')
 	PPconnection.add_argument('--sysoper', dest='SYSOPER', action='store_true', default=False, help='connection as SYSOPER')

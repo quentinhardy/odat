@@ -39,10 +39,26 @@ class OracleDatabase:
         '''
         Generate Oracle Database connection string
         '''
-        if self.args['tnsConnectionStringMode'] == True:
-            self.args['connectionStr'] = "{0}/{1}@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(Host={2})(Port={3})))(CONNECT_DATA=(SID={4})))".format(self.args['user'],self.args['password'],self.args['server'],self.args['port'],self.args['sid'])
+        if self.args['sidAsServiceName'] == True:
+            self.args['tnsConnectionStringMode'] = True
+            logging.debug("TNS Connection string mode enabled and SID is used as a SERVICE NAME in connection string")
+            self.args['connectionStr'] = "{0}/{1}@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(Host={2})(Port={3})))(CONNECT_DATA=(SERVICE_NAME={4})))".format(self.args['user'],
+                                                                                                                                                                     self.args['password'],
+                                                                                                                                                                     self.args['server'],
+                                                                                                                                                                     self.args['port'],
+                                                                                                                                                                     self.args['sid'])
+        elif self.args['tnsConnectionStringMode'] == True:
+            self.args['connectionStr'] = "{0}/{1}@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(Host={2})(Port={3})))(CONNECT_DATA=(SID={4})))".format(self.args['user'],
+                                                                                                                                                            self.args['password'],
+                                                                                                                                                            self.args['server'],
+                                                                                                                                                            self.args['port'],
+                                                                                                                                                            self.args['sid'])
         else:
-            self.args['connectionStr'] = "{0}/{1}@{2}:{3}/{4}".format(self.args['user'],self.args['password'],self.args['server'],self.args['port'],self.args['sid'])
+            self.args['connectionStr'] = "{0}/{1}@{2}:{3}/{4}".format(self.args['user'],
+                                                                      self.args['password'],
+                                                                      self.args['server'],
+                                                                      self.args['port'],
+                                                                      self.args['sid'])
         logging.debug('Oracle connection string: {0}'.format(self.args['connectionStr']))
         return self.args['connectionStr']
     

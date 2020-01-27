@@ -32,7 +32,13 @@ class DbmsXslprocessor (DirectoryManagement):
 		if isinstance(status,Exception): return status
 		if localFile != None :
 			data = self.__loadFile__(localFile)
-		response = self.__execProc__("dbms_xslprocessor.clob2file",options=(data, self.directoryName, remoteNameFile))
+		logging.debug("Decoding bytes as {0} before executing dbms_xslprocessor.clob2file".format(self.encoding))
+		try:
+			dataStr = data.decode(self.encoding)
+		except Exception as e:
+			logging.error("Impossible to decode as {0} bytes: {1}".format(self.encoding,repr(data)))
+			return Exception(e)
+		response = self.__execProc__("dbms_xslprocessor.clob2file",options=(dataStr, self.directoryName, remoteNameFile))
 		if isinstance(response,Exception):
 			logging.info("Impossible to create a file with dbms_xslprocessor: {0}".format(self.cleanError(response)))
 			return response

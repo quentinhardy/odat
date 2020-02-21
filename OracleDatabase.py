@@ -55,12 +55,15 @@ class OracleDatabase:
         try: 
             if self.args['SYSDBA'] == True :
                 logging.debug("Connecting as SYSDBA to the database")
-                self.args['dbcon'] = cx_Oracle.connect(self.args['connectionStr'], mode=cx_Oracle.SYSDBA,threaded=threaded)
+                dsn_tns = cx_Oracle.makedsn(self.args['server'], self.args['port'], self.args['sid'])
+                self.args['dbcon'] = cx_Oracle.connect(user=self.args['user'], password=self.args['password'], mode=cx_Oracle.SYSDBA, dsn=dsn_tns,threaded=threaded)
             elif self.args['SYSOPER'] == True : 
                 logging.debug("Connecting as SYSOPER to the database")
-                self.args['dbcon'] = cx_Oracle.connect(self.args['connectionStr'], mode=cx_Oracle.SYSOPER,threaded=threaded)
+                dsn_tns = cx_Oracle.makedsn(self.args['server'], self.args['port'], self.args['sid'])
+                self.args['dbcon'] = cx_Oracle.connect(user=self.args['user'], password=self.args['password'], mode=cx_Oracle.SYSOPER, dsn=dsn_tns,threaded=threaded)
             else :
-                self.args['dbcon'] = cx_Oracle.connect(self.args['connectionStr'],threaded=threaded)
+                dsn_tns = cx_Oracle.makedsn(self.args['server'], self.args['port'], self.args['sid'])
+                self.args['dbcon'] = cx_Oracle.connect(user=self.args['user'], password=self.args['password'], dsn=dsn_tns,threaded=threaded)
             self.args['dbcon'].autocommit = True
             if self.remoteOS == '' and self.oracleDatabaseversion=='' : self.loadInformationRemoteDatabase() 
             return True

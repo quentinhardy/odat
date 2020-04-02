@@ -365,6 +365,7 @@ def main():
 	PPdbmsxslprocessor = argparse.ArgumentParser(add_help=False,formatter_class=myFormatterClass)
 	PPdbmsxslprocessor._optionals.title = "DBMSXslprocessor commands"
 	PPdbmsxslprocessor.add_argument('--putFile',dest='putFile',default=None,required=False,nargs=3,metavar=('remotePath','remoteFile','localFile'),help='put a file on the remote database server')
+	PPdbmsxslprocessor.add_argument('--getFile', dest='getFile', default=None, required=False, nargs=3,metavar=('remotePath', 'remoteFile', 'localFile'),help='get a file from the remote database server')
 	PPdbmsxslprocessor.add_argument('--test-module',dest='test-module',action='store_true',help='test the module before use it')
 	#1.12- Parent parser: externalTable
 	PPexternaltable = argparse.ArgumentParser(add_help=False,formatter_class=myFormatterClass)

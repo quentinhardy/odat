@@ -221,7 +221,7 @@ sudo dpkg -i oracle-instantclient19.3-devel_???_???.deb
 ```bash
 export ORACLE_HOME=/usr/lib/oracle/19.3/client64/
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ORACLE_HOME/lib
-export PATH=$ORACLE_HOME/bin:$PATH
+export PATH=${ORACLE_HOME}bin:$PATH
 ```
 
 * Restart your session (to apply env variables)

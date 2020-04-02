@@ -176,6 +176,8 @@ class OracleDatabase:
         if impossible. Incompatible with ld option.
         '''
         results = []
+        if ld!=[] and (getColumnNames==True or stringOnly==True):
+            logging.error("INTERNAL BUG: ld option is not compatible with getColumnNames or stringOnly in __execThisQuery__(). Fix that quickly!")
         cursor = self.args['dbcon'].cursor()
         try:
             if self.args['show_sql_requests'] == True: logging.info("SQL request executed: {0}".format(query))

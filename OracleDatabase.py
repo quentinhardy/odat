@@ -167,12 +167,13 @@ class OracleDatabase:
 
     def __execThisQuery__(self, query=None, ld=[], isquery=True, getColumnNames=False, stringOnly=False):
         '''
-        Permet de définir un cursor et execute la requete sql
-        Si ld != [], active le chargement dans un dictionnaire des
-        resultats
-        If getColumns is enabled (not by default), returns columns in first results. Icompatible when ld is used
+        Create a cursor and execute the SQL request in 'query'.
+        Return a list of tuples by default e.g. [(valueA, valueB,),(valueAA,valueBB,), etc]
+        If ld != [], load in a dictionary all results according to ld (column names) and return a dictionary e.g.
+        [{'column1':'valueA', 'column2':'valueB'}, etc]
+        If getColumns is enabled (not by default), returns columns in first results. Incompatible with ld otpion.
         If stringOnly enabled, try to convert all columns as string when required (e.g. datetime) or convert to repr()
-        if impossible
+        if impossible. Incompatible with ld option.
         '''
         results = []
         cursor = self.args['dbcon'].cursor()

@@ -118,6 +118,7 @@ Thanks to ODAT, you can:
   * oradbg
 * __download files__ stored on the database server using:
   * UTL_FILE
+  * DBMS_XSLPROCESSOR
   * external tables
   * CTXSYS
   * DBMS_LOB

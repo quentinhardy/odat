@@ -165,11 +165,14 @@ class OracleDatabase:
             except Exception as e:
                 logging.debug("Impossible to close the connection to the database: {0}".format(e))
 
-    def __execThisQuery__(self,query=None,ld=[],isquery=True):
+    def __execThisQuery__(self, query=None, ld=[], isquery=True, getColumnNames=False, stringOnly=False):
         '''
         Permet de définir un cursor et execute la requete sql
         Si ld != [], active le chargement dans un dictionnaire des
         resultats
+        If getColumns is enabled (not by default), returns columns in first results. Icompatible when ld is used
+        If stringOnly enabled, try to convert all columns as string when required (e.g. datetime) or convert to repr()
+        if impossible
         '''
         results = []
         cursor = self.args['dbcon'].cursor()
@@ -177,7 +180,7 @@ class OracleDatabase:
             if self.args['show_sql_requests'] == True: logging.info("SQL request executed: {0}".format(query))
             cursor.execute(query)
         except Exception as e:
-            logging.info("Impossible to execute the query `{0}`: `{1}`".format(query, self.cleanError(e)))
+            logging.info("Impossible to execute the query {0}: '{1}'".format(repr(query), self.cleanError(e)))
             if self.ERROR_NOT_CONNECTED in str(e):
                 status = self.__retryConnect__(nbTry=3)
                 if status == None :
@@ -187,12 +190,35 @@ class OracleDatabase:
             else :
                 return ErrorSQLRequest(e)
         if isquery==True :
-            try :  
+            try :
                 cursor.arraysize = 256
                 results = cursor.fetchall()
             except Exception as e:
-                logging.warning("Impossible to fetch all the rows of the query {0}: `{1}`".format(query, self.cleanError(e)))
-                return ErrorSQLRequest(e)
+                if self.cleanError(e) == "not a query":
+                    logging.debug("{0} is not a query, returning [] as result".format(query))
+                    return [()]
+                else:
+                    logging.warning("Impossible to fetch all the rows of the query {0}: `{1}`".format(query, self.cleanError(e)))
+                    return ErrorSQLRequest(e)
+            if stringOnly == True:
+                logging.debug("Converting all columns as string if required...")
+                resultsAsString = []
+                for aR in results:
+                    aResultAsString = []
+                    for v in aR:
+                        vString = None
+                        try:
+                            vString = str(v)
+                        except Exception:
+                            logging.debug("Impossible to convert {0} as string for request {1}".format(repr(aR),repr(query)))
+                            vString = repr(v)
+                        aResultAsString.append(vString)
+                    resultsAsString.append(aResultAsString)
+                results = resultsAsString
+            if getColumnNames==True:
+                logging.debug("Extracting column names and returning them in results...")
+                columnNames = [row[0] for row in cursor.description]
+                results = [tuple(columnNames)] + results
         else : 
             cursor.close()
             return 0
@@ -213,11 +239,11 @@ class OracleDatabase:
         '''
         return self.__execThisQuery__(query=request,ld=[],isquery=False)
         
-    def __execQuery__(self,query,ld=[]):
+    def __execQuery__(self,query,ld=[],getColumnNames=False,stringOnly=False):
         '''
         Execute the query (not PL/SQL) and parse response
         '''
-        return self.__execThisQuery__(query=query, ld=ld, isquery=True)
+        return self.__execThisQuery__(query=query, ld=ld, isquery=True,getColumnNames=getColumnNames,stringOnly=stringOnly)
 
     def __execProc__(self,proc,options=None):
         '''

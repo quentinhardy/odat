@@ -20,6 +20,11 @@ __ODAT linux standalone__ version at [https://github.com/quentinhardy/odat/relea
 
 Changelog
 ====
+* Version __4.2__ (__04/02/2020__):
+  * minimal interactive SQL shell in search module
+  * new feature for downloading files with DBMS_XSLPROCESSOR.read2clob in DbmsXslprocessor module
+  * improvement for having remote OS after authentication
+  * bug fix (e.g. terminal size)
 * Version __4.1__ (__01/15/2020__):
   * Option for connection with SERVICE NAME instead of SID
   * Encoding set to UTF-8 by default for some operations (e.g. NVARCHAR2 and NCLOB, VARCHAR2 and CLOB)

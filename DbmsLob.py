@@ -76,7 +76,7 @@ class DbmsLob (DirectoryManagement):
 					line = lineVar.getvalue()
 					if line == None : line = ''
 					data += line
-					logging.info(line)
+					logging.info(repr(line))
 			cursor.close()
 		elif isFileExist == False : data = False
 		else : data = isFileExist

@@ -212,7 +212,7 @@ def getScreenSize ():
 	'''
 	Returns screen size (columns, lines)
 	'''
-	rows, columns = os.popen('stty size', 'r').read().split()
+	columns, rows  = os.popen('stty size', 'r').read().split()
 	return (int(rows), int(columns))
 	
 def stringToLinePadded(string, padValue=" "):

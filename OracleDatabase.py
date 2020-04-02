@@ -353,15 +353,41 @@ class OracleDatabase:
         It is possible the current user has not privileges on table v$database.
         Return "" if an error
         """
+        platformName = ""
         REQ = "SELECT platform_name FROM v$database"
+        REQ2 = "select dbms_utility.port_string from dual"
         response = self.__execQuery__(query=REQ, ld=['platform_name'])
         if isinstance(response,Exception):
-            return ""
+            logging.debug("Impossible to get remote platform name with v$database")
+            return self.getDatabasePlatfromNameWithPortString()
         else:
             if len(response)>0 and isinstance(response[0],dict):
-                return response[0]['platform_name']
+                platformName = response[0]['platform_name']
+                logging.debug("Remote platform name: {0}".format(platformName))
+                return platformName
             else:
-                return ""
+                logging.debug("Impossible to get remote platform name with  v$database")
+                return platformName
+
+    def getDatabasePlatfromNameWithPortString(self):
+        """
+        Return platform_name string from port_string.
+        Return "" if an error
+        """
+        platformName = ""
+        REQ = "select dbms_utility.port_string from dual"
+        response = self.__execQuery__(query=REQ, ld=['platform_name'])
+        if isinstance(response,Exception):
+            logging.debug("Impossible to get remote platform name with port_string")
+            return platformName
+        else:
+            if len(response)>0 and isinstance(response[0],dict):
+                platformName = response[0]['platform_name']
+                logging.debug("Remote platform name: {0}".format(platformName))
+                return platformName
+            else:
+                logging.debug("Impossible to get remote platform name with port_string")
+                return platformName
 
     def getOSFromPortString(self):
         """
@@ -420,7 +446,7 @@ class OracleDatabase:
             self.loadInformationRemoteDatabase()
             if self.remoteOS == "":
                 logging.warning("Impossible to known the remote target OS")
-        if "windows" in self.remoteOS.lower() : return True
+        if "windows" in self.remoteOS.lower() or "win_nt" in self.remoteOS.lower(): return True
         else : return False
 
     def remoteSystemIsLinux(self):  

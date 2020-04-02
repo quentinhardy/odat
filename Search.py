@@ -148,6 +148,40 @@ class Search (OracleDatabase):
 			return True
 		else : 
 			return False
+
+	def startInteractiveSQLShell(self):
+		"""
+		Start an interactive SQL shell
+		Return True when finished
+		Tested with:
+		- select
+		- create user
+		- create or replace
+		"""
+		print("Ctrl-D to close the SQL shell")
+		while True:
+			theLine = None
+			allLines = ""
+			print("SQL> ", end='')
+			while theLine != "":
+				try:
+					theLine = input()
+				except EOFError:
+					print("\nSQL shell closed")
+					return True
+				allLines += theLine
+			if allLines != "":
+				results = self.__execQuery__(query=allLines, getColumnNames=True,stringOnly=True)
+				if isinstance(results,Exception):
+					print(results)
+				elif results==[()]:
+					print("Executed successfully")
+				else:
+					table = Texttable(max_width=getScreenSize()[0])
+					table.set_deco(Texttable.HEADER)
+					table.add_rows(results)
+					print(table.draw())
+
 		
 	def testAll (self):
 		'''
@@ -163,7 +197,7 @@ def runSearchModule(args):
 	Run the Search module
 	'''
 	status = True
-	if checkOptionsGivenByTheUser(args,["test-module","column-names","pwd-column-names","desc-tables","without-example"]) == False : return EXIT_MISS_ARGUMENT
+	if checkOptionsGivenByTheUser(args,["test-module","column-names","pwd-column-names","desc-tables","without-example","sql-shell"]) == False : return EXIT_MISS_ARGUMENT
 	search = Search(args)
 	status = search.connection(stopIfError=True)
 	if args['test-module'] == True :
@@ -187,3 +221,6 @@ def runSearchModule(args):
 		args['print'].title("Descibe each table which is accessible by the current user (without system tables)")
 		table = search.getDescOfEachNoSystemTable()
 		print(table)
+	if args['sql-shell'] == True:
+		args['print'].title("Starting an interactive SQL shell")
+		search.startInteractiveSQLShell()

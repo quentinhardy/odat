@@ -5,6 +5,8 @@ from DirectoryManagement import DirectoryManagement
 import logging, random, string 
 from Utils import checkOptionsGivenByTheUser
 from Constants import *
+import cx_Oracle
+from Utils import ErrorSQLRequest
 
 class DbmsXslprocessor (DirectoryManagement):	
 	'''
@@ -44,6 +46,51 @@ class DbmsXslprocessor (DirectoryManagement):
 			return response
 		return True
 
+	def getFile(self, remotePath, remoteNameFile, localFile):
+		'''
+		Get a file from the remote database server with READ2CLOB
+		Save file in localFile
+		'''
+		READ2CLOB_GET_FILE = """
+		DECLARE
+			clob_value	CLOB			DEFAULT NULL;
+			utlfile_directory   VARCHAR2 (100) DEFAULT '{0}';                                                                               
+			filename            VARCHAR2 (100) DEFAULT '{1}';
+		BEGIN
+			clob_value :=  DBMS_XSLPROCESSOR.read2clob (flocation => utlfile_directory, fname => filename);
+   			DBMS_OUTPUT.put_line (clob_value);
+		END;
+		"""
+		data = ""
+		logging.info('Trying to download the file `{0}` stored in {1}...'.format(remoteNameFile, remotePath))
+		self.__setDirectoryName__()
+		status = self.__createOrRemplaceDirectory__(remotePath)
+		if isinstance(status, Exception): return status
+		cursor = cx_Oracle.Cursor(self.args['dbcon'])
+		cursor.callproc("dbms_output.enable")
+		try:
+			cursor.execute(READ2CLOB_GET_FILE.format(self.directoryName, remoteNameFile))
+		except Exception as e:
+			logging.info("Impossible to execute the query `{0}`: {1}".format(READ2CLOB_GET_FILE, self.cleanError(e)))
+			self.__dropDirectory__()
+			return ErrorSQLRequest(e)
+		else:
+			statusVar = cursor.var(cx_Oracle.NUMBER)
+			lineVar = cursor.var(cx_Oracle.STRING)
+			while True:
+				cursor.callproc("dbms_output.get_line", (lineVar, statusVar))
+				if statusVar.getvalue() != 0: break
+				line = lineVar.getvalue()
+				if line == None: line = ''
+				data += line
+				logging.info(repr(line))
+		cursor.close()
+		logging.info("Creating local file {0}...".format(localFile))
+		f = open(localFile,'w')
+		f.write(data)
+		f.close()
+		return True
+
 	def testAll (self):
 		'''
 		Test all functions
@@ -63,7 +110,7 @@ def runDbmsXslprocessorModule(args):
 	Run the DbmsXslprocessor module
 	'''
 	status = True
-	if checkOptionsGivenByTheUser(args,["test-module","putFile"]) == False : return EXIT_MISS_ARGUMENT
+	if checkOptionsGivenByTheUser(args,["test-module","putFile","getFile"]) == False : return EXIT_MISS_ARGUMENT
 	dbmsXslprocessor = DbmsXslprocessor(args)
 	status = dbmsXslprocessor.connection(stopIfError=True)
 	if args['test-module'] == True :
@@ -77,4 +124,15 @@ def runDbmsXslprocessorModule(args):
 			args['print'].goodNews("The {0} local file was put in the remote {1} path (named {2})".format(args['putFile'][2],args['putFile'][0],args['putFile'][1]))
 		else :
 			args['print'].badNews("The {0} local file was not put in the remote {1} path (named {2}): {3}".format(args['putFile'][2],args['putFile'][0],args['putFile'][1],str(status)))
+	# Option 1: putLocalFile
+	if args['getFile'] != None:
+		args['print'].title("Get the {0} remote file from the {1} path (named {2}) of the {3} server".format(args['getFile'][2],
+																							  args['getFile'][0],
+																							  args['getFile'][1],
+																							  args['server']))
+		status = dbmsXslprocessor.getFile(remotePath=args['getFile'][0], remoteNameFile=args['getFile'][1],localFile=args['getFile'][2])
+		if status == True:
+			args['print'].goodNews("The {0} remote file was downloaded in {1}".format(args['getFile'][1], args['getFile'][2]))
+		else:
+			args['print'].badNews("The {0} remote file was not put in {1}: {2}".format(args['getFile'][1], args['getFile'][2],str(status)))
 	dbmsXslprocessor.close()

@@ -36,7 +36,7 @@ class DbmsXslprocessor (DirectoryManagement):
 		try:
 			dataStr = data.decode(self.encoding)
 		except Exception as e:
-			logging.error("Impossible to decode as {0} bytes: {1}".format(self.encoding,repr(data)))
+			logging.error("Impossible to decode as {0} bytes: {1} ({2})".format(self.encoding,repr(data), str(e)))
 			return Exception(e)
 		response = self.__execProc__("dbms_xslprocessor.clob2file",options=(dataStr, self.directoryName, remoteNameFile))
 		if isinstance(response,Exception):
@@ -52,7 +52,7 @@ class DbmsXslprocessor (DirectoryManagement):
 		self.args['print'].subtitle("DBMS_XSLPROCESSOR library ?")
 		logging.info("Simulate the file creation in the {0} folder with DBMS_XSLPROCESSOR".format(folder))
 		logging.info('The file is not created remotly because the folder should not exist')
-		status = self.putFile(folder,'temp.txt',data='data in file')
+		status = self.putFile(folder,'temp.txt',data=b'data in file')
 		if status == True or self.ERROR_BAD_FOLDER_OR_BAD_SYSTEM_PRIV in str(status) or self.ERROR_FILEOPEN_FAILED in str(status):
 			self.args['print'].goodNews("OK")
 		else : 
@@ -72,7 +72,7 @@ def runDbmsXslprocessorModule(args):
 	#Option 1: putLocalFile
 	if args['putFile'] != None:
 		args['print'].title("Put the {0} local file in the {1} path (named {2}) of the {3} server".format(args['putFile'][2],args['putFile'][0],args['putFile'][1],args['server']))
-		status = dbmsXslprocessor.putFile(args['putFile'][0], args['putFile'][1],localFile=args['putFile'][2])		
+		status = dbmsXslprocessor.putFile(remotePath=args['putFile'][0], remoteNameFile=args['putFile'][1], localFile=args['putFile'][2])
 		if status == True:
 			args['print'].goodNews("The {0} local file was put in the remote {1} path (named {2})".format(args['putFile'][2],args['putFile'][0],args['putFile'][1]))
 		else :

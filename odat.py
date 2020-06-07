@@ -315,6 +315,7 @@ def main():
 	PPpassguesser.add_argument('--accounts-files',dest='accounts-files',required=False,nargs=2,metavar=('loginFile','pwdFile'),default=[None, None],help='files containing logins and passwords (default: %(default)s)')
 	PPpassguesser.add_argument('--login-as-pwd',dest='login-as-pwd',action='store_true',help='each login will be tested as password (lowercase & uppercase)')
 	PPpassguesser.add_argument('--force-retry',dest='force-retry',action='store_true',help='allow to test multiple passwords for a user without ask you')
+	PPpassguesser.add_argument('--separator', dest='separator', default='/', help='separator between login and password (default: %(default)s)')
 	#1.5- Parent parser: URL_HTTP
 	PPutlhttp = argparse.ArgumentParser(add_help=False,formatter_class=myFormatterClass)
 	PPutlhttp._optionals.title = "http commands"

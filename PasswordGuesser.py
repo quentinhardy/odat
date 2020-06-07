@@ -20,6 +20,7 @@ class PasswordGuesser (OracleDatabase):
 		self.loginFile = loginFile
 		self.passwordFile = passwordFile
 		self.loginAsPwd = loginAsPwd
+		self.separator = args['separator']  # Separator for credentials
 		if self.accountsFile == '' : self.accounts = []
 		else : self.accounts = self.__getAccounts__()
 		self.valideAccounts = {}
@@ -39,11 +40,12 @@ class PasswordGuesser (OracleDatabase):
 		'''
 		accounts = []
 		logins, passwords, loginsAsPwdsLowercase, loginsAsPwdsUppercase = [], [], {}, {}
+		logging.info("Separator between login and password fixed on {0}".format(repr(self.separator)))
 		if self.accountsFile != None:
 			logging.info('Loading accounts stored in the {0} file'.format(self.accountsFile))
 			f = open(self.accountsFile)
 			for l in f:
-				lsplit = l.replace('\n','').replace('\t','').split('/')
+				lsplit = l.replace('\n','').replace('\t','').split(self.separator)
 				if isinstance(lsplit,list) and len(lsplit) == 2 : 
 					accounts.append([lsplit[0],lsplit[1]])
 					if lsplit[0] not in logins:

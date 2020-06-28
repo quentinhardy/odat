@@ -11,7 +11,7 @@ class PasswordGuesser (OracleDatabase):
 	'''
 	Password guesser
 	'''
-	def __init__(self,args,accountsFile,loginFile,passwordFile,loginAsPwd,timeSleep=0):
+	def __init__(self,args,accountsFile,loginFile,passwordFile,loginAsPwd,bothUpperLower=False,timeSleep=0):
 		'''
 		Constructor
 		'''
@@ -21,6 +21,7 @@ class PasswordGuesser (OracleDatabase):
 		self.passwordFile = passwordFile
 		self.loginAsPwd = loginAsPwd
 		self.separator = args['separator']  # Separator for credentials
+		self.bothUpperLower = bothUpperLower
 		if self.accountsFile == '' : self.accounts = []
 		else : self.accounts = self.__getAccounts__()
 		self.valideAccounts = {}
@@ -36,28 +37,28 @@ class PasswordGuesser (OracleDatabase):
 
 	def __getAccounts__(self):
 		'''
-		return list containing accounts
+		Load credentials stored in file(s) according to program arguments.
+		Impossible to have duplicate credentials.
+		return a list containing each account
+		e.g. [['login1','pwd1'], etc]
 		'''
-		accounts = []
-		logins, passwords, loginsAsPwdsLowercase, loginsAsPwdsUppercase = [], [], {}, {}
-		logging.info("Separator between login and password fixed on {0}".format(repr(self.separator)))
+		accountsDict = {} #For saving temporarily credentials in a dict (of username)
+		finalUniqAccounts = [] #Contain each uniq account e.g. [['login1','pwd1'], etc]
+		logins = [] #For saving all logins when a login file and a pwd file are given
+		passwords = [] #For saving all pwds when a login file and a pwd file are given
 		if self.accountsFile != None:
 			logging.info('Loading accounts stored in the {0} file'.format(self.accountsFile))
+			logging.info("Separator between login and password fixed on {0}".format(repr(self.separator)))
 			f = open(self.accountsFile)
 			for l in f:
 				lsplit = l.replace('\n','').replace('\t','').split(self.separator)
-				if isinstance(lsplit,list) and len(lsplit) == 2 : 
-					accounts.append([lsplit[0],lsplit[1]])
-					if lsplit[0] not in logins:
-						logins.append(lsplit[0])
-						loginsAsPwdsLowercase[lsplit[0]]=False
-						loginsAsPwdsUppercase[lsplit[0]]=False
-					if lsplit[0] == lsplit[1].lower(): 
-						if loginsAsPwdsLowercase[lsplit[0]]==False: 
-							loginsAsPwdsLowercase[lsplit[0]]=True
-					if lsplit[0] == lsplit[1].upper():
-						if loginsAsPwdsUppercase[lsplit[0]]==False: 
-							loginsAsPwdsUppercase[lsplit[0]]=True
+				if isinstance(lsplit, list) and len(lsplit) == 2 :
+					if lsplit[0] not in accountsDict:
+						accountsDict[lsplit[0]] = [lsplit[1]]
+					else:
+						accountsDict[lsplit[0]].append(lsplit[1])
+				else:
+					logging.warning("The line {0} is not loaded in credentials list: {1}".format(repr(l), repr(lsplit)))
 			f.close()
 		else:
 			logging.info('Loading logins stored in {0} and passwords stored in {1}'.format(self.loginFile, self.passwordFile))
@@ -66,32 +67,40 @@ class PasswordGuesser (OracleDatabase):
 				aLogin = l.replace('\n','').replace('\t','')
 				if aLogin not in logins: 
 					logins.append(aLogin)
-					loginsAsPwdsLowercase[aLogin]=False
-					loginsAsPwdsUppercase[aLogin]=False
 			f.close()
 			f = open(self.passwordFile)
-			for l in f: passwords.append(l.replace('\n','').replace('\t',''))
+			for l in f:
+				passwords.append(l.replace('\n','').replace('\t',''))
 			f.close()
 			for aLogin in logins:
 				for aPwd in passwords:
-					accounts.append([aLogin,aPwd])
-					if aLogin == aPwd.lower(): 
-						if loginsAsPwdsLowercase[aLogin]==False: 
-							loginsAsPwdsLowercase[aLogin]=True
-					if aLogin == aPwd.upper():
-						if loginsAsPwdsUppercase[aLogin]==False: 
-							loginsAsPwdsUppercase[aLogin]=True
+					if aLogin not in accountsDict:
+						accountsDict[aLogin] = [aPwd]
+					else:
+						accountsDict[aLogin].append(aPwd)
 		if self.loginAsPwd == True:
-			logging.info('Each login not in credentials list is appended as password (in lowercase and uppercase)'.format())
-			for aLogin in logins:
-				if loginsAsPwdsLowercase[aLogin]==False:
-					accounts.append([aLogin,aLogin.lower()])
-				if loginsAsPwdsUppercase[aLogin]==False:
-					accounts.append([aLogin,aLogin.upper()])
-		logging.info ("{0} paired login/password loaded".format(len(accounts)))
-		if len(accounts) == 0:
+			logging.info('Each login is saved as password (in lower case and upper case) if it is not done yet')
+			for aLogin in accountsDict:
+				if aLogin.lower() not in accountsDict[aLogin]:
+					accountsDict[aLogin].append(aLogin.lower())
+				if aLogin.upper() not in accountsDict[aLogin]:
+					accountsDict[aLogin].append(aLogin.upper())
+		if self.bothUpperLower == True:
+			logging.info("Each password of each username is saved in lower case and upper case if it is not done yet")
+			for aLogin in accountsDict:
+				for aPwd in accountsDict[aLogin]:
+					if aPwd.lower() not in accountsDict[aLogin]:
+						accountsDict[aLogin].append(aPwd.lower())
+					if aPwd.upper() not in accountsDict[aLogin]:
+						accountsDict[aLogin].append(aPwd.upper())
+		#Transform dictionary of accounts to list
+		for aLogin in accountsDict:
+			for aPwd in accountsDict[aLogin]:
+				finalUniqAccounts.append([aLogin, aPwd])
+		logging.info("{0} paired login/password loaded".format(len(finalUniqAccounts)))
+		if len(finalUniqAccounts) == 0:
 			logging.warning("0 login/password loaded. It seems there is an error with your account file")
-		return accounts
+		return finalUniqAccounts
 
 	def searchValideAccounts(self):
 		'''

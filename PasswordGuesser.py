@@ -6,12 +6,13 @@ from time import sleep
 import logging, os.path
 from Constants import *
 from Utils import sidHasBeenGiven, stringToLinePadded, getCredentialsFormated
+from random import shuffle
 
 class PasswordGuesser (OracleDatabase):
 	'''
 	Password guesser
 	'''
-	def __init__(self,args,accountsFile,loginFile,passwordFile,loginAsPwd,bothUpperLower=False,timeSleep=0):
+	def __init__(self, args, accountsFile, loginFile, passwordFile, loginAsPwd, bothUpperLower=False, randomOrder=False, timeSleep=0):
 		'''
 		Constructor
 		'''
@@ -22,6 +23,7 @@ class PasswordGuesser (OracleDatabase):
 		self.loginAsPwd = loginAsPwd
 		self.separator = args['separator']  # Separator for credentials
 		self.bothUpperLower = bothUpperLower
+		self.randomOrder = randomOrder
 		if self.accountsFile == '' : self.accounts = []
 		else : self.accounts = self.__getAccounts__()
 		self.valideAccounts = {}
@@ -97,6 +99,8 @@ class PasswordGuesser (OracleDatabase):
 		for aLogin in accountsDict:
 			for aPwd in accountsDict[aLogin]:
 				finalUniqAccounts.append([aLogin, aPwd])
+		if self.randomOrder == True:
+			shuffle(finalUniqAccounts)
 		logging.info("{0} paired login/password loaded".format(len(finalUniqAccounts)))
 		if len(finalUniqAccounts) == 0:
 			logging.warning("0 login/password loaded. It seems there is an error with your account file")

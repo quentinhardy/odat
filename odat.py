@@ -121,7 +121,12 @@ def runAllModules(args):
 	if args['credentialsFile'] == True :
 		logging.debug("Loading credentials stored in the {0} file".format(args['accounts-file']))
 		#Load accounts from file
-		passwordGuesser = PasswordGuesser(args, args['accounts-file'], loginFile=None ,passwordFile=None, loginAsPwd=args['login-as-pwd'])
+		passwordGuesser = PasswordGuesser(args,
+										  args['accounts-file'],
+										  loginFile=None ,
+										  passwordFile=None,
+										  loginAsPwd=args['login-as-pwd'],
+										  bothUpperLower=args['both-upper-lower'])
 		validAccountsList = passwordGuesser.getAccountsFromFile()
 		for aSid in validSIDsList:
 			for anAccount in validAccountsList:
@@ -132,7 +137,13 @@ def runAllModules(args):
 			args['print'].title("Searching valid accounts on the {0} SID".format(sid))
 			args['sid'] = sid
 			if args['accounts-files'][0] != None and args['accounts-files'][1] != None : args['accounts-file'] = None
-			passwordGuesser = PasswordGuesser(args, accountsFile=args['accounts-file'], loginFile=args['accounts-files'][0], passwordFile=args['accounts-files'][1], timeSleep=args['timeSleep'], loginAsPwd=args['login-as-pwd'])
+			passwordGuesser = PasswordGuesser(args,
+											  accountsFile=args['accounts-file'],
+											  loginFile=args['accounts-files'][0],
+											  passwordFile=args['accounts-files'][1],
+											  timeSleep=args['timeSleep'],
+											  loginAsPwd=args['login-as-pwd'],
+											  bothUpperLower=args['both-upper-lower'])
 			passwordGuesser.searchValideAccounts()
 			validAccountsList = passwordGuesser.valideAccounts
 			if validAccountsList == {}:
@@ -316,6 +327,7 @@ def main():
 	PPpassguesser.add_argument('--login-as-pwd',dest='login-as-pwd',action='store_true',help='each login will be tested as password (lowercase & uppercase)')
 	PPpassguesser.add_argument('--force-retry',dest='force-retry',action='store_true',help='allow to test multiple passwords for a user without ask you')
 	PPpassguesser.add_argument('--separator', dest='separator', default='/', help='separator between login and password (default: %(default)s)')
+	PPpassguesser.add_argument('--both-ul', dest='both-upper-lower', action='store_true', help='test each password in lower case and upper case (default: %(default)s)')
 	#1.5- Parent parser: URL_HTTP
 	PPutlhttp = argparse.ArgumentParser(add_help=False,formatter_class=myFormatterClass)
 	PPutlhttp._optionals.title = "http commands"

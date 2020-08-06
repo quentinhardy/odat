@@ -111,13 +111,14 @@ class PasswordGuesser (OracleDatabase):
 		Search valide accounts
 		Return True if no error, owtherwise False (i.e. pb with accounts)
 		'''
-		userChoice = 1 
+		userChoice = 1
+		lockedUsernames = []
 		logging.info("Searching valid accounts on {0}:{1}/{2}".format(self.args['server'], self.args['port'], self.args['sid']))
 		logging.debug("{0} accounts will be tested".format(len(self.accounts)))
 		if len(self.accounts) == 0:
 			return False
 		pbar,nb = self.getStandardBarStarted(len(self.accounts)), 0
-		for anAccount in self.accounts :
+		for anAccount in self.accounts:
 			nb += 1
 			pbar.update(nb)
 			self.args['SYSDBA'] = False
@@ -133,6 +134,8 @@ class PasswordGuesser (OracleDatabase):
 				break
 			if userChoice == 3:
 				logging.info("Skip account {0} and continue to next one. Ask each time".format(repr(self.args['user'])))
+			elif self.args['user'].lower() in lockedUsernames:
+				logging.info("Skip this creds {0}/{1} because we known this account is locked".format(repr(self.args['user']),repr(self.args['password'])))
 			else:
 				status = self.connection(threaded=False)
 				if status == True:
@@ -149,11 +152,15 @@ class PasswordGuesser (OracleDatabase):
 					self.args['SYSDBA'] = False
 				elif self.__needRetryConnection__(status) == True:
 					status = self.__retryConnect__(nbTry=4)
+				elif self.ERROR_ACCOUNT_LOCKED in str(status):
+					logging.debug("{0} account is locked, so skipping this username for password".format(repr(self.args['user'])))
+					lockedUsernames.append(self.args['user'].lower())
 				else:
 					logging.debug("Error during connection with this account: {0}".format(status))
 				self.close()
 				sleep(self.timeSleep)
 		pbar.finish()
+		logging.debug("All these accounts are locked according to errors: {0}".format(lockedUsernames))
 		return True
 
 	def __saveThisLoginInFileIfNotExist__(self,login):

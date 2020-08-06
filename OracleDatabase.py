@@ -32,6 +32,7 @@ class OracleDatabase:
         self.ERROR_UNABLE_TO_ACQUIRE_ENV = "Unable to acquire Oracle environment handle"
         self.ERROR_NOT_CONNECTED = "ORA-03114: "
         self.ERROR_SHARED_MEMORY = "ORA-27101: "
+        self.ERROR_ACCOUNT_LOCKED = "ORA-28000: "
         self.encoding = args['encoding']
         self.nencoding = args['encoding']
 

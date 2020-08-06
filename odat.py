@@ -149,7 +149,7 @@ def runAllModules(args):
 			passwordGuesser.searchValideAccounts()
 			validAccountsList = passwordGuesser.valideAccounts
 			if validAccountsList == {}:
-				args['print'].badNews("No found a valid account on {0}:{1}/{2}. You should try with the option '--accounts-file accounts/accounts_multiple.txt' or '--accounts-file accounts/logins.txt accounts/pwds.txt'".format(args['server'], args['port'], args['sid']))
+				args['print'].badNews("No found a valid account on {0}:{1}/{2}. You should try with the option '--accounts-file accounts/accounts_multiple.txt' or '--accounts-files accounts/logins.txt accounts/pwds.txt'".format(args['server'], args['port'], args['sid']))
 				exit(EXIT_NO_ACCOUNTS)
 			else :
 				args['print'].goodNews("Accounts found on {0}:{1}/{2}: {3}".format(args['server'], args['port'], args['sid'],getCredentialsFormated(validAccountsList)))
@@ -321,6 +321,7 @@ def main():
 	PPsidguesser.add_argument('--sid-charset',dest='sid-charset',required=False, default=DEFAULT_SID_CHARSET, help='charset for the sid bruteforce (default: %(default)s)')
 	PPsidguesser.add_argument('--sids-file',dest='sids-file',required=False,metavar="FILE",default=DEFAULT_SID_FILE, help='file containing SIDs (default: %(default)s)')
 	PPsidguesser.add_argument('--no-alias-like-sid',dest='no-alias-like-sid',action='store_true',required=False, help='no try listener ALIAS like SIDs (default: %(default)s)')	
+	#1.4- Parent parser: Password Guesser
 	#1.4- Parent parser: Password Guesser
 	PPpassguesser = argparse.ArgumentParser(add_help=False,formatter_class=myFormatterClass)
 	PPpassguesser._optionals.title = "password guesser options"

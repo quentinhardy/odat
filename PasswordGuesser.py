@@ -206,7 +206,7 @@ def runPasswordGuesserModule(args):
 	passwordGuesser.searchValideAccounts()
 	validAccountsList = passwordGuesser.valideAccounts
 	if validAccountsList == {}:
-		args['print'].badNews("No found a valid account on {0}:{1}/{2}. You should try with the option '--accounts-file accounts/accounts_multiple.txt' or '--accounts-file accounts/logins.txt accounts/pwds.txt'".format(args['server'], args['port'], args['sid']))
+		args['print'].badNews("No found a valid account on {0}:{1}/{2}. You should try with the option '--accounts-file accounts/accounts_multiple.txt' or '--accounts-files accounts/logins.txt accounts/pwds.txt'".format(args['server'], args['port'], args['sid']))
 	else :
 		args['print'].goodNews("Accounts found on {0}:{1}/{2}: {3}".format(args['server'], args['port'], args['sid'],getCredentialsFormated(validAccountsList)))
 

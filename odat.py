@@ -49,7 +49,6 @@ from PrivilegeEscalation import PrivilegeEscalation, runPrivilegeEscalationModul
 from CVE_XXXX_YYYY import CVE_XXXX_YYYY, runCVEXXXYYYModule
 from Tnspoison import Tnspoison, runTnsPoisonModule
 from OracleDatabase import OracleDatabase
-import imp
 
 class MyFormatter(argparse.RawTextHelpFormatter):
     """
@@ -571,9 +570,6 @@ def main():
 	#4- Configure logging and output
 	configureLogging(args)
 	args['print'] = Output(args)
-	#5- define encoding
-	#imp.reload(sys) 
-	#sys.setdefaultencoding(args['encoding'])
 	#Start the good function
 	if 'auditType' in args and (args['auditType']=='unwrapper' or args['auditType']=='clean'): pass
 	else:

@@ -126,30 +126,33 @@ class PasswordGuesser (OracleDatabase):
 			self.args['user'], self.args['password'] = anAccount[0], anAccount[1]
 			self.__generateConnectionString__()
 			status = self.__saveThisLoginInFileIfNotExist__(self.args['user'])
-			if self.args['force-retry'] == False and status == False and userChoice ==1: 
+			if self.args['force-retry'] == False and status == False and userChoice in [1,3]:
 				userChoice = self.__askToTheUserIfNeedToContinue__(self.args['user'])
 			if userChoice == 0 : 
 				logging.info("The attack is aborded because you choose to stop (s/S)")
 				break
-			status = self.connection(threaded=False)
-			if status == True:
-				self.valideAccounts[self.args['user']] = self.args['password']
-				logging.info("Valid credential: {0} ({1})  ".format('/'.join(anAccount),self.args['connectionStr']))
-				self.args['print'].goodNews(stringToLinePadded("Valid credentials found: {0}. Continue... ".format('/'.join(anAccount))))
-			elif "connection as SYS should be as SYSDBA or SYSOPER" in str(status):
-				logging.debug("Try to connect as sysdba")
-				self.args['SYSDBA'] = True
-				status = self.connection()
+			if userChoice == 3:
+				logging.info("Skip account {0} and continue to next one. Ask each time".format(repr(self.args['user'])))
+			else:
+				status = self.connection(threaded=False)
 				if status == True:
 					self.valideAccounts[self.args['user']] = self.args['password']
 					logging.info("Valid credential: {0} ({1})  ".format('/'.join(anAccount),self.args['connectionStr']))
-				self.args['SYSDBA'] = False
-			elif self.__needRetryConnection__(status) == True:
-				status = self.__retryConnect__(nbTry=4)
-			else:
-				logging.debug("Error during connection with this account: {0}".format(status))
-			self.close()
-			sleep(self.timeSleep)
+					self.args['print'].goodNews(stringToLinePadded("Valid credentials found: {0}. Continue... ".format('/'.join(anAccount))))
+				elif "connection as SYS should be as SYSDBA or SYSOPER" in str(status):
+					logging.debug("Try to connect as sysdba")
+					self.args['SYSDBA'] = True
+					status = self.connection()
+					if status == True:
+						self.valideAccounts[self.args['user']] = self.args['password']
+						logging.info("Valid credential: {0} ({1})  ".format('/'.join(anAccount),self.args['connectionStr']))
+					self.args['SYSDBA'] = False
+				elif self.__needRetryConnection__(status) == True:
+					status = self.__retryConnect__(nbTry=4)
+				else:
+					logging.debug("Error during connection with this account: {0}".format(status))
+				self.close()
+				sleep(self.timeSleep)
 		pbar.finish()
 		return True
 
@@ -185,10 +188,11 @@ class PasswordGuesser (OracleDatabase):
 		- 2 : continue without ask (yes) 
 		'''
 		def askToContinue ():
-			rep = input("The login {0} has already been tested at least once. What do you want to do:\n- stop (s/S)\n- continue and ask every time (a/A)\n- continue without to ask (c/C)\n".format(login))
+			rep = input("The login {0} has already been tested at least once. What do you want to do:\n- stop (s/S)\n- continue and ask every time (a/A)\n- skip and continue to ask (p/P)\n- continue without to ask (c/C)\n".format(login))
 			if rep == 's' or rep == 'S' : return 0
 			elif rep == 'a' or rep == 'A' : return 1
 			elif rep == 'c' or rep == 'C' : return 2
+			elif rep == 'p' or rep == 'P': return 3
 			else : return -1
 		rep = askToContinue()
 		while (rep==-1):

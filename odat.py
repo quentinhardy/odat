@@ -430,6 +430,7 @@ def main():
 	PPusernamelikepassword.add_argument('--run',dest='run',action='store_true',required=True,help='try to connect using each Oracle username like the password')
 	PPusernamelikepassword.add_argument('--force-retry',dest='force-retry',action='store_true',help='allow to test multiple passwords for a user without ask you')
 	PPusernamelikepassword.add_argument('--additional-pwd',dest='additional-pwd',nargs='+',help='try these passwords for each user also (default: %(default)s)')
+	PPusernamelikepassword.add_argument('--separator', dest='separator', default='/',help='separator between login and password (default: %(default)s)')
 	#1.18- Parent parser: smb
 	PPsmb = argparse.ArgumentParser(add_help=False,formatter_class=myFormatterClass)
 	PPsmb._optionals.title = "smb commands"

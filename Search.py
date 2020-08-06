@@ -78,7 +78,7 @@ class Search (OracleDatabase):
 				if colNb>0:
 					currentColNum += 1
 					pbar.update(currentColNum)
-				request = self.REQ_GET_COLUMNS_FOR_TABLE.format(aTabl<e['table_name'], aTable['owner'])
+				request = self.REQ_GET_COLUMNS_FOR_TABLE.format(aTable['table_name'], aTable['owner'])
 				columnsAndTypes = self.__execQuery__(query=request, ld=['column_name', 'data_type'])
 				if isinstance(columnsAndTypes,Exception):
 					logging.warning("Impossible to execute the request '{0}': {1}".format(request, columnsAndTypes.generateInfoAboutError(request)))

@@ -22,8 +22,9 @@ Changelog
 ====
 * Version __4.3__ (__28/06/2020__):
   * new option: _--both-ul_. Try each password in lower case and upper case if it is not done in credential file(s)
-  * new option: _--random-order_. Test accounts in random order. By default, it uses the text file order.
-  * some new accounts.
+  * new option: _--random-order_. Test accounts in random order. By default, it uses the text file order
+  * all passwords are tested in lower case now by default (account files modified from upper to lower case)
+  * some new accounts
 * Version __4.2__ (__04/02/2020__):
   * minimal interactive SQL shell in search module
   * new feature for downloading files with DBMS_XSLPROCESSOR.read2clob in DbmsXslprocessor module

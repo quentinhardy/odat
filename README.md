@@ -163,6 +163,8 @@ Thanks to ODAT, you can:
   * search a pattern (ex: password) in column names
 * __unwrap__ PL/SQL source code (10g/11g and 12c)
 * get __system privileges__ and __roles granted__. It is possible to get privileges and roles of roles granted also
+* execute arbitrary SELECT requests (aka minimal sql shell)
+
 ![Alt text](./pictures/ODAT_main_features_v2.0.jpg)
 
 Supported Platforms and dependencies

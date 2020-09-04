@@ -85,7 +85,7 @@ class UtlFile (DirectoryManagement):
 		Create the localFile file containing data stored on the remoteNameFile (stored in the remotePath)
 		'''
 		logging.info("Read the {0} remote file stored in {1}".format(remoteNameFile,remotePath))
-		data = ""
+		data = b""
 		self.__setDirectoryName__()
 		status = self.__createOrRemplaceDirectory__(remotePath)
 		if isinstance(status,Exception): return status
@@ -110,7 +110,7 @@ class UtlFile (DirectoryManagement):
 					line = lineVar.getvalue()
 					if line == None : 
 						line = ''
-					data += line.decode('hex')+'\n'
+					data += bytes.fromhex(line)+b'\n'
 				cursor.close()
 		except Exception as e: 
 			self.__dropDirectory__()

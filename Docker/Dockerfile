@@ -33,4 +33,5 @@ RUN activate-global-python-argcomplete
 # Change to /root et clone odat project
 WORKDIR /root
 RUN git clone https://github.com/quentinhardy/odat.git
+RUN ln -s /usr/bin/python3 /usr/bin/python
 WORKDIR odat

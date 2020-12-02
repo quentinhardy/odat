@@ -46,27 +46,28 @@ class Passwords (OracleDatabase):
 		'''
 		Try to get hashed password
 		If username is in the blacklist (blacklistOfUsernames), the account is not returned in results
-		In Oracle 11g-12g: select name, password, spare4 from sys.user$
+		In Oracle 11g-12c+: select name, password, spare4 from sys.user$
 		In Oracle 9-10: SELECT username, password FROM DBA_USERS;
+		Notice: Some DBA users as SYSTEM are not able to access to sys.user$ table on 12c and +.
 		'''
 		currentUsername = ""
-		isVersion11or12 = False
+		isVersionHigh11 = False
 		self.__resetPasswordList__()
-		if self.isDBVersion('11.') or self.isDBVersion('12.') or self.isDBVersion('18.'):
+		if self.isDBVersion('11.') or self.isDBVersion('12.') or self.isDBVersion('18.') or self.isDBVersion('19.'):
 			req = "SELECT name, password, spare4 FROM sys.user$"
 			results = self.__execQuery__(query=req,ld=['name', 'password','spare4'])
-			isVersion11or12 = True
+			isVersionHigh11 = True
 		else :
 			req =  "SELECT username, password FROM DBA_USERS"
-			results = self.__execQuery__(query=req,ld=['username', 'password'])	
-			isVersion11or12 = False
+			results = self.__execQuery__(query=req,ld=['username', 'password'])
+			isVersionHigh11 = False
 		if isinstance(results,Exception):
 			logging.info("Impossible to get hashed passwords: {0}".format(results))
 			return results
 		else :
 			logging.info("Get hashed passwords")
 			for anAccount in results:
-				if isVersion11or12 == True: currentUsername = anAccount['name']
+				if isVersionHigh11 == True: currentUsername = anAccount['name']
 				else: currentUsername = anAccount['username']
 				if currentUsername in blacklistOfUsernames:
 					logging.debug("The account {0} will be not in hashed password list because this account is locked".format(currentUsername))

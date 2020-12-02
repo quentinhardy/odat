@@ -167,7 +167,7 @@ def runAllModules(args):
 	for aSid in list(connectionInformation.keys()):
 		for loginAndPass in connectionInformation[aSid]:
 			args['sid'] , args['user'], args['password'] = aSid, loginAndPass[0],loginAndPass[1]
-			args['print'].title("Testing all modules on the {0} SID with the {1}/{2} account".format(args['sid'],args['user'],args['password']))
+			args['print'].title("Testing all modules on the {0} SID with the {1}/{2} account".format(args['sid'],args['user'],args['password']))
 			#INFO ABOUT REMOTE SERVER
 			status = OracleDatabase(args).connection()
 			if isinstance(status,Exception):

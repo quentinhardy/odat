@@ -100,7 +100,7 @@ class OracleDatabase:
                                                        encoding=encoding,
                                                        nencoding=nencoding)
             self.args['dbcon'].autocommit = True
-            if self.remoteOS == '' and self.oracleDatabaseversion=='' : self.loadInformationRemoteDatabase() 
+            if self.remoteOS == '' or self.oracleDatabaseversion=='' : self.loadInformationRemoteDatabase()
             return True
         except Exception as e:
             if self.ERROR_CONN_IMPOSS in str(e) or self.ERROR_UNABLE_TO_ACQUIRE_ENV in str(e):
@@ -417,6 +417,7 @@ class OracleDatabase:
             return False
         logging.debug ("Pickup the remote verion")
         self.oracleDatabaseversion = self.args['dbcon'].version
+        logging.debug("Remote database version: {0}".format(self.oracleDatabaseversion))
         logging.debug ("Pickup the remote Operating System")
         self.remoteOS = self.getDatabasePlatfromName()
         if self.remoteOS != "":

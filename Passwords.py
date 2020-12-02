@@ -205,7 +205,7 @@ def runPasswordsModule(args):
 	Run the Passwords module
 	'''
 	status = True
-	if checkOptionsGivenByTheUser(args,["test-module","get-passwords","get-passwords-ocm","get-passwords-from-history", "get-passwords-not-locked"]) == False : return EXIT_MISS_ARGUMENT
+	if checkOptionsGivenByTheUser(args,["test-module","get-passwords","get-passwords-ocm","get-passwords-from-history", "get-passwords-not-locked","get-passwords-ocm-not-locked"]) == False : return EXIT_MISS_ARGUMENT
 	passwords = Passwords(args)
 	status = passwords.connection(stopIfError=True)
 	passwords.__getLockedUsernames__()
@@ -253,6 +253,19 @@ def runPasswordsModule(args):
 			passwords.printPasswordsJohn()
 		else : 
 			args['print'].badNews("Impossible to get hashed passwords: {0}".format(status))
+	if args['get-passwords-ocm-not-locked'] == True :
+		args['print'].title("Try to get Oracle hashed passwords with an ORACLE_OCM view when the account is not locked")
+		blacklistOfUsernames = passwords.__getLockedUsernames__()
+		status = passwords.__tryToGetHashedPasswordsWithOracleOCM__(blacklistOfUsernames)
+		if status == True :
+			args['print'].goodNews("Here are Oracle hashed passwords (all accounts are opened, not locked):")
+			passwords.printPasswords()
+			args['print'].goodNews("Here are 10g Oracle hashed passwords for oclHashcat (some accounts can be locked):")
+			passwords.printPasswordsOclHashcat()
+			args['print'].goodNews("Here are 10g Oracle hashed passwords for John the Ripper (some accounts can be locked):")
+			passwords.printPasswordsJohn()
+		else :
+			args['print'].badNews("Impossible to get hashed passwords with an ORACLE_OCM view: {0}".format(status))
 	if args['get-passwords-from-history'] == True :
 		args['print'].title("Try to get Oracle hashed passwords from history")
 		status = passwords.__tryToGetHashedPasswordsfromHistory__()

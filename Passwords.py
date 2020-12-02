@@ -123,7 +123,7 @@ class Passwords (OracleDatabase):
 			if isinstance(status, Exception):
 				logging.error("Impossible to drop view in oracle_ocm: {0}".format(self.cleanError(status)))
 		else:
-			logging.info("Hashes can not be got with Oracle_OCM. This method is only valid when database is 12c or higher")
+			logging.warning("Hashes can not be got with Oracle_OCM. This method is only valid when database is 12c or higher")
 			return False
 		if isinstance(results, Exception):
 			logging.info("Impossible to get hashed passwords: {0}".format(results))

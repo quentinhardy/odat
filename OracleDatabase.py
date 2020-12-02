@@ -477,6 +477,15 @@ class OracleDatabase:
             return True
         else:
             return False
+
+    def isDBVersionHigherThan12(self, version=None):
+        '''
+        Return True if remote database version is 12c or higher
+        '''
+        if self.isDBVersion('12.') or self.isDBVersion('18.') or self.isDBVersion('19.'):
+            return True
+        else:
+            return False
         
     def hasThisRole(self, role, user=None):
         '''

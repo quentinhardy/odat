@@ -374,6 +374,7 @@ def main():
 	PPpasswords = argparse.ArgumentParser(add_help=False,formatter_class=myFormatterClass)
 	PPpasswords._optionals.title = "passwords commands"
 	PPpasswords.add_argument('--get-passwords',dest='get-passwords',action='store_true',required=False,help='get Oracle hashed passwords (accounts can be locked or not)')
+	PPpasswords.add_argument('--get-passwords-ocm', dest='get-passwords-ocm', action='store_true', required=False, help='get Oracle hashed passwords (accounts can be locked or not) with an ORACLE_OCM view for bypassing restriction. Only when 12c or higher and for some accounts (e.g SYSTEM)')
 	PPpasswords.add_argument('--get-passwords-not-locked',dest='get-passwords-not-locked',action='store_true',required=False,help='get Oracle hashed passwords when account is not locked')
 	PPpasswords.add_argument('--get-passwords-from-history',dest='get-passwords-from-history',action='store_true',required=False,help='get Oracle hashed passwords from history')
 	PPpasswords.add_argument('--test-module',dest='test-module',action='store_true',help='test the module before use it')

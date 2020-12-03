@@ -296,7 +296,7 @@ def runPasswordsModule(args):
 		else : 
 			args['print'].badNews("Impossible to get hashed passwords: {0}".format(status))
 	if args['get-passwords-ocm'] == True :
-		args['print'].title("Try to get Oracle hashed passwords with an ORACLE_OCM view")
+		args['print'].title("Try to get Oracle hashed passwords with an ORACLE_OCM view (CVE-2020-2984)")
 		status = passwords.__tryToGetHashedPasswordsWithOracleOCM__()
 		if status == True :
 			args['print'].goodNews("Here are Oracle hashed passwords (some accounts can be locked):")
@@ -321,7 +321,7 @@ def runPasswordsModule(args):
 		else : 
 			args['print'].badNews("Impossible to get hashed passwords: {0}".format(status))
 	if args['get-passwords-ocm-not-locked'] == True :
-		args['print'].title("Try to get Oracle hashed passwords with an ORACLE_OCM view when the account is not locked")
+		args['print'].title("Try to get Oracle hashed passwords with an ORACLE_OCM view (CVE-2020-2984) when the account is not locked")
 		blacklistOfUsernames = passwords.__getLockedUsernames__()
 		status = passwords.__tryToGetHashedPasswordsWithOracleOCM__(blacklistOfUsernames)
 		if status == True :

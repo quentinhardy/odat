@@ -378,6 +378,7 @@ def main():
 	PPpasswords.add_argument('--get-passwords-ocm', dest='get-passwords-ocm', action='store_true', required=False, help='get Oracle hashed passwords (accounts can be locked or not) indirectly. "Lateral Thinking" with an ORACLE_OCM view. Only when 12c or higher and for some accounts (e.g SYSTEM)')
 	PPpasswords.add_argument('--get-passwords-ocm-not-locked', dest='get-passwords-ocm-not-locked', action='store_true', required=False, help='get Oracle hashed passwords (accounts not locked) indirectly. "Lateral Thinking" with an ORACLE_OCM view. Only when 12c or higher and for some accounts (e.g SYSTEM)')
 	PPpasswords.add_argument('--get-passwords-from-history',dest='get-passwords-from-history',action='store_true',required=False,help='get Oracle hashed passwords from history')
+	PPpasswords.add_argument('--get-passwords-dbms-stats', dest='get-passwords-dbms-stats', action='store_true',required=False, help='get Oracle hashed passwords with DBMS_STAT')
 	PPpasswords.add_argument('--test-module',dest='test-module',action='store_true',help='test the module before use it')
 	#1.11- Parent parser: dbmsxslprocessor
 	PPdbmsxslprocessor = argparse.ArgumentParser(add_help=False,formatter_class=myFormatterClass)

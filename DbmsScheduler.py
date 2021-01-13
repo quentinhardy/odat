@@ -100,6 +100,8 @@ class DbmsScheduler (OracleDatabase):
 		self.jobName = self.__generateRandomString__(nb=20)
 		logging.info('Execute the following command on the remote database system: {0}'.format(cmd))
 		logging.info('Be Careful: Special chars are not allowed in the command line')
+		if ">" in cmd:
+			logging.warning('Be Careful: Special chars are not allowed in the command line and it seems you are using one')
 		status = self.__createJob__(cmd)
 		if isinstance(status,Exception): return status
 		status = self.__runJob__()

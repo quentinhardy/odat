@@ -27,7 +27,7 @@ class DbmsScheduler (OracleDatabase):
 		'''
 		logging.info('Create a job named {0}'.format(self.jobName))
 		splitCmd = cmd.split()
-		parameters = {'job_name':self.jobName,'job_type':'EXECUTABLE','job_action':splitCmd[0],'number_of_arguments':len(splitCmd)-1,'auto_drop':False}
+		parameters = {'job_name':self.jobName,'job_type':'EXECUTABLE','job_action':splitCmd[0],'number_of_arguments':len(splitCmd)-1}
 		cursor = cx_Oracle.Cursor(self.args['dbcon'])
 		try :
 			if self.args['show_sql_requests'] == True: logging.info("SQL request executed: DBMS_SCHEDULER.create_job with these parameters: {0}".format(parameters))

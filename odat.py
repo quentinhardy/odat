@@ -578,6 +578,8 @@ def main():
 	if 'auditType' in args and (args['auditType']=='unwrapper' or args['auditType']=='clean'): pass
 	else:
 		if ipOrNameServerHasBeenGiven(args) == False : return EXIT_MISS_ARGUMENT
+	logging.debug("cx_Oracle Version: {0}".format(cx_Oracle.version))
+	logging.debug("Oracle Client Version: {0}".format(cx_Oracle.clientversion()))
 	arguments.func(args)
 	exit(ALL_IS_OK)
 

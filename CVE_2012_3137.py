@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import logging, string, re, sys
-from Utils import execSystemCmd, checkOptionsGivenByTheUser, anAccountIsGiven
+from Utils import execSystemCmd, checkOptionsGivenByTheUser, anAccountIsGiven, getSIDorServiceName
 from OracleDatabase import OracleDatabase
 from time import sleep
 import hashlib
@@ -274,7 +274,7 @@ def runCVE20123137Module(args):
 			keys = cve.getKeys()
 			if keys != []:
 				args['print'].goodNews("Here are keys:\n\n{0}\n\nIf for some users keys are empty, there was an error during capture or this Oracle user does not exist on the database".format('\n'.join(keys)))
-				filename = "sessions-{0}-{1}-{2}{3}".format(args['server'],args['port'],args['sid'],CHALLENGE_EXT_FILE)
+				filename = "sessions-{0}-{1}-{2}{3}".format(args['server'], args['port'], getSIDorServiceName(args), CHALLENGE_EXT_FILE)
 				f = open(filename,"w")
 				f.write('\n'.join(keys))
 				f.close()

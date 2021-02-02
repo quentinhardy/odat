@@ -40,14 +40,17 @@ class OracleDatabase:
         '''
         Generate Oracle Database connection string
         '''
-        if self.args['sidAsServiceName'] == True:
-            logging.debug("TNS Connection string mode enabled and SID is used as a SERVICE NAME in connection string")
+        if self.args['serviceName'] == None and self.args['sid'] == None:
+            logging.critical("serviceName and sid are empty for generating a connection string")
+        if self.args['serviceName'] != None:
+            logging.debug("TNS Connection string mode enabled and SERVICE NAME used for connection string")
             self.args['connectionStr'] = "{0}/{1}@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(Host={2})(Port={3})))(CONNECT_DATA=(SERVICE_NAME={4})))".format(self.args['user'],
                                                                                                                                                                      self.args['password'],
                                                                                                                                                                      self.args['server'],
                                                                                                                                                                      self.args['port'],
-                                                                                                                                                                     self.args['sid'])
+                                                                                                                                                                     self.args['serviceName'])
         else:
+            logging.debug("TNS Connection string mode enabled and SID used for connection string")
             self.args['connectionStr'] = "{0}/{1}@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(Host={2})(Port={3})))(CONNECT_DATA=(SID={4})))".format(self.args['user'],
                                                                                                                                                             self.args['password'],
                                                                                                                                                             self.args['server'],

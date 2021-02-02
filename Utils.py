@@ -186,12 +186,15 @@ def ipOrNameServerHasBeenGiven(args):
 
 def sidHasBeenGiven(args):
 	'''
-	Return True if an ip has been given
+	Return True if a SID or Service Name has been given
 	Otherwise return False
 	- args must be a dictionary
 	'''
-	if ('sid' in args) == False or args['sid'] == None:
-		logging.critical("The server SID must be given with the '-d SID' option.")
+	if ('sid' in args) == False and ('serviceName' in args) == False:
+		logging.critical("The server SID or Service Name must be defined")
+		return False
+	if (('serviceName' in args) == True and args['serviceName'] == None) and (('serviceName' in args) == True and args['sid'] == None):
+		logging.critical("The server SID or Service Name must be given with the '-d SID' or '-n serviceName' option.")
 		return False
 	return True
 

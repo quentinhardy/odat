@@ -214,7 +214,11 @@ class Tnspoison (Tnscmd):
 		Return True if vulneeable to CVE-2012-1675 (http://seclists.org/fulldisclosure/2012/Apr/204)
 		Otherwise returns False
 		return None if error
+		return -1 if SID is not given
 		'''
+		if self.args['sid'] == None:
+			logging.info("SID is not given. Impossible to check if target is vulnerable to TNS poisoning")
+			return -1
 		return self.exploitTNSPoisoningAttack(checkOnly=True)
 				
 	
@@ -352,7 +356,9 @@ class Tnspoison (Tnscmd):
 		self.args['print'].title("Is it vulnerable to TNS poisoning (CVE-2012-1675)?")
 		status = self.isTNSListenerVulnerableToCVE_2012_1675()
 		if status == None:
-			pass
+			self.args['print'].unknownNews("Impossible to know if target is vulnerable to a remote TNS poisoning because error.")
+		elif status == -1:
+			self.args['print'].unknownNews("Impossible to know if target is vulnerable to a remote TNS poisoning because SID is not given.")
 		elif status == True:
 			self.args['print'].goodNews("The target is vulnerable to a remote TNS poisoning")
 		else :

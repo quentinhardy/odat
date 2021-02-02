@@ -108,7 +108,7 @@ def runAllModules(args):
 	else:
 		logging.info("Don't check if the target is vulnerable to TNS poisoning because the option --no-tns-poisoning-check is enabled in command line")
 	#A)SID MANAGEMENT
-	if args['sid'] == None :
+	if args['sid'] == None and args['serviceName'] == None:
 		logging.debug("Searching valid SIDs")
 		validSIDsList = runSIDGuesserModule(args)
 		args['user'], args['password'] = None, None 
@@ -280,8 +280,8 @@ def main():
 	PPconnection.add_argument('-p', dest='port', default=1521, type=int, required=False, help='port (Default 1521)')
 	PPconnection.add_argument('-U', dest='user', required=False, help='Oracle username')
 	PPconnection.add_argument('-P', dest='password', required=False, default=None, help='Oracle password')
-	PPconnection.add_argument('-d', dest='sid', required=False, help='Oracle System ID (SID)')
-	PPconnection.add_argument('-n', dest='sidAsServiceName', required=False, action='store_true', help='SID (-d) used as a Service Name for connection')
+	PPconnection.add_argument('-d', dest='sid', required=False, default=None, help='Oracle System ID (SID)')
+	PPconnection.add_argument('-n', dest='serviceName', required=False, default=None, help='Oracle Service Name')
 	PPconnection.add_argument('--sysdba', dest='SYSDBA', action='store_true', default=False, help='connection as SYSDBA')
 	PPconnection.add_argument('--sysoper', dest='SYSOPER', action='store_true', default=False, help='connection as SYSOPER')
 	#1.2- Parent parser: output options

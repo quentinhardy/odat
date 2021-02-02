@@ -5,7 +5,7 @@ from OracleDatabase import OracleDatabase
 from time import sleep
 import logging, os.path
 from Constants import *
-from Utils import sidHasBeenGiven, stringToLinePadded, getCredentialsFormated
+from Utils import sidHasBeenGiven, stringToLinePadded, getCredentialsFormated, getSIDorServiceNameWithType, getSIDorServiceName
 from random import shuffle
 
 class PasswordGuesser (OracleDatabase):
@@ -113,7 +113,7 @@ class PasswordGuesser (OracleDatabase):
 		'''
 		userChoice = 1
 		lockedUsernames = []
-		logging.info("Searching valid accounts on {0}:{1}/{2}".format(self.args['server'], self.args['port'], self.args['sid']))
+		logging.info("Searching valid accounts on {0}:{1}/{2}".format(self.args['server'], self.args['port'], getSIDorServiceNameWithType(self.args)))
 		logging.debug("{0} accounts will be tested".format(len(self.accounts)))
 		if len(self.accounts) == 0:
 			return False
@@ -169,7 +169,7 @@ class PasswordGuesser (OracleDatabase):
 		If the login is in the file , return False. Otherwise return True
 		'''
 		if ('loginTraceFile' in self.args) == False:
-			self.args['loginTraceFile'] = "{0}-{1}-{2}{3}".format(self.args['server'],self.args['port'],self.args['sid'],PASSWORD_EXTENSION_FILE)
+			self.args['loginTraceFile'] = "{0}-{1}-{2}{3}".format(self.args['server'], self.args['port'], getSIDorServiceName(self.args), PASSWORD_EXTENSION_FILE)
 			if os.path.isfile(self.args['loginTraceFile']) == False:
 				f=open(self.args['loginTraceFile'],'w')
 				f.close()
@@ -217,9 +217,9 @@ def runPasswordGuesserModule(args):
 	passwordGuesser.searchValideAccounts()
 	validAccountsList = passwordGuesser.valideAccounts
 	if validAccountsList == {}:
-		args['print'].badNews("No found a valid account on {0}:{1}/{2}. You should try with the option '--accounts-file accounts/accounts_multiple.txt' or '--accounts-files accounts/logins.txt accounts/pwds.txt'".format(args['server'], args['port'], args['sid']))
+		args['print'].badNews("No found a valid account on {0}:{1}/{2}. You should try with the option '--accounts-file accounts/accounts_multiple.txt' or '--accounts-files accounts/logins.txt accounts/pwds.txt'".format(args['server'], args['port'], getSIDorServiceNameWithType(args)))
 	else :
-		args['print'].goodNews("Accounts found on {0}:{1}/{2}: {3}".format(args['server'], args['port'], args['sid'],getCredentialsFormated(validAccountsList)))
+		args['print'].goodNews("Accounts found on {0}:{1}/{2}: {3}".format(args['server'], args['port'], getSIDorServiceNameWithType(args),getCredentialsFormated(validAccountsList)))
 
 
 

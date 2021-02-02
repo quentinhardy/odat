@@ -370,6 +370,9 @@ def runTnsPoisonModule(args):
 	'''
 	status = True
 	if checkOptionsGivenByTheUser(args,["test-module",'poison'],checkAccount=False) == False : return EXIT_MISS_ARGUMENT
+	if ('sid' not in args) or ('sid' in args and args['sid'] == None):
+		logging.error("This module requires a SID. It does not work with a Service Name. Without SID, impossible to use this module.")
+		return EXIT_BAD_CMD_PARAMETER
 	tnspoison = Tnspoison(args)
 	if args['test-module'] == True:
 		tnspoison.testAll()

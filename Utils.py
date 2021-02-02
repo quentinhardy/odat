@@ -253,3 +253,17 @@ def getSIDorServiceName(args):
 		return args['serviceName']
 	else:
 		return None
+
+def getSIDorServiceNameWithType(args):
+	'''
+	Return SID or Service Name
+	Return None if an error
+	'''
+	if 'sid' not in args and 'serviceName' not in args:
+		return None
+	if ('sid' in args and args['sid']!=None):
+		return "sid:{0}".format(args['sid'])
+	elif ('serviceName' in args and args['serviceName']!=None):
+		return "ServiceName:{0}".format(args['serviceName'])
+	else:
+		return None

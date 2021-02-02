@@ -496,7 +496,7 @@ def main():
 	parser_tnscmd = subparsers.add_parser('tnscmd',parents=[PPoptional,PPconnection,PPTnsCmd,PPoutput], formatter_class=mySubFormatterClass, help='to communicate with the TNS listener')	
 	parser_tnscmd.set_defaults(func=runTnsCmdModule,auditType='tnscmd')
 	#2.b- tnspoison
-	parser_tnspoison = subparsers.add_parser('tnspoison',parents=[PPoptional,PPconnection,PPTnsPoison,PPTnsPoisonSub, PPoutput], formatter_class=mySubFormatterClass, help='to exploit TNS poisoning attack')	
+	parser_tnspoison = subparsers.add_parser('tnspoison',parents=[PPoptional,PPconnection,PPTnsPoison,PPTnsPoisonSub, PPoutput], formatter_class=mySubFormatterClass, help='to exploit TNS poisoning attack (SID required)')
 	parser_tnspoison.set_defaults(func=runTnsPoisonModule,auditType='tnspoison')
 	#2.b- SIDGuesser
 	parser_sidGuesser = subparsers.add_parser('sidguesser',parents=[PPoptional,PPconnection,PPsidguesser,PPoutput], formatter_class=mySubFormatterClass, help='to know valid SIDs')

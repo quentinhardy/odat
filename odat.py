@@ -409,7 +409,8 @@ def main():
 	PPstealRemotePass._optionals.title = "stealRemotePasswords commands"
 	PPstealRemotePass.add_argument('-s', dest='server', required=True, help='server')
 	PPstealRemotePass.add_argument('-p', dest='port', default=1521, required=False, help='port (Default 1521)')
-	PPstealRemotePass.add_argument('-d', dest='sid', required=False, help='Oracle System ID (SID)')
+	PPstealRemotePass.add_argument('-d', dest='sid', required=False, default=None, help='Oracle System ID (SID)')
+	PPstealRemotePass.add_argument('-n', dest='serviceName', required=False, default=None, help='Service Name')
 	PPstealRemotePass.add_argument('-U', dest='user', required=False, help='Valid Oracle username')
 	PPstealRemotePass.add_argument('-P', dest='password', required=False, default=None, help='Valid Oracle password')
 	PPstealRemotePass.add_argument('--get-all-passwords',dest='get-all-passwords',action='store_true',default=None,required=False,help='get all hashed passwords thanks to the user/password list')

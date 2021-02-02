@@ -36,23 +36,36 @@ class OracleDatabase:
         self.encoding = args['encoding']
         self.nencoding = args['encoding']
 
-    def __generateConnectionString__(self):
+    def __generateConnectionString__(self, username=None, password=None):
         '''
         Generate Oracle Database connection string
+        If username is not given, it is taken from self.args
+        If password is not given, it is taken from self.args
+        Return Connection string according to args and parameters (user, password)
         '''
-        if self.args['serviceName'] == None and self.args['sid'] == None:
+        if username == None:
+            user = self.args['user']
+        else:
+            user = username
+        if password == None:
+            pwd = self.args['password']
+        else:
+            pwd = password
+        if 'serviceName' not in self.args and 'sid' not in self.args:
+            logging.critical("serviceName and sid are not defined for generating a connection string")
+        if ('serviceName' in self.args and self.args['serviceName'] == None) and ('sid' not in self.args and self.args['sid'] == None):
             logging.critical("serviceName and sid are empty for generating a connection string")
-        if self.args['serviceName'] != None:
+        if 'serviceName' in self.args and  self.args['serviceName'] != None:
             logging.debug("TNS Connection string mode enabled and SERVICE NAME used for connection string")
-            self.args['connectionStr'] = "{0}/{1}@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(Host={2})(Port={3})))(CONNECT_DATA=(SERVICE_NAME={4})))".format(self.args['user'],
-                                                                                                                                                                     self.args['password'],
+            self.args['connectionStr'] = "{0}/{1}@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(Host={2})(Port={3})))(CONNECT_DATA=(SERVICE_NAME={4})))".format(user,
+                                                                                                                                                                     pwd,
                                                                                                                                                                      self.args['server'],
                                                                                                                                                                      self.args['port'],
                                                                                                                                                                      self.args['serviceName'])
         else:
             logging.debug("TNS Connection string mode enabled and SID used for connection string")
-            self.args['connectionStr'] = "{0}/{1}@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(Host={2})(Port={3})))(CONNECT_DATA=(SID={4})))".format(self.args['user'],
-                                                                                                                                                            self.args['password'],
+            self.args['connectionStr'] = "{0}/{1}@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(Host={2})(Port={3})))(CONNECT_DATA=(SID={4})))".format(user,
+                                                                                                                                                            pwd,
                                                                                                                                                             self.args['server'],
                                                                                                                                                             self.args['port'],
                                                                                                                                                             self.args['sid'])

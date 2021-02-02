@@ -11,6 +11,7 @@ from threading import Thread
 from progressbar import *
 from os import geteuid
 from Constants import *
+import cx_Oracle
 
 #Load scapy without warnings
 tempout = sys.stdout; temperr = sys.stderr
@@ -109,13 +110,13 @@ class CVE_2012_3137 ():
 		'''
 		Establish a connection to the database
 		'''
-		import cx_Oracle
+		odc = OracleDatabase(self.args)
+		connString = odc.__generateConnectionString__(username=user, password="aaaa")
 		try:
-			connectString = "{0}/{1}@{2}:{3}/{4}".format(user, 'aaaaaaa', self.args['server'], self.args['port'], self.args['sid'])
-			logging.debug("Connecting with {0}".format(connectString))
-			cx_Oracle.connect(connectString)
+			logging.debug("Connecting with {0}".format(connString))
+			cx_Oracle.connect(connString)
 		except Exception as e:
-			pass
+			logging.debug("Of course, impossible to connect: {0}".format(e))
 
 	def getAPassword(self,user):
 		'''

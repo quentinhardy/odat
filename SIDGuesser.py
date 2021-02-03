@@ -59,6 +59,7 @@ class SIDGuesser (OracleDatabase):
 		Test if it is a good SID
 		'''
 		no_good_sid_found = False
+		self.args['serviceName'] = None
 		self.__generateConnectionString__(username=self.__generateRandomString__(nb=15), password=self.__generateRandomString__(nb=5))
 		logging.debug("Try to connect with the {0} SID ({1})".format(self.args['sid'], self.args['connectionStr']))
 		status = self.connection()

@@ -85,7 +85,16 @@ class Output ():
 		m = m.encode(encoding='UTF-8',errors='ignore')
 		formatMesg = '[+] {0}'.format(m.decode())
 		if self.noColor == True  or TERMCOLOR_AVAILABLE == False: print(formatMesg)
-		else : print(colored(formatMesg, 'yellow',attrs=['bold'])) 
+		else : print(colored(formatMesg, 'yellow',attrs=['bold']))
+
+	def printImportantNotice(self,m):
+		'''
+		print important notice
+		'''
+		m = m.encode(encoding='UTF-8',errors='ignore')
+		formatMesg = '[!] Notice: {0}'.format(m.decode())
+		if self.noColor == True  or TERMCOLOR_AVAILABLE == False: print(formatMesg)
+		else : print(colored(formatMesg, 'yellow',attrs=['bold']))
 
 	def printOSCmdOutput(self,m):
 		'''

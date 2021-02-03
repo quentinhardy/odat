@@ -20,7 +20,7 @@ except ImportError:
 	COLORLOG_AVAILABLE = False
 
 import argparse, logging, platform, cx_Oracle, string, os, sys
-from Utils import areEquals, configureLogging,ErrorSQLRequest, sidHasBeenGiven, anAccountIsGiven, ipOrNameServerHasBeenGiven, getCredentialsFormated
+from Utils import areEquals, configureLogging,ErrorSQLRequest, sidOrServiceNameHasBeenGiven, anAccountIsGiven, ipOrNameServerHasBeenGiven, getCredentialsFormated, getSIDorServiceNameWithType
 
 from Constants import *
 from Output import Output
@@ -32,7 +32,7 @@ from UtlHttp import UtlHttp,runUtlHttpModule
 from HttpUriType import HttpUriType,runHttpUriTypeModule
 from Java import Java,runjavaModule
 from PasswordGuesser import PasswordGuesser, runPasswordGuesserModule
-from SIDGuesser import SIDGuesser, runSIDGuesserModule
+from SIDGuesser import runSIDGuesserModule
 from SMB import SMB, runSMBModule
 from Ctxsys import Ctxsys,runCtxsysModule
 from Passwords import Passwords,runPasswordsModule
@@ -49,6 +49,7 @@ from PrivilegeEscalation import PrivilegeEscalation, runPrivilegeEscalationModul
 from CVE_XXXX_YYYY import CVE_XXXX_YYYY, runCVEXXXYYYModule
 from Tnspoison import Tnspoison, runTnsPoisonModule
 from OracleDatabase import OracleDatabase
+from ServiceNameGuesser import runServiceNameGuesserModule
 
 class MyFormatter(argparse.RawTextHelpFormatter):
     """
@@ -100,25 +101,55 @@ def runAllModules(args):
 	'''
 	Run all modules
 	'''
-	connectionInformation, validSIDsList = {}, []
+	connectionInformationSID, connectionInformationServiceName = {}, {} #Store valid/given connection strings
+	validSIDsList, validServiceNameList = [], [] #Store valid SID ans Service Name
 	#0)TNS Poinsoning
 	if args['no-tns-poisoning-check'] == False:
+		logging.debug("All Module: Checking TNS poison attack because option enabled...")
 		tnspoison = Tnspoison(args)
 		tnspoison.testAll()
 	else:
 		logging.info("Don't check if the target is vulnerable to TNS poisoning because the option --no-tns-poisoning-check is enabled in command line")
+
 	#A)SID MANAGEMENT
 	if args['sid'] == None and args['serviceName'] == None:
-		logging.debug("Searching valid SIDs")
+		logging.debug("All Module: Searching valid SIDs because no SID or Service Name given...")
 		validSIDsList = runSIDGuesserModule(args)
-		args['user'], args['password'] = None, None 
+		args['user'], args['password'] = None, None
+		args['sid'] = None #Clean sid, if one has been found
 	else :
-		validSIDsList = [args['sid']]
+		if args['sid'] != None:
+			logging.debug("All Module: A SID has been given. Don't search other valid SIDs.")
+			validSIDsList = [args['sid']]
+		else:
+			logging.debug("All Module: SID has NOT been given")
 	if validSIDsList == []:
+		logging.debug("All Module: A SID has not been found, searching valid Service Name(s)...")
+	#A.2 SERVICE NAME MANAGEMENT
+	if args['sid'] == None and args['serviceName'] == None:
+		logging.debug("All Module: Searching valid Service Names because no SID found and Service Name is not given...")
+		validServiceNameList = runServiceNameGuesserModule(args)
+		args['user'], args['password'] = None, None
+		args['serviceName'] == None #Clean serviceName, if one has been found
+	else:
+		if args['serviceName'] != None:
+			logging.debug("All Module: A Service Name has been given. Don't search other valid SIDs.")
+			validServiceNameList = [args['serviceName']]
+		else:
+			logging.debug("All Module: Service Name has NOT been given")
+	if validSIDsList == [] and validServiceNameList == []:
+		args['print'].badNews("No one SID or Service Name has been found. Impossible to continue")
 		exit(EXIT_NO_SIDS)
+
+	logging.debug("Removing Service Names identical to a SID...")
+	for aSID in validSIDsList:
+			if aSID in validServiceNameList:
+				args['print'].printImportantNotice("SID {0} found. Service Name {0} found too: Identical database instance. Removing Service Name {0} from Service Name list in order to don't do same checks twice".format(repr(aSID)))
+				validServiceNameList.remove(aSID)
+
 	#B)ACCOUNT MANAGEMENT
 	if args['credentialsFile'] == True :
-		logging.debug("Loading credentials stored in the {0} file".format(args['accounts-file']))
+		logging.debug("All Module: Loading credentials stored in the {0} file as valid credentials".format(args['accounts-file']))
 		#Load accounts from file
 		passwordGuesser = PasswordGuesser(args,
 										  args['accounts-file'],
@@ -128,15 +159,29 @@ def runAllModules(args):
 										  bothUpperLower=args['both-upper-lower'],
 										  randomOrder=args['random-order'])
 		validAccountsList = passwordGuesser.getAccountsFromFile()
+		logging.debug("All Module: Loading all valid credentials with these SIDs: {0}".format(validSIDsList))
 		for aSid in validSIDsList:
 			for anAccount in validAccountsList:
-				if (aSid in connectionInformation) == False: connectionInformation[aSid] = [[anAccount[0], anAccount[1]]]
-				else : connectionInformation[aSid].append([anAccount[0], anAccount[1]])
+				if (aSid in connectionInformationSID) == False:
+					connectionInformationSID[aSid] = [[anAccount[0], anAccount[1]]]
+				else :
+					connectionInformationSID[aSid].append([anAccount[0], anAccount[1]])
+		logging.debug("All Module: Loading all valid credentials with these SIDs: {0}".format(validServiceNameList))
+		for aServiceName in validServiceNameList:
+			for anAccount in validAccountsList:
+				if (aServiceName in connectionInformationServiceName) == False:
+					connectionInformationServiceName[aServiceName] = [[anAccount[0], anAccount[1]]]
+				else :
+					connectionInformationServiceName[connectionInformationServiceName].append([anAccount[0], anAccount[1]])
+
 	elif args['user'] == None and args['password'] == None:
+		logging.debug("All Module: No specific credential given. Searching valid creds for given or found SIDs...")
 		for sid in validSIDsList:
 			args['print'].title("Searching valid accounts on the {0} SID".format(sid))
 			args['sid'] = sid
-			if args['accounts-files'][0] != None and args['accounts-files'][1] != None : args['accounts-file'] = None
+			args['serviceName'] = None #To be sure to DISABLE connection with Service Name, and to use SID
+			if args['accounts-files'][0] != None and args['accounts-files'][1] != None :
+				args['accounts-file'] = None
 			passwordGuesser = PasswordGuesser(args,
 											  accountsFile=args['accounts-file'],
 											  loginFile=args['accounts-files'][0],
@@ -149,84 +194,156 @@ def runAllModules(args):
 			validAccountsList = passwordGuesser.valideAccounts
 			if validAccountsList == {}:
 				args['print'].badNews("No found a valid account on {0}:{1}/{2}. You should try with the option '--accounts-file accounts/accounts_multiple.txt' or '--accounts-files accounts/logins.txt accounts/pwds.txt'".format(args['server'], args['port'], args['sid']))
-				exit(EXIT_NO_ACCOUNTS)
+				#exit(EXIT_NO_ACCOUNTS)
 			else :
-				args['print'].goodNews("Accounts found on {0}:{1}/{2}: {3}".format(args['server'], args['port'], args['sid'],getCredentialsFormated(validAccountsList)))
+				args['print'].goodNews("Accounts found on {0}:{1}/sid:{2}: {3}".format(args['server'], args['port'], args['sid'],getCredentialsFormated(validAccountsList)))
 				for aLogin, aPassword in list(validAccountsList.items()): 
-					if (sid in connectionInformation) == False: connectionInformation[sid] = [[aLogin,aPassword]]
-					else : connectionInformation[sid].append([aLogin,aPassword])
+					if (sid in connectionInformationSID) == False:
+						connectionInformationSID[sid] = [[aLogin,aPassword]]
+					else :
+						connectionInformationSID[sid].append([aLogin,aPassword])
+		logging.debug("All Module: No specific credential given. Searching valid creds for given or found Service Names...")
+		for aServiceName in validServiceNameList:
+			args['print'].title("Searching valid accounts on the {0} Service Name".format(aServiceName))
+			args['serviceName'] = aServiceName
+			args['sid'] = None #To be sure to DISABLE connection with SID, and to use Service Name
+			if args['accounts-files'][0] != None and args['accounts-files'][1] != None:
+				args['accounts-file'] = None
+			passwordGuesser = PasswordGuesser(args,
+											  accountsFile=args['accounts-file'],
+											  loginFile=args['accounts-files'][0],
+											  passwordFile=args['accounts-files'][1],
+											  timeSleep=args['timeSleep'],
+											  loginAsPwd=args['login-as-pwd'],
+											  bothUpperLower=args['both-upper-lower'],
+											  randomOrder=args['random-order'])
+			passwordGuesser.searchValideAccounts()
+			validAccountsList = passwordGuesser.valideAccounts
+			if validAccountsList == {}:
+				args['print'].badNews("No found a valid account on {0}:{1}/{2}. You should try with the option '--accounts-file accounts/accounts_multiple.txt' or '--accounts-files accounts/logins.txt accounts/pwds.txt'".format(args['server'], args['port'], args['serviceName']))
+				#exit(EXIT_NO_ACCOUNTS)
+			else:
+				args['print'].goodNews("Accounts found on {0}:{1}/serviceName:{2}: {3}".format(args['server'], args['port'], args['serviceName'], getCredentialsFormated(validAccountsList)))
+				for aLogin, aPassword in list(validAccountsList.items()):
+					if (aServiceName in connectionInformationServiceName) == False:
+						connectionInformationServiceName[aServiceName] = [[aLogin, aPassword]]
+					else:
+						connectionInformationServiceName[aServiceName].append([aLogin, aPassword])
+		if connectionInformationSID == [] and connectionInformationServiceName == []:
+			args['print'].badNews("No account found with SID(s) or Service Name(s) given (or found). Impossible to continue.")
+			exit(EXIT_NO_ACCOUNTS)
 	else:
+		logging.debug("All Module: a specific account given with user and password arguments")
 		validAccountsList = {args['user']:args['password']}
 		for aSid in validSIDsList:
 			for aLogin, aPassword in list(validAccountsList.items()):
-				if (aSid in connectionInformation) == False: connectionInformation[aSid] = [[aLogin,aPassword]]
-				else : connectionInformation[aSid].append([aLogin,aPassword])
+				if (aSid in connectionInformationSID) == False:
+					connectionInformationSID[aSid] = [[aLogin,aPassword]]
+				else :
+					connectionInformationSID[aSid].append([aLogin,aPassword])
+		for aServiceName in validServiceNameList:
+			for aLogin, aPassword in list(validAccountsList.items()):
+				if (aServiceName in connectionInformationServiceName) == False:
+					connectionInformationServiceName[aServiceName] = [[aLogin,aPassword]]
+				else :
+					connectionInformationServiceName[aServiceName].append([aLogin,aPassword])
+
+	logging.debug("All Module: Valid account(s) with a SID (connectionInformationSID): {0}".format(connectionInformationSID))
+	logging.debug("All Module: Valid account(s) with a Service Name (connectionInformationServiceName): {0}".format(connectionInformationServiceName))
+
 	#C)ALL OTHERS MODULES
-	if sidHasBeenGiven(args) == False : return EXIT_MISS_ARGUMENT
-	#elif anAccountIsGiven(args) == False : return EXIT_MISS_ARGUMENT
-	for aSid in list(connectionInformation.keys()):
-		for loginAndPass in connectionInformation[aSid]:
-			args['sid'] , args['user'], args['password'] = aSid, loginAndPass[0],loginAndPass[1]
-			args['print'].title("Testing all modules on the {0} SID with the {1}/{2} account".format(args['sid'],args['user'],args['password']))
-			#INFO ABOUT REMOTE SERVER
-			status = OracleDatabase(args).connection()
-			if isinstance(status,Exception):
-				args['print'].badNews("Impossible to connect to the remote database: {0}".format(str(status).replace('\n','')))
-				break
-			#UTL_HTTP
-			utlHttp = UtlHttp(args)
-			status = utlHttp.connection()
-			utlHttp.testAll()
-			#HTTPURITYPE
-			httpUriType = HttpUriType(args)
-			httpUriType.testAll()
-			#UTL_FILE
-			utlFile = UtlFile(args)
-			utlFile.testAll()
-			#JAVA
-			java = Java(args)
-			java.testAll()
-			#DBMS ADVISOR
-			dbmsAdvisor = DbmsAdvisor(args)
-			dbmsAdvisor.testAll()
-			#DBMS Scheduler
-			dbmsScheduler = DbmsScheduler(args)
-			dbmsScheduler.testAll()
-			#CTXSYS
-			ctxsys = Ctxsys(args)
-			ctxsys.testAll()
-			#Passwords
-			passwords = Passwords(args)
-			passwords.testAll()
-			#DbmsXmldom
-			dbmsXslprocessor = DbmsXslprocessor(args)
-			dbmsXslprocessor.testAll()
-			#External Table
-			externalTable = ExternalTable(args)
-			externalTable.testAll()
-			#Oradbg
-			oradbg = Oradbg(args)
-			oradbg.testAll()
-			#DbmsLob
-			dbmsLob = DbmsLob(args)
-			dbmsLob.testAll()
-			#SMB
-			smb = SMB(args)
-			smb.testAll()
-			#Pribvilege escalation
-			privilegeEscalation = PrivilegeEscalation(args)
-			privilegeEscalation.testAll()
-			#Test some CVE
-			cve = CVE_XXXX_YYYY(args)
-			cve.testAll()
-			cve.close() #Close the socket to the remote database
-			#CVE_2012_3137
-			cve = CVE_2012_3137 (args)
-			cve.testAll()
-			
-	#usernamelikepassword
-	args['run'] = True
-	runUsernameLikePassword(args)
+	for aSid in list(connectionInformationSID.keys()):
+		for loginAndPass in connectionInformationSID[aSid]:
+			status = runAllAuthenticatedModules(args=args, username=loginAndPass[0], password=loginAndPass[1], sid=aSid, serviceName=None)
+			# usernamelikepassword module
+			args['run'] = True
+			logging.info("Using last valid credentials on {0} for getting usernames and checking weak passwords".format(getSIDorServiceNameWithType(args)))
+			runUsernameLikePassword(args)
+	for aServiceName in list(connectionInformationServiceName.keys()):
+		for loginAndPass in connectionInformationServiceName[aServiceName]:
+			status = runAllAuthenticatedModules(args=args, username=loginAndPass[0], password=loginAndPass[1], sid=None, serviceName=aServiceName)
+			# usernamelikepassword module
+			args['run'] = True
+			logging.info("Using last valid credentials on {0} for getting usernames and checking weak passwords".format(getSIDorServiceNameWithType(args)))
+			runUsernameLikePassword(args)
+
+def runAllAuthenticatedModules(args, username, password, sid=None, serviceName=None, ):
+	"""
+	Runs all authenticated/connected modules
+	sid or serviceName has to be given.
+	:return: None if an error, returns True if no problem
+	"""
+	if sid == None and serviceName == None:
+		logging.critical("A SID or Service Name has to be given in runAllAuthenticatedModules()")
+		return None
+	if sid != None and serviceName != None:
+		logging.warning("A SID and a Service Name are given in runAllAuthenticatedModules(). SID only is used")
+	if sid != None:
+		args['sid'] = sid
+		args['serviceName'] = None #To be sure that sid is used for Connection String, and not Service Name
+	else:
+		args['serviceName'] = serviceName
+		args['sid'] = None # To be sure that Service Name is used for Connection String, and not SID
+	args['user'], args['password'] = username, password
+	args['print'].title("Testing all authenticated modules on {0} with the {1}/{2} account".format(getSIDorServiceNameWithType(args),
+																									args['user'],
+																									args['password']))
+	# INFO ABOUT REMOTE SERVER
+	status = OracleDatabase(args).connection()
+	if isinstance(status, Exception):
+		args['print'].badNews("Impossible to connect to the remote database: {0}".format(str(status).replace('\n', '')))
+		return None
+	# UTL_HTTP
+	utlHttp = UtlHttp(args)
+	status = utlHttp.connection()
+	utlHttp.testAll()
+	# HTTPURITYPE
+	httpUriType = HttpUriType(args)
+	httpUriType.testAll()
+	# UTL_FILE
+	utlFile = UtlFile(args)
+	utlFile.testAll()
+	# JAVA
+	java = Java(args)
+	java.testAll()
+	# DBMS ADVISOR
+	dbmsAdvisor = DbmsAdvisor(args)
+	dbmsAdvisor.testAll()
+	# DBMS Scheduler
+	dbmsScheduler = DbmsScheduler(args)
+	dbmsScheduler.testAll()
+	# CTXSYS
+	ctxsys = Ctxsys(args)
+	ctxsys.testAll()
+	# Passwords
+	passwords = Passwords(args)
+	passwords.testAll()
+	# DbmsXmldom
+	dbmsXslprocessor = DbmsXslprocessor(args)
+	dbmsXslprocessor.testAll()
+	# External Table
+	externalTable = ExternalTable(args)
+	externalTable.testAll()
+	# Oradbg
+	oradbg = Oradbg(args)
+	oradbg.testAll()
+	# DbmsLob
+	dbmsLob = DbmsLob(args)
+	dbmsLob.testAll()
+	# SMB
+	smb = SMB(args)
+	smb.testAll()
+	# Pribvilege escalation
+	privilegeEscalation = PrivilegeEscalation(args)
+	privilegeEscalation.testAll()
+	# Test some CVE
+	cve = CVE_XXXX_YYYY(args)
+	cve.testAll()
+	cve.close()  # Close the socket to the remote database
+	# CVE_2012_3137
+	cve = CVE_2012_3137(args)
+	cve.testAll()
+	return True
 
 def configureLogging(args):
 	'''
@@ -316,10 +433,18 @@ def main():
 	PPsidguesser._optionals.title = "SID guesser options"
 	PPsidguesser.add_argument('--sids-min-size',dest='sids-min-size',required=False, type=int, default=DEFAULT_SID_MIN_SIZE, help='minimum size of SIDs for the bruteforce (default: %(default)s)')
 	PPsidguesser.add_argument('--sids-max-size',dest='sids-max-size',required=False, type=int, default=DEFAULT_SID_MAX_SIZE, help='maximum size of SIDs for the bruteforce (default: %(default)s)')
-	PPsidguesser.add_argument('--sid-charset',dest='sid-charset',required=False, default=DEFAULT_SID_CHARSET, help='charset for the sid bruteforce (default: %(default)s)')
+	PPsidguesser.add_argument('--sid-charset',dest='sid-charset',required=False, default=DEFAULT_SID_CHARSET, help='charset for the SID bruteforce (default: %(default)s)')
 	PPsidguesser.add_argument('--sids-file',dest='sids-file',required=False,metavar="FILE",default=DEFAULT_SID_FILE, help='file containing SIDs (default: %(default)s)')
-	PPsidguesser.add_argument('--no-alias-like-sid',dest='no-alias-like-sid',action='store_true',required=False, help='no try listener ALIAS like SIDs (default: %(default)s)')	
-	#1.4- Parent parser: Password Guesser
+	PPsidguesser.add_argument('--no-alias-like-sid',dest='no-alias-like-sid',action='store_true',required=False, help='no try listener ALIAS like SIDs (default: %(default)s)')
+	# 1.3.2- Parent parser: Service Name Guesser
+	PPservicenameguesser = argparse.ArgumentParser(add_help=False, formatter_class=myFormatterClass)
+	PPservicenameguesser._optionals.title = "SID guesser options"
+	PPservicenameguesser.add_argument('--service-name-min-size', dest='service-name-min-size', required=False, type=int, default=DEFAULT_SID_MIN_SIZE,help='minimum size of Service Names for the bruteforce (default: %(default)s)')
+	PPservicenameguesser.add_argument('--service-name-max-size', dest='service-name-max-size', required=False, type=int,default=DEFAULT_SID_MAX_SIZE,help='maximum size of Service Names for the bruteforce (default: %(default)s)')
+	PPservicenameguesser.add_argument('--service-name-charset', dest='service-name-charset', required=False, default=DEFAULT_SID_CHARSET,help='charset for the Service Name bruteforce (default: %(default)s)')
+	PPservicenameguesser.add_argument('--service-name-file', dest='service-name-file', required=False, metavar="FILE", default=DEFAULT_SERVICE_NAME_FILE,help='file containing Service Names (default: %(default)s)')
+	#PPservicenameguesser.add_argument('--no-alias-like-sid', dest='no-alias-like-sid', action='store_true', required=False,help='no try listener ALIAS like SIDs (default: %(default)s)')
+#1.4- Parent parser: Password Guesser
 	#1.4- Parent parser: Password Guesser
 	PPpassguesser = argparse.ArgumentParser(add_help=False,formatter_class=myFormatterClass)
 	PPpassguesser._optionals.title = "password guesser options"
@@ -490,7 +615,7 @@ def main():
 	#2- main commands
 	subparsers = parser.add_subparsers(help='\nChoose a main command')
 	#2.a- Run all modules
-	parser_all = subparsers.add_parser('all',parents=[PPoptional,PPconnection,PPallModule,PPoutput,PPsidguesser,PPpassguesser], formatter_class=mySubFormatterClass, help='to run all modules in order to know what it is possible to do')	
+	parser_all = subparsers.add_parser('all',parents=[PPoptional,PPconnection,PPallModule,PPoutput,PPsidguesser,PPservicenameguesser,PPpassguesser], formatter_class=mySubFormatterClass, help='to run all modules in order to know what it is possible to do')
 	parser_all.set_defaults(func=runAllModules,auditType='all')
 	#2.b- tnscmd
 	parser_tnscmd = subparsers.add_parser('tnscmd',parents=[PPoptional,PPconnection,PPTnsCmd,PPoutput], formatter_class=mySubFormatterClass, help='to communicate with the TNS listener')	
@@ -501,6 +626,9 @@ def main():
 	#2.b- SIDGuesser
 	parser_sidGuesser = subparsers.add_parser('sidguesser',parents=[PPoptional,PPconnection,PPsidguesser,PPoutput], formatter_class=mySubFormatterClass, help='to know valid SIDs')
 	parser_sidGuesser.set_defaults(func=runSIDGuesserModule,auditType='sidGuesser')
+	# 2.b.2- ServiceNameGuesser
+	parser_serviceNameGuesser = subparsers.add_parser('snguesser', parents=[PPoptional, PPconnection, PPservicenameguesser, PPoutput], formatter_class=mySubFormatterClass, help='to know valid Service Name(s)')
+	parser_serviceNameGuesser.set_defaults(func=runServiceNameGuesserModule, auditType='serviceNameGuesser')
 	#2.c- PasswordGuesser
 	parser_passwordGuesser = subparsers.add_parser('passwordguesser',parents=[PPoptional,PPconnection,PPpassguesser,PPoutput], formatter_class=mySubFormatterClass, help='to know valid credentials')
 	parser_passwordGuesser.set_defaults(func=runPasswordGuesserModule,auditType='passwordGuesser')

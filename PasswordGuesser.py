@@ -5,7 +5,7 @@ from OracleDatabase import OracleDatabase
 from time import sleep
 import logging, os.path
 from Constants import *
-from Utils import sidHasBeenGiven, stringToLinePadded, getCredentialsFormated, getSIDorServiceNameWithType, getSIDorServiceName
+from Utils import sidOrServiceNameHasBeenGiven, stringToLinePadded, getCredentialsFormated, getSIDorServiceNameWithType, getSIDorServiceName
 from random import shuffle
 
 class PasswordGuesser (OracleDatabase):
@@ -210,7 +210,7 @@ def runPasswordGuesserModule(args):
 	'''
 	Run the PasswordGuesser module
 	'''
-	if sidHasBeenGiven(args) == False : return EXIT_MISS_ARGUMENT
+	if sidOrServiceNameHasBeenGiven(args) == False : return EXIT_MISS_ARGUMENT
 	args['print'].title("Searching valid accounts on the {0} server, port {1}".format(args['server'],args['port']))
 	if args['accounts-files'][0] != None and args['accounts-files'][1] != None : args['accounts-file'] = None
 	passwordGuesser = PasswordGuesser(args, accountsFile=args['accounts-file'], loginFile=args['accounts-files'][0], passwordFile=args['accounts-files'][1], timeSleep=args['timeSleep'], loginAsPwd=args['login-as-pwd'])

@@ -184,7 +184,7 @@ def ipOrNameServerHasBeenGiven(args):
 				return False
 	return True
 
-def sidHasBeenGiven(args):
+def sidOrServiceNameHasBeenGiven(args):
 	'''
 	Return True if a SID or Service Name has been given
 	Otherwise return False
@@ -206,7 +206,7 @@ def checkOptionsGivenByTheUser(args,operationsAllowed,checkSID=True,checkAccount
 	- operationsAllowed : operations allowed with this module
 	'''
 	if ipOrNameServerHasBeenGiven(args) == False : return False
-	elif checkSID==True and sidHasBeenGiven(args) == False : return False
+	elif checkSID==True and sidOrServiceNameHasBeenGiven(args) == False : return False
 	elif checkAccount==True and anAccountIsGiven(args) == False : return False
 	elif anOperationHasBeenChosen(args,operationsAllowed) == False : return False
 	return True

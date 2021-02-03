@@ -82,7 +82,7 @@ def runUsernameLikePassword(args):
 			additionalPwd = args['additional-pwd']
 		usernameLikePassword.tryUsernameLikePassword(additionalPwd = additionalPwd)
 		if usernameLikePassword.validAccountsList == {}:
-			args['print'].badNews("No found a valid account on {0}:{1}/{2}".format(args['server'], args['port'], getSIDorServiceNameWithType(args)))
+			args['print'].badNews("No found a valid account on {0}:{1}/{2} with usernameLikePassword module".format(args['server'], args['port'], getSIDorServiceNameWithType(args)))
 		else :
-			args['print'].goodNews("Accounts found on {0}:{1}/{2}: {3}".format(args['server'], args['port'], getSIDorServiceNameWithType(args), getCredentialsFormated(usernameLikePassword.validAccountsList)))
+			args['print'].goodNews("Accounts found on {0}:{1}/{2} with usernameLikePassword module: {3}".format(args['server'], args['port'], getSIDorServiceNameWithType(args), getCredentialsFormated(usernameLikePassword.validAccountsList)))
 

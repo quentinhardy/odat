@@ -24,6 +24,7 @@ MAX_SUB_HELP_POSITION=45
 MAX_SPECIAL_SUB_HELP_POSITION = 60
 MAX_HELP_WIDTH = 150
 DEFAULT_SID_FILE = "resources/sids.txt"
+DEFAULT_SERVICE_NAME_FILE = "resources/sids.txt"
 DEFAULT_ACCOUNT_FILE = "accounts/accounts.txt"
 DEFAULT_LOGINS_FILE = "accounts/logins.txt"
 DEFAULT_PWDS_FILE = "accounts/pwds.txt"

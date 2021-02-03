@@ -25,7 +25,9 @@ class SIDGuesser (OracleDatabase):
 		self.args['SYSDBA'] = False
 		self.args['SYSOPER'] = False
 		self.timeSleep = timeSleep
-		self.NO_GOOD_SID_STRING_LIST = ["listener does not currently know of service requested","listener does not currently know of SID","connection to server failed"]
+		self.NO_GOOD_SID_STRING_LIST = ["listener does not currently know of service requested",
+										"listener does not currently know of SID",
+										"connection to server failed"]
 
 	def getValidSIDs(self):
 		'''
@@ -40,14 +42,6 @@ class SIDGuesser (OracleDatabase):
 		if sid not in self.valideSIDS:
 			self.valideSIDS.append(sid)
 
-	def __setUserAndPassword__(self):
-		'''
-		User and password random
-		'''
-		self.args['user'] = self.__generateRandomString__(nb=10)
-		self.args['password'] = self.__generateRandomString__(nb=10)
-		
-
 	def __loadSIDsFromFile__(self):
 		'''
 		return list containing SIDS
@@ -55,7 +49,8 @@ class SIDGuesser (OracleDatabase):
 		sids = []
 		logging.info('Load SIDS stored in the {0} file'.format(self.SIDFile))
 		f = open(self.SIDFile)
-		for l in f: sids.append(l.replace('\n','').replace('\t',''))
+		for l in f:
+			sids.append(l.replace('\n','').replace('\t',''))
 		f.close()
 		return sorted(sids)
 
@@ -64,9 +59,8 @@ class SIDGuesser (OracleDatabase):
 		Test if it is a good SID
 		'''
 		no_good_sid_found = False
-		self.__setUserAndPassword__()
-		self.__generateConnectionString__()
-		logging.debug("Try to connect with the {0} SID ({1})".format(self.args['sid'],self.args['connectionStr'])) 
+		self.__generateConnectionString__(username=self.__generateRandomString__(nb=15), password=self.__generateRandomString__(nb=5))
+		logging.debug("Try to connect with the {0} SID ({1})".format(self.args['sid'], self.args['connectionStr']))
 		status = self.connection()
 		if self.__needRetryConnection__(status) == True: 
 			status = self.__retryConnect__(nbTry=4)
@@ -102,7 +96,7 @@ class SIDGuesser (OracleDatabase):
 
 	def bruteforceSIDs(self, size=4, charset=string.ascii_uppercase):
 		'''
-		Bruteforce_sid
+		Bruteforce SID
 		'''
 		self.args['print'].subtitle("Searching valid SIDs thanks to a brute-force attack on {2} chars now ({0}:{1})".format(self.args['server'], self.args['port'], size))
 		pbar,nb = self.getStandardBarStarted(len(charset)**size), 0

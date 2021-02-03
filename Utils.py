@@ -228,6 +228,7 @@ def stringToLinePadded(string, padValue=" "):
 	
 def generateRandomString (length=20):
 	'''
+	Get a Random upper case string
 	'''
 	return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(length))
 

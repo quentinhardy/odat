@@ -19,6 +19,7 @@ class DbmsScheduler (OracleDatabase):
 		logging.debug("DbmSscheduler object created")
 		OracleDatabase.__init__(self,args)
 		self.jobName = None
+		self.CMD_WIND_PATH = "c:\windows\system32\cmd.exe"
 
 	def __removeJob__(self, jobName, force=False, defer=True):
 		'''
@@ -115,7 +116,7 @@ class DbmsScheduler (OracleDatabase):
 			self.args['print'].goodNews("The Job is finish") 
 			return True
 
-	def execOSCommand(self,cmd):
+	def execOSCommand(self, cmd, prepandWindCmdPath=False):
 		'''
 		Execute an OS command on the remote database system
 		Example: 
@@ -124,14 +125,19 @@ class DbmsScheduler (OracleDatabase):
 		    exec DBMS_SCHEDULER.SET_JOB_ARGUMENT_VALUE('J1226',2,'2');
 		    exec DBMS_SCHEDULER.SET_JOB_ARGUMENT_VALUE('J1226',3,'192.168.56.1');
 		    exec DBMS_SCHEDULER.ENABLE('J1226');
-		    select log_id, log_date, job_name, status, error#, additional_info from dba_scheduler_job_run_details where job_name ='J1226'; 
+		    select log_id, log_date, job_name, status, error#, additional_info from dba_scheduler_job_run_details where job_name ='J1226';
+		If prepandWindCmdPath is enabled, prepand path to cmd.exe before executing the command.
 		'''
 		self.jobName = self.__generateRandomString__(nb=20)
 		logging.info('Execute the following command on the remote database system: {0}'.format(cmd))
 		logging.info('Be Careful: Special chars are not allowed in the command line')
 		if ">" in cmd:
 			logging.warning('Be Careful: Special chars are not allowed in the command line and it seems you are using one')
-		status = self.__createJob__(cmd)
+		if prepandWindCmdPath == True:
+			fullCmd = "{0} /c {1}".format(self.CMD_WIND_PATH, cmd)
+		else:
+			fullCmd = cmd
+		status = self.__createJob__(fullCmd)
 		if isinstance(status,Exception): return status
 		status = self.__runJob__()
 		if isinstance(status,Exception): return status
@@ -199,7 +205,7 @@ def runDbmsSchedulerModule(args):
 	#Option 1: exec
 	if args['exec'] != None:
 		args['print'].title("Execute the `{0}` on the {1} server".format(args['exec'],args['server']))
-		status = dbmsScheduler.execOSCommand(args['exec'])
+		status = dbmsScheduler.execOSCommand(args['exec'], prepandWindCmdPath=args['cmd-exe'])
 		if status == True:
 			args['print'].goodNews("The `{0}` command was executed on the {1} server".format(args['exec'],args['server']))
 		else :

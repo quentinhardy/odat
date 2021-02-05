@@ -14,12 +14,14 @@ Usage examples of ODAT:
 * You have a valid Oracle account on a database and want to __escalate your privileges__ to become DBA or SYSDBA
 * You have a Oracle account and you want to __execute system commands__ (e.g. __reverse shell__) in order to move forward on the operating system hosting the database
 
-Tested on Oracle Database __10g__,  __11g__,  __12c__ and __18c__.
+Tested on Oracle Database __10g__,  __11g__,  __12c__, __18c__ and __19c__.
 
 __ODAT linux standalone__ version at [https://github.com/quentinhardy/odat/releases/](https://github.com/quentinhardy/odat/releases/). Notice it is recommended to use the development version  (*git clone*), *master-python3* branch (python 3 version).
 
 Changelog
 ====
+* Version __4.4__ (__XX/XX/2021__):
+  * new module: Service Name Guesser, for searching valid Service Names. Specific module named __*snguesser*__ and integrated in *all* module too. By default, *all* module searches all valid Service Names now after searching valid SIDs.
 * Version __4.3__ (__28/06/2020__):
   * new option: _--both-ul_. Try each password in lower case and upper case if it is not done in credential file(s)
   * new option: _--random-order_. Test accounts in random order. By default, it uses the text file order

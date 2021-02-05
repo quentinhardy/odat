@@ -479,7 +479,7 @@ def main():
 	PPdbmsscheduler._optionals.title = "DBMSScheduler commands"
 	PPdbmsscheduler.add_argument('--exec',dest='exec',default=None,required=False,help='execute a system command on the remote system')
 	PPdbmsscheduler.add_argument('--reverse-shell',dest='reverse-shell',required=False,nargs=2,metavar=('ip','port'),help='get a reverse shell')
-	PPdbmsscheduler.add_argument('--cmd-exe', dest='cmd-exe', action='store_true', help='execute command in a "cmd.exe /c" (for --exec with Windows only)')
+	PPdbmsscheduler.add_argument('--cmd-exe', dest='cmd-exe', action='store_true', help='execute command in a "cmd.exe /c" (for --exec with Windows target only)')
 	PPdbmsscheduler.add_argument('--make-download', dest='make-download', required=False, nargs=2, metavar=('urlToFile', 'remotefilePath'), help='make the windows target download a local file with powershell over http')
 	PPdbmsscheduler.add_argument('--test-module',dest='test-module',action='store_true',help='test the module before use it')
 	#1.8- Parent parser: Java 

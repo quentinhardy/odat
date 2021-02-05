@@ -268,3 +268,5 @@ def getSIDorServiceNameWithType(args):
 		return "ServiceName:{0}".format(args['serviceName'])
 	else:
 		return None
+
+

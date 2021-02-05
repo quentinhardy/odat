@@ -137,7 +137,7 @@ CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
 				return status
 		return True
 
-	def __runOSCmd__ (self,cmd,printResponse=True,retryNb=1):
+	def __runOSCmd__ (self, cmd, printResponse=True, retryNb=1):
 		'''
 		Run a OS command
 		defineClassAndFunctionToExecOsCmd() must be run before this one
@@ -150,22 +150,23 @@ CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
 			if self.JAVA_SESSION_CLEARED in str(data):
 				if retryNb == 0 : return data
 				logging.info("Run again the OS command...")
-				return  self.__runOSCmd__ (cmd=cmd,printResponse=printResponse,retryNb=retryNb-1)
+				return  self.__runOSCmd__ (cmd=cmd, printResponse=printResponse, retryNb=retryNb-1)
 			return data
 		if data[0][0] == None : 
 			logging.info('The system command output is empty')
 			return ''
 		else : 
 			logging.info('The system command output is: `{0}`...'.format(data[0][0][:100]))
-			if printResponse == True : self.args['print'].printOSCmdOutput("{0}".format(data[0][0]))
+			if printResponse == True :
+				self.args['print'].printOSCmdOutput(data[0][0])
 			return data[0][0]
 
-	def execOSCommand(self,cmd,printResponse=True, needCreateClassAndFunction = True, needDeleteClassAndFunction = True):
+	def execOSCommand(self,cmd, printResponse=True, needCreateClassAndFunction=True, needDeleteClassAndFunction=True):
 		'''
 		Run a OS command
 		'''
 		if needCreateClassAndFunction == False :
-			data = self.__runOSCmd__ (cmd=cmd,printResponse=printResponse)
+			data = self.__runOSCmd__ (cmd=cmd, printResponse=printResponse)
 		else :
 			status = self.createClassAndFunctionToExecOsCmd()
 			if status != True:
@@ -195,7 +196,7 @@ CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
 					needCreateClassFunctions = False
 				else :
 					cmd = input('{0}$ '.format(self.args['server']))
-					output = self.execOSCommand(cmd=cmd,printResponse=True, needCreateClassAndFunction = False, needDeleteClassAndFunction = False)
+					output = self.execOSCommand(cmd=cmd ,printResponse=True, needCreateClassAndFunction = False, needDeleteClassAndFunction = False)
 			except KeyboardInterrupt:
 				status = self.deleteClassAndFunctionToExecOsCmd()
 				if status != True:

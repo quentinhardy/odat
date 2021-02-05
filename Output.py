@@ -100,7 +100,7 @@ class Output ():
 		'''
 		print the output of a OS command
 		'''
-		print(m.encode(encoding='UTF-8',errors='ignore'))
+		print(m.encode(encoding='UTF-8',errors='ignore').decode())
 		
 	def getColoredString(self, string, color, attrs=[]):
 		'''

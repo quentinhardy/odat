@@ -20,8 +20,13 @@ __ODAT linux standalone__ version at [https://github.com/quentinhardy/odat/relea
 
 Changelog
 ====
-* Version __4.4__ (__XX/XX/2021__):
-  * new module: Service Name Guesser, for searching valid Service Names. Specific module named __*snguesser*__ and integrated in *all* module too. By default, *all* module searches all valid Service Names now after searching valid SIDs.
+* Version __5.0__ (__08/02/2021__):
+  * Important new module: __Service Name Guesser__, for searching valid Service Names. Specific module named __*snguesser*__ and integrated in *all* module too. By default, *all* module searches all valid Service Names now after searching SIDs. SIDs can be identical to Service Name. When a Service Name is found but not a SID, Service Name can be used as a SID for connection.
+  * __--basic-info__ option in _search_ module for getting some basic technical information about the database/instance. It gets Service Name, SID, databases, Oracle Database Vault status, Java status, hostname, ip address of the server, password policy, current system pivileges, current roles, pathches (when >= 12c and user is privileged), etc. Requires high pivileges for very interesting information (e.g. password policy & lock status).
+  * Reverse shell implemented in _DbmsScheduler_ module when the target is Windows. Starts a minimal http server, makes the Oracle Database download the powershell code and executes it remotely. The user has an interactive PS shell. Downloaded file is removed automatically.
+  * _--make-download_ option implemented in _DbmsScheduler_ in order to make download a Windows target a script/binary file.
+  * Bug fix in output in _DbmsScheduler_ module (_printOSCmdOutput()_).
+  * Better explanations in _DbmsScheduler_ module (options).
 * Version __4.3__ (__28/06/2020__):
   * new option: _--both-ul_. Try each password in lower case and upper case if it is not done in credential file(s)
   * new option: _--random-order_. Test accounts in random order. By default, it uses the text file order

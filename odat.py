@@ -152,7 +152,7 @@ def runAllModules(args):
 		logging.debug("All Module: Loading credentials stored in the {0} file as valid credentials".format(args['accounts-file']))
 		#Load accounts from file
 		passwordGuesser = PasswordGuesser(args,
-										  args['accounts-file'],
+										  accountsFile= args['accounts-file'],
 										  loginFile=None ,
 										  passwordFile=None,
 										  loginAsPwd=args['login-as-pwd'],
@@ -450,6 +450,7 @@ def main():
 	PPpassguesser._optionals.title = "password guesser options"
 	PPpassguesser.add_argument('--accounts-file',dest='accounts-file',required=False,metavar="FILE",default=DEFAULT_ACCOUNT_FILE,help='file containing Oracle credentials (default: %(default)s)')
 	PPpassguesser.add_argument('--accounts-files',dest='accounts-files',required=False,nargs=2,metavar=('loginFile','pwdFile'),default=[None, None],help='files containing logins and passwords (default: %(default)s)')
+	PPpassguesser.add_argument('--logins-file-pwd', dest='logins-file-pwd', required=False, nargs=2, metavar=('loginFile','thePwd'), help='try the given password for each login in file')
 	PPpassguesser.add_argument('--login-as-pwd',dest='login-as-pwd',action='store_true',help='each login will be tested as password (lowercase & uppercase)')
 	PPpassguesser.add_argument('--force-retry',dest='force-retry',action='store_true',help='allow to test multiple passwords for a user without ask you')
 	PPpassguesser.add_argument('--separator', dest='separator', default='/', help='separator between login and password (default: %(default)s)')

@@ -12,7 +12,7 @@ class PasswordGuesser (OracleDatabase):
 	'''
 	Password guesser
 	'''
-	def __init__(self, args, accountsFile, loginFile, passwordFile, loginAsPwd, bothUpperLower=False, randomOrder=False, timeSleep=0):
+	def __init__(self, args, accountsFile, loginFile=None, passwordFile=None, loginAsPwd=False, password=None, bothUpperLower=False, randomOrder=False, timeSleep=0):
 		'''
 		Constructor
 		'''
@@ -24,8 +24,11 @@ class PasswordGuesser (OracleDatabase):
 		self.separator = args['separator']  # Separator for credentials
 		self.bothUpperLower = bothUpperLower
 		self.randomOrder = randomOrder
-		if self.accountsFile == '' : self.accounts = []
-		else : self.accounts = self.__getAccounts__()
+		self.password = password
+		if self.accountsFile == '' :
+			self.accounts = []
+		else :
+			self.accounts = self.__loadAccounts__()
 		self.valideAccounts = {}
 		self.args['SYSDBA'] = False
 		self.args['SYSOPER'] = False
@@ -37,9 +40,9 @@ class PasswordGuesser (OracleDatabase):
 		'''
 		return self.accounts
 
-	def __getAccounts__(self):
+	def __loadAccounts__(self):
 		'''
-		Load credentials stored in file(s) according to program arguments.
+		Load credentials stored in file(s) according to contructor arguments.
 		Impossible to have duplicate credentials.
 		return a list containing each account
 		e.g. [['login1','pwd1'], etc]
@@ -49,7 +52,7 @@ class PasswordGuesser (OracleDatabase):
 		logins = [] #For saving all logins when a login file and a pwd file are given
 		passwords = [] #For saving all pwds when a login file and a pwd file are given
 		if self.accountsFile != None:
-			logging.info('Loading accounts stored in the {0} file'.format(self.accountsFile))
+			logging.info('Loading accounts stored in the uniq file {0}'.format(repr(self.accountsFile)))
 			logging.info("Separator between login and password fixed on {0}".format(repr(self.separator)))
 			f = open(self.accountsFile)
 			for l in f:
@@ -62,18 +65,15 @@ class PasswordGuesser (OracleDatabase):
 				else:
 					logging.warning("The line {0} is not loaded in credentials list: {1}".format(repr(l), repr(lsplit)))
 			f.close()
+		elif self.loginFile!=None and self.password!=None:
+			logging.info('Loading logins/usernames stored in the file {0} with the password {1}'.format(repr(self.loginFile), repr(self.password)))
+			logins = self.__getLoginsList__()
+			for aLogin in logins:
+				accountsDict[aLogin] = [self.password]
 		else:
 			logging.info('Loading logins stored in {0} and passwords stored in {1}'.format(self.loginFile, self.passwordFile))
-			f = open(self.loginFile)
-			for l in f: 
-				aLogin = l.replace('\n','').replace('\t','')
-				if aLogin not in logins: 
-					logins.append(aLogin)
-			f.close()
-			f = open(self.passwordFile)
-			for l in f:
-				passwords.append(l.replace('\n','').replace('\t',''))
-			f.close()
+			logins = self.__getLoginsList__()
+			passwords = self.__getPasswordsList__()
 			for aLogin in logins:
 				for aPwd in passwords:
 					if aLogin not in accountsDict:
@@ -106,9 +106,43 @@ class PasswordGuesser (OracleDatabase):
 			logging.warning("0 login/password loaded. It seems there is an error with your account file")
 		return finalUniqAccounts
 
+	def __getLoginsList__(self):
+		'''
+		Returns logins stored in self.loginFile as a list.
+		usernames are in lowercases.
+		Remove duplicate usernames/logins.
+		'''
+		logins = []
+		logging.debug("Loading usernames/logins stored in {0}...".format(repr(self.loginFile)))
+		f = open(self.loginFile)
+		for l in f:
+			aLogin = l.replace('\n', '').replace('\t', '').lower()
+			if aLogin not in logins:
+				logins.append(aLogin)
+		f.close()
+		logging.debug("Usernames/logins loaded from {0}: {1} uniq usernames loaded".format(repr(self.loginFile), len(logins)))
+		return logins
+
+	def __getPasswordsList__(self):
+		'''
+		Returns passwords stored in self.passwordFile as a list
+		Remove duplicate passwords
+		'''
+		passwords = []
+		logging.debug("Loading password stored in {0}...".format(repr(self.passwordFile)))
+		f = open(self.passwordFile)
+		for l in f:
+			aPwd = l.replace('\n', '').replace('\t', '')
+			if aPwd not in passwords:
+				passwords.append(aPwd)
+		f.close()
+		logging.debug("Passwords loaded from {0}: {1} uniq passwords loaded".format(repr(self.passwordFile), len(passwords)))
+		return passwords
+
 	def searchValideAccounts(self):
 		'''
-		Search valide accounts
+		Search valide accounts.
+		By default, the constructor defines an attack thanks to ONE file wich contains usernames & passwords (with a separator).
 		Return True if no error, owtherwise False (i.e. pb with accounts)
 		'''
 		userChoice = 1
@@ -153,7 +187,8 @@ class PasswordGuesser (OracleDatabase):
 				elif self.__needRetryConnection__(status) == True:
 					status = self.__retryConnect__(nbTry=4)
 				elif self.ERROR_ACCOUNT_LOCKED in str(status):
-					logging.debug("{0} account is locked, so skipping this username for password".format(repr(self.args['user'])))
+					self.args['print'].printImportantNotice("{0} account is locked, so skipping this username for password".format(repr(self.args['user'])))
+					#logging.debug("{0} account is locked, so skipping this username for password".format(repr(self.args['user'])))
 					lockedUsernames.append(self.args['user'].lower())
 				else:
 					logging.debug("Error during connection with this account: {0}".format(status))
@@ -211,9 +246,31 @@ def runPasswordGuesserModule(args):
 	Run the PasswordGuesser module
 	'''
 	if sidOrServiceNameHasBeenGiven(args) == False : return EXIT_MISS_ARGUMENT
-	args['print'].title("Searching valid accounts on the {0} server, port {1}".format(args['server'],args['port']))
-	if args['accounts-files'][0] != None and args['accounts-files'][1] != None : args['accounts-file'] = None
-	passwordGuesser = PasswordGuesser(args, accountsFile=args['accounts-file'], loginFile=args['accounts-files'][0], passwordFile=args['accounts-files'][1], timeSleep=args['timeSleep'], loginAsPwd=args['login-as-pwd'])
+	args['print'].title("Searching valid accounts on the {0} server, port {1}".format(args['server'],args['port']))
+	accountsFile = None
+	accountsFiles = None
+	loginFile = None
+	passwordFile = None
+	loginFile = None
+	password = None
+	if args['accounts-files'][0] != None and args['accounts-files'][1] != None :
+		logging.debug("Login file and password file are given. 'accounts-file' option is disabled")
+		loginFile = args['accounts-files'][0]
+		passwordFile = args['accounts-files'][1]
+	elif args['logins-file-pwd']!= None and args['logins-file-pwd'][0] != None and args['logins-file-pwd'][1] != None :
+		logging.debug("Login file and a password are given. 'accounts-file' and 'accounts-files' options are disabled")
+		loginFile = args['logins-file-pwd'][0]
+		password = args['logins-file-pwd'][1]
+	else:
+		logging.debug("One file with accounts is given")
+		accountsFile = args['accounts-file']
+	passwordGuesser = PasswordGuesser(args,
+									  accountsFile=accountsFile,
+									  loginFile=loginFile,
+									  passwordFile=passwordFile,
+									  timeSleep=args['timeSleep'],
+									  loginAsPwd=args['login-as-pwd'],
+									  password=password)
 	passwordGuesser.searchValideAccounts()
 	validAccountsList = passwordGuesser.valideAccounts
 	if validAccountsList == {}:

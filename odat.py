@@ -596,6 +596,7 @@ def main():
 	#1.21- Parent parser: search
 	PPsearch = argparse.ArgumentParser(add_help=False,formatter_class=myFormatterClass)
 	PPsearch._optionals.title = "search commands"
+	PPsearch.add_argument('--basic-info', dest='basic-info', action='store_true', required=False,help='get basic information about the instance & database')
 	PPsearch.add_argument('--column-names',dest='column-names',default=None,required=False,metavar='sqlPattern',help='search pattern in all collumns')
 	PPsearch.add_argument('--pwd-column-names',dest='pwd-column-names',action='store_true',help='search password patterns in all collumns')
 	PPsearch.add_argument('--desc-tables',dest='desc-tables',action='store_true',help='describe each table which is accessible')

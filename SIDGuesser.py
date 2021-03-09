@@ -27,7 +27,8 @@ class SIDGuesser (OracleDatabase):
 		self.timeSleep = timeSleep
 		self.NO_GOOD_SID_STRING_LIST = ["listener does not currently know of service requested",
 										"listener does not currently know of SID",
-										"connection to server failed"]
+										"connection to server failed",
+										"destination host unreachable"]
 
 	def getValidSIDs(self):
 		'''
@@ -57,6 +58,7 @@ class SIDGuesser (OracleDatabase):
 	def __testIfAGoodSID__(self):
 		'''
 		Test if it is a good SID
+		Return status of the connection
 		'''
 		no_good_sid_found = False
 		self.args['serviceName'] = None
@@ -75,10 +77,13 @@ class SIDGuesser (OracleDatabase):
 				logging.info("'{0}' is a valid SID (Server message: {1})".format(self.args['sid'],str(status)))
 				self.args['print'].goodNews(stringToLinePadded("'{0}' is a valid SID. Continue... ".format(self.args['sid'])))
 		self.close()
+		return status
 
 	def searchKnownSIDs(self):
 		'''
 		Search valid SIDs THANKS TO a well known sid list
+		Return False if connection error.
+		Return True if SIDs have been tested.
 		'''
 		self.args['print'].subtitle("Searching valid SIDs thanks to a well known SID list on the {0}:{1} server".format(self.args['server'], self.args['port']))
 		self.sids += self.__loadSIDsFromFile__()
@@ -89,7 +94,7 @@ class SIDGuesser (OracleDatabase):
 			pbar.update(nb)
 			self.args['sid'] = aSID
 			
-			self.__testIfAGoodSID__()
+			connectionStatus = self.__testIfAGoodSID__()
 
 			sleep(self.timeSleep)
 		pbar.finish()

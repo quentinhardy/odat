@@ -165,23 +165,24 @@ def anOperationHasBeenChosen(args, operations):
 
 def ipOrNameServerHasBeenGiven(args):
 	'''
-	Return True if an ip or name server has been given
+	Return True if an ip or name server or a list of ips/hostnames has been given
 	Otherwise return False
 	- args must be a dictionary
 	'''
-	if ('server' in args) == False or args['server'] == None:
+	if (('server' in args) == False or args['server'] == None) and args['hostlist'] == None:
 		logging.critical("The server address must be given with the '-s IPadress' option.")
 		return False
 	else :
-		try:
-			inet_aton(args['server'])
-		except Exception as e:
+		if args['hostlist'] == None:
 			try:
-				ip = gethostbyname(args['server'])
-				args['server'] = ip
+				inet_aton(args['server'])
 			except Exception as e:
-				logging.critical("There is an error with the name server or ip address: '{0}'".format(e))
-				return False
+				try:
+					ip = gethostbyname(args['server'])
+					args['server'] = ip
+				except Exception as e:
+					logging.critical("There is an error with the name server or ip address: '{0}'".format(e))
+					return False
 	return True
 
 def sidOrServiceNameHasBeenGiven(args):
@@ -269,4 +270,27 @@ def getSIDorServiceNameWithType(args):
 	else:
 		return None
 
+def getHostsFromFile(filename):
+	'''
+	Load targets from the file filename
+	One ip/target by line.
+	ip:port\n or ip\n and in this case, default port used (1521)
+	Return a list of hosts : [['1.1.1.1',1433],['1.1.1.2',1433], etc]
+	'''
+	hosts, lines = [], None
+	logging.debug("Trying to read hosts from {0}".format(filename))
+	f = open(filename)
+	lines = f.readlines()
+	logging.info("Reading hosts from {0}".format(filename))
+	for aHost in lines:
+		aHostSplitted = aHost.replace('\n','').replace('\r','').replace('\t','').split(':')
+		if len(aHostSplitted) == 1:
+			hosts.append([aHostSplitted[0],1521])
+		elif len(aHostSplitted) == 2:
+			hosts.append([aHostSplitted[0],aHostSplitted[1]])
+		else:
+			logging.warning("Impossible to read this host: {0}".format(aHostSplitted))
+	f.close()
+	logging.debug("Hosts stored in {0}: {1}".format(filename, hosts))
+	return hosts
 

@@ -20,7 +20,16 @@ except ImportError:
 	COLORLOG_AVAILABLE = False
 
 import argparse, logging, platform, cx_Oracle, string, os, sys
-from Utils import areEquals, configureLogging,ErrorSQLRequest, sidOrServiceNameHasBeenGiven, anAccountIsGiven, ipOrNameServerHasBeenGiven, getCredentialsFormated, getSIDorServiceNameWithType
+from libnmap.parser import NmapParser
+from Utils import (areEquals,
+				   configureLogging,
+				   ErrorSQLRequest,
+				   sidOrServiceNameHasBeenGiven,
+				   anAccountIsGiven,
+				   ipOrNameServerHasBeenGiven,
+				   getCredentialsFormated,
+				   getSIDorServiceNameWithType,
+				   getHostsFromFile)
 
 from Constants import *
 from Output import Output
@@ -97,9 +106,23 @@ def runClean (args):
 				nbFileToDelete += 1
 	args['print'].goodNews("Finish: {0}/{1} file(s) deleted".format(nbFileDeleted, nbFileToDelete))
 
+def runAllModulesOnEachHost(args):
+	'''
+	Run all modules for all targets
+	'''
+	if args['hostlist'] != None:
+		hosts = getHostsFromFile(args['hostlist'])
+		for aHost in hosts:
+			args['server'], args['port'] = aHost[0], aHost[1]
+			args['user'], args['password'] = None, None
+			args['sid'], args['serviceName'] = None, None
+			runAllModules(args)
+	else:
+		runAllModules(args)
+
 def runAllModules(args):
 	'''
-	Run all modules
+	Run all modules for one target
 	'''
 	connectionInformationSID, connectionInformationServiceName = {}, {} #Store valid/given connection strings
 	validSIDsList, validServiceNameList = [], [] #Store valid SID ans Service Name
@@ -411,6 +434,7 @@ def main():
 	PPallModule._optionals.title = "all module options"
 	PPallModule.add_argument('-C', dest='credentialsFile', action='store_true', required=False, default=False, help='use credentials stored in the --accounts-file file (disable -P and -U)')
 	PPallModule.add_argument('--no-tns-poisoning-check', dest='no-tns-poisoning-check', action='store_true', required=False, default=False, help="don't check if target is vulnreable to TNS poisoning")
+	PPallModule.add_argument('-l', dest='hostlist', required=False, help='filename which contains hosts (one ip on each line: "ip:port" or "ip" only)')
 	#1.3bis- Parent parser: TNS cmd
 	PPTnsCmd = argparse.ArgumentParser(add_help=False,formatter_class=myFormatterClass)
 	PPTnsCmd._optionals.title = "TNS cmd options"
@@ -443,8 +467,6 @@ def main():
 	PPservicenameguesser.add_argument('--service-name-max-size', dest='service-name-max-size', required=False, type=int,default=DEFAULT_SID_MAX_SIZE,help='maximum size of Service Names for the bruteforce (default: %(default)s)')
 	PPservicenameguesser.add_argument('--service-name-charset', dest='service-name-charset', required=False, default=DEFAULT_SID_CHARSET,help='charset for the Service Name bruteforce (default: %(default)s)')
 	PPservicenameguesser.add_argument('--service-name-file', dest='service-name-file', required=False, metavar="FILE", default=DEFAULT_SERVICE_NAME_FILE,help='file containing Service Names (default: %(default)s)')
-	#PPservicenameguesser.add_argument('--no-alias-like-sid', dest='no-alias-like-sid', action='store_true', required=False,help='no try listener ALIAS like SIDs (default: %(default)s)')
-#1.4- Parent parser: Password Guesser
 	#1.4- Parent parser: Password Guesser
 	PPpassguesser = argparse.ArgumentParser(add_help=False,formatter_class=myFormatterClass)
 	PPpassguesser._optionals.title = "password guesser options"
@@ -620,7 +642,7 @@ def main():
 	subparsers = parser.add_subparsers(help='\nChoose a main command')
 	#2.a- Run all modules
 	parser_all = subparsers.add_parser('all',parents=[PPoptional,PPconnection,PPallModule,PPoutput,PPsidguesser,PPservicenameguesser,PPpassguesser], formatter_class=mySubFormatterClass, help='to run all modules in order to know what it is possible to do')
-	parser_all.set_defaults(func=runAllModules,auditType='all')
+	parser_all.set_defaults(func=runAllModulesOnEachHost,auditType='all')
 	#2.b- tnscmd
 	parser_tnscmd = subparsers.add_parser('tnscmd',parents=[PPoptional,PPconnection,PPTnsCmd,PPoutput], formatter_class=mySubFormatterClass, help='to communicate with the TNS listener')	
 	parser_tnscmd.set_defaults(func=runTnsCmdModule,auditType='tnscmd')
@@ -707,7 +729,8 @@ def main():
 	configureLogging(args)
 	args['print'] = Output(args)
 	#Start the good function
-	if 'auditType' in args and (args['auditType']=='unwrapper' or args['auditType']=='clean'): pass
+	if 'auditType' in args and (args['auditType']=='unwrapper' or args['auditType']=='clean'):
+		pass
 	else:
 		if ipOrNameServerHasBeenGiven(args) == False : return EXIT_MISS_ARGUMENT
 	logging.debug("cx_Oracle Version: {0}".format(cx_Oracle.version))

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from sys import exit,stdout,version_info
+import socket
 if version_info[0] < 3:
 	print("ERROT: Python 3 has to be used for this version of ODAT")
 	exit(99)
@@ -120,10 +121,37 @@ def runAllModulesOnEachHost(args):
 	else:
 		runAllModules(args)
 
+def checkIfWorkingTnsListener(args, timeoutTCP=10):
+	'''
+	Returns True if it is a working TNS listener. Otherwise False
+	Use server and port of args only for testing.
+	'''
+	args['print'].printMessage("Checking if target {0}:{1} is well configured for a connection...".format(args['server'], args['port']))
+	socks = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	socks.settimeout(timeoutTCP)
+	logging.debug('Trying a TCP connection to {0} port {1}'.format(args['server'], args['port']))
+	try:
+		socks.connect((args['server'], args['port']))
+	except Exception as e:
+		args['print'].badNews("Impossible to establish a TCP connection to {0}:{1}. This target is SKIPPED".format(args['server'], args['port']))
+		return False
+	odb = OracleDatabase(args)
+	statusWorking = odb.isWorkingTnsListener()
+	if statusWorking == False:
+		args['print'].badNews("According to a test, the TNS listener {0}:{1} is NOT well configured. This target is SKIPPED".format(args['server'], args['port']))
+		return False
+	else:
+		args['print'].goodNews("According to a test, the TNS listener {0}:{1} is well configured. Continue...".format(args['server'],args['port']))
+		return True
+
 def runAllModules(args):
 	'''
 	Run all modules for one target
+	Returns True if all tests have been checked if possible.
+	Returns False if TNS listener is not well configured
 	'''
+	if checkIfWorkingTnsListener(args) == False:
+		return False
 	connectionInformationSID, connectionInformationServiceName = {}, {} #Store valid/given connection strings
 	validSIDsList, validServiceNameList = [], [] #Store valid SID ans Service Name
 	#0)TNS Poinsoning
@@ -289,6 +317,7 @@ def runAllModules(args):
 			args['run'] = True
 			logging.info("Using last valid credentials on {0} for getting usernames and checking weak passwords".format(getSIDorServiceNameWithType(args)))
 			runUsernameLikePassword(args)
+	return True
 
 def runAllAuthenticatedModules(args, username, password, sid=None, serviceName=None, ):
 	"""

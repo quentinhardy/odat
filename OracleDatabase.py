@@ -15,6 +15,7 @@ class OracleDatabase:
         '''
         Constructor
         '''
+        logging.debug("OracleDatabase module created")
         self.args = args
         self.__generateConnectionString__()
         self.oracleDatabaseversion = ''
@@ -135,7 +136,8 @@ class OracleDatabase:
             elif stopIfError == True: 
                 logging.critical("Impossible to connect to the remote database: {0}".format(self.cleanError(e)))
                 exit(EXIT_BAD_CONNECTION)
-            else : return ErrorSQLRequest(e)
+            else :
+                return ErrorSQLRequest(e)
         
 
     def __retryConnect__(self, nbTry=3):
@@ -153,7 +155,7 @@ class OracleDatabase:
                 logging.debug("Re-connection done !")
                 return status
             if tryNum == nbTry-1 :
-                logging.warning("Becareful! The remote is now unavailable. {0} SID not tried. Perhaps you are doing a DOS on the listener.".format(self.args['sid']))
+                logging.warning("Becareful! The remote is now unavailable. {0} SID not tried. Perhaps you are doing a DOS on the listener.".format(self.args['sid']))
             timesleep += 4
             logging.debug("Impossible to re-establish the connection!")
         return None
@@ -627,6 +629,27 @@ class OracleDatabase:
             logging.debug("The trigger '{0}' has been dropped".format(triggerName))
             return True
 
+    def isWorkingTnsListener(self):
+        '''
+        Returns True when the TNS listener is well configured and it can be used for connection. Otherwise, return False
+        Sends a connection with an invalid login, password and SID. If TNS listener is working, the TNS listener
+        should returns an error with the SID. Ib this case, the TNS listener is working. Otherwise, TNS does not work well.
+        '''
+        workingTNS = False
+        self.args['serviceName'] = None
+        self.args['sid'] = None
+        self.__generateConnectionString__(username=self.__generateRandomString__(nb=15),
+                                          password=self.__generateRandomString__(nb=5))
+        logging.debug("Checking if {0}:{1} is a working TNS listener...".format(self.args['server'], self.args['port']))
+        status = self.connection(stopIfError=False)
+        #We have an error, because SID is not valid
+        if 'ORA-12505' in str(status):
+            logging.debug("{0}:{1} is a working TNS listener according to error".format(self.args['server'], self.args['port']))
+            workingTNS = True
+        else:
+            logging.debug("{0}:{1} is NOT a working TNS listener according to error : {2}".format(self.args['server'], self.args['port'], str(status)))
+        self.close()
+        return workingTNS
 
 
 

@@ -169,11 +169,25 @@ def ipOrNameServerHasBeenGiven(args):
 	Otherwise return False
 	- args must be a dictionary
 	'''
-	if (('server' in args) == False or args['server'] == None) and args['hostlist'] == None:
-		logging.critical("The server address must be given with the '-s IPadress' option.")
+	print(args)
+	#If server not exit and hostlist not exit ==>  ERROR
+	#If server not exit and hostlist == None ==>  ERROR
+	#If server NONE and hostlist not exit ==>  ERROR
+	#If server NONE and hostlist None ==>  ERROR
+	if ('server' not in args and 'hostlist' not in args):
+		logging.critical("The server address must be given with the '-s IPadress' option [Case 1]")
+		return False
+	if ('server' not in args and args['hostlist'] == None):
+		logging.critical("The server address must be given with the '-s IPadress' option [Case 2]")
+		return False
+	if (args['server'] == None and 'hostlist' not in args):
+		logging.critical("The server address must be given with the '-s IPadress' option [Case 3]")
+		return False
+	if (args['server'] == None and args['hostlist'] == None):
+		logging.critical("The server address must be given with the '-s IPadress' option [Case 3]")
 		return False
 	else :
-		if args['hostlist'] == None:
+		if ('hostlist' in args and args['hostlist'] == None):
 			try:
 				inet_aton(args['server'])
 			except Exception as e:

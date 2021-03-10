@@ -169,7 +169,6 @@ def ipOrNameServerHasBeenGiven(args):
 	Otherwise return False
 	- args must be a dictionary
 	'''
-	print(args)
 	#If server not exit and hostlist not exit ==>  ERROR
 	#If server not exit and hostlist == None ==>  ERROR
 	#If server NONE and hostlist not exit ==>  ERROR

@@ -644,7 +644,7 @@ class OracleDatabase:
         '''
         workingTNS = False
         self.args['serviceName'] = None
-        self.args['sid'] = None
+        self.args['sid'] = self.__generateRandomString__(nb=12)
         self.__generateConnectionString__(username=self.__generateRandomString__(nb=15),
                                           password=self.__generateRandomString__(nb=5))
         logging.debug("Checking if {0}:{1} is a working TNS listener...".format(self.args['server'], self.args['port']))

@@ -107,3 +107,13 @@ class Output ():
 		'''
 		if self.noColor == True or TERMCOLOR_AVAILABLE == False: return string
 		else : return colored(string, color, attrs=attrs)
+
+	def printMessage (self, m):
+		'''
+		print a message
+		'''
+		formatMesg = '[+] {0}'.format(m)
+		if self.noColor == True or TERMCOLOR_AVAILABLE == False:
+			print(formatMesg)
+		else :
+			print (colored(formatMesg, 'white',attrs=['bold']))

@@ -643,7 +643,9 @@ class OracleDatabase:
         should returns an error with the SID. Ib this case, the TNS listener is working. Otherwise, TNS does not work well.
         '''
         workingTNS = False
+        lastServiceName = self.args['serviceName']
         self.args['serviceName'] = None
+        lastSID = self.args['sid']
         self.args['sid'] = self.__generateRandomString__(nb=12)
         self.__generateConnectionString__(username=self.__generateRandomString__(nb=15),
                                           password=self.__generateRandomString__(nb=5))
@@ -656,6 +658,8 @@ class OracleDatabase:
         else:
             logging.debug("{0}:{1} is NOT a working TNS listener according to error : {2}".format(self.args['server'], self.args['port'], str(status)))
         self.close()
+        self.args['sid']         = lastSID
+        self.args['serviceName'] = lastServiceName
         return workingTNS
 
 

@@ -132,9 +132,11 @@ def checkIfWorkingTnsListener(args, timeoutTCP=10):
 	logging.debug('Trying a TCP connection to {0} port {1}'.format(args['server'], args['port']))
 	try:
 		socks.connect((args['server'], args['port']))
+		logging.debug("Connection established to server")
 	except Exception as e:
 		args['print'].badNews("Impossible to establish a TCP connection to {0}:{1}. This target is SKIPPED".format(args['server'], args['port']))
 		return False
+	socks.close()
 	odb = OracleDatabase(args)
 	statusWorking = odb.isWorkingTnsListener()
 	if statusWorking == False:

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from sys import exit,stdout,version_info
+from libnmap.parser import NmapParser
 import socket
 if version_info[0] < 3:
 	print("ERROT: Python 3 has to be used for this version of ODAT")
@@ -111,7 +112,20 @@ def runAllModulesOnEachHost(args):
 	'''
 	Run all modules for all targets
 	'''
-	if args['hostlist'] != None:
+	if args['nmap-file'] != None:
+		nmapReport = NmapParser.parse_fromfile(args['nmap-file'])
+		for aHost in nmapReport.hosts:
+			hostAdress = aHost.address
+			for aService in aHost.services:
+				serviceName = aService.service.lower()
+				# oracle-tns service, opened on TCP only
+				if aService.state == 'open' and aService.protocol == "tcp" and serviceName == "oracle-tns":
+					hostPort = aService.port
+					logging.info("Server {0} is running a TNS Listener on {1}: {2}".format(hostAdress, hostPort, repr(aService)))
+					args['server'], args['port'] = hostAdress, hostPort
+					args['user'], args['password'] = None, None
+					runAllModules(args)
+	elif args['hostlist'] != None:
 		hosts = getHostsFromFile(args['hostlist'])
 		for aHost in hosts:
 			args['server'], args['port'] = aHost[0], aHost[1]
@@ -468,6 +482,7 @@ def main():
 	PPallModule.add_argument('-C', dest='credentialsFile', action='store_true', required=False, default=False, help='use credentials stored in the --accounts-file file (disable -P and -U)')
 	PPallModule.add_argument('--no-tns-poisoning-check', dest='no-tns-poisoning-check', action='store_true', required=False, default=False, help="don't check if target is vulnreable to TNS poisoning")
 	PPallModule.add_argument('-l', dest='hostlist', required=False, help='filename which contains hosts (one ip on each line: "ip:port" or "ip" only)')
+	PPallModule.add_argument('--nmap-file', dest='nmap-file', default=None, required=False, help='xml nmap file for getting targets')
 	PPallModule.add_argument('--timeout-tcp-check', dest='timeout-tcp-check', default=10, type=int, required=False, help='timeout for tcp connection check (default: %(default)s scds)')
 	#1.3bis- Parent parser: TNS cmd
 	PPTnsCmd = argparse.ArgumentParser(add_help=False,formatter_class=myFormatterClass)

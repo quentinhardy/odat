@@ -192,6 +192,7 @@ If you want to have the __development version__ installed on your computer, thes
   * passlib
   * pycrypto
   * python-scapy
+  * python-libnmap (new from python 5.1)    
   * colorlog (recommended)
   * termcolor (recommended)
   * argcomplete (recommended)
@@ -271,7 +272,7 @@ python3 -c 'import cx_Oracle'
 * Install some python libraries:
 ```bash
 sudo apt-get install python3-scapy
-sudo pip3 install colorlog termcolor pycrypto passlib
+sudo pip3 install colorlog termcolor pycrypto passlib python-libnmap
 sudo pip3 install argcomplete && sudo activate-global-python-argcomplete
 ```
 

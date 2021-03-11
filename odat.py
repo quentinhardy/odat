@@ -153,7 +153,7 @@ def runAllModules(args):
 	Returns True if all tests have been checked if possible.
 	Returns False if TNS listener is not well configured
 	'''
-	if checkIfWorkingTnsListener(args) == False:
+	if checkIfWorkingTnsListener(args, timeoutTCP=args['timeout-tcp-check']) == False:
 		return False
 	connectionInformationSID, connectionInformationServiceName = {}, {} #Store valid/given connection strings
 	validSIDsList, validServiceNameList = [], [] #Store valid SID ans Service Name
@@ -467,6 +467,7 @@ def main():
 	PPallModule.add_argument('-C', dest='credentialsFile', action='store_true', required=False, default=False, help='use credentials stored in the --accounts-file file (disable -P and -U)')
 	PPallModule.add_argument('--no-tns-poisoning-check', dest='no-tns-poisoning-check', action='store_true', required=False, default=False, help="don't check if target is vulnreable to TNS poisoning")
 	PPallModule.add_argument('-l', dest='hostlist', required=False, help='filename which contains hosts (one ip on each line: "ip:port" or "ip" only)')
+	PPallModule.add_argument('--timeout-tcp-check', dest='timeout-tcp-check', default=10, type=int, required=False, help='timeout for tcp connection check (default: %(default)s scds)')
 	#1.3bis- Parent parser: TNS cmd
 	PPTnsCmd = argparse.ArgumentParser(add_help=False,formatter_class=myFormatterClass)
 	PPTnsCmd._optionals.title = "TNS cmd options"

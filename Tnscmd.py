@@ -83,20 +83,24 @@ class Tnscmd():
 
 	def getAlias(self):
 		'''
-		return alias list
+		return alias list or None if an error
 		'''
 		self.alias = []
-		self.getInformation(cmd='ping')
+		status = self.getInformation(cmd='ping')
+		if status == False:
+			return None
 		alias = re.findall(r'(?<=ALIAS=).+?(?=\))', self.recvdata, flags=re.IGNORECASE)
 		for anAlias in alias : self.alias.append(anAlias.replace('\n','').replace(' ','').replace('\t',''))
 		return self.alias
 		
 	def getVersion(self):
 		'''
-		return version from VSNNUM
+		return version from VSNNUM or None if an error
 		'''
 		self.version = ""
-		self.getInformation(cmd='version')
+		status = self.getInformation(cmd='version')
+		if status == False:
+			return None
 		vsnnum = re.findall(r'(?<=VSNNUM=).+?(?=\))', self.recvdata, flags=re.IGNORECASE)
 		if vsnnum == []:
 			return "Unknown"
@@ -116,16 +120,25 @@ def runTnsCmdModule(args):
 	if checkOptionsGivenByTheUser(args,["version","status","ping"],checkSID=False,checkAccount=False) == False : return EXIT_MISS_ARGUMENT
 	tnscmd = Tnscmd(args)
 	if args['ping'] == True:
-		args['print'].title("Searching ALIAS on the {0} server, port {1}".format(args['server'],args['port']))
+		args['print'].title("Searching ALIAS on the {0} server, port {1}".format(args['server'],args['port']))
 		alias = tnscmd.getAlias()
-		args['print'].goodNews("{0} ALIAS received: {1}. You should use this alias (more or less) as Oracle SID.".format(len(alias),alias))
+		if alias != None:
+			args['print'].goodNews("{0} ALIAS received: {1}. You should use this alias (more or less) as Oracle SID.".format(len(alias),alias))
+		else:
+			args['print'].badNews("Impossible to get ALIAS")
 	if args['version'] == True:
-		args['print'].title("Searching the version of the Oracle database server ({0}) listening on the port {1}".format(args['server'],args['port']))
+		args['print'].title("Searching the version of the Oracle database server ({0}) listening on the port {1}".format(args['server'],args['port']))
 		version = tnscmd.getVersion()
-		args['print'].goodNews("The remote database version is: '{0}'".format(version))
+		if version != None:
+			args['print'].goodNews("The remote database version is: '{0}'".format(version))
+		else:
+			args['print'].badNews("Impossible to get version")
 	if args['status'] == True:
-		args['print'].title("Searching the server status of the Oracle database server ({0}) listening on the port {1}".format(args['server'],args['port']))
-		tnscmd.getInformation(cmd='status')
-		args['print'].goodNews("Data received by the database server: '{0}'".format(tnscmd.getRecvData()))
+		args['print'].title("Searching the server status of the Oracle database server ({0}) listening on the port {1}".format(args['server'],args['port']))
+		status = tnscmd.getInformation(cmd='status')
+		if status != False:
+			args['print'].goodNews("Data received by the database server: '{0}'".format(tnscmd.getRecvData()))
+		else:
+			args['print'].badNews("Impossible to get status")
 	
 

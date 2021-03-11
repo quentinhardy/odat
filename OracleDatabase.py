@@ -3,11 +3,12 @@
 
 import logging, random, string, cx_Oracle
 
+'''
 try:
-    cx_Oracle.init_oracle_client(config_dir="conf/")
+    cx_Oracle.init_oracle_client()
 except Exception as e:
     logging.error("Impossible to load local configuration files in conf/: {0}".format(str(e)))
-
+'''
 
 from Utils import areEquals,checkOracleVersion,getOracleConnection,ErrorSQLRequest
 from progressbar import *

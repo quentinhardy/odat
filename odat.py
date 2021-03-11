@@ -454,6 +454,7 @@ def main():
 	PPconnection.add_argument('-P', dest='password', required=False, default=None, help='Oracle password')
 	PPconnection.add_argument('-d', dest='sid', required=False, default=None, help='Oracle System ID (SID)')
 	PPconnection.add_argument('-n', dest='serviceName', required=False, default=None, help='Oracle Service Name')
+	PPconnection.add_argument('--client-driver', dest='client-driver', required=False, default="SQL*PLUS", help='Set client driver name (default: %(default)s)')
 	PPconnection.add_argument('--sysdba', dest='SYSDBA', action='store_true', default=False, help='connection as SYSDBA')
 	PPconnection.add_argument('--sysoper', dest='SYSOPER', action='store_true', default=False, help='connection as SYSOPER')
 	#1.2- Parent parser: output options
@@ -765,7 +766,13 @@ def main():
 	if 'auditType' in args and (args['auditType']=='unwrapper' or args['auditType']=='clean'):
 		pass
 	else:
-		if ipOrNameServerHasBeenGiven(args) == False : return EXIT_MISS_ARGUMENT
+		if ipOrNameServerHasBeenGiven(args) == False :
+			return EXIT_MISS_ARGUMENT
+	try:
+		cx_Oracle.init_oracle_client(config_dir="conf/", driver_name=args['client-driver'], error_url= "")
+		logging.info("CX_Oracle is well configured according to parameters")
+	except Exception as e:
+		logging.error("Impossible to load local configuration files in conf/ and to set driver_name: {0}".format(str(e)))
 	logging.debug("cx_Oracle Version: {0}".format(cx_Oracle.version))
 	logging.debug("Oracle Client Version: {0}".format(cx_Oracle.clientversion()))
 	arguments.func(args)

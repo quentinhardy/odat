@@ -21,10 +21,10 @@ __ODAT linux standalone__ version at [https://github.com/quentinhardy/odat/relea
 Changelog
 ====
 * Version __5.1__ (__12/03/2021__):
-  * new option in _all__ module: __--nmap-file__ for loading all Oracle databases from a nmap XML outpout file
-  * new option in _all__ module: __-l__ for loading all targets from a text file (ip:port or ip on each line) 
-  * In __all__ module, a TCP connection is tested on each target before to start ODAT tests now. __--timeout-tcp-check__ can be used to manage timeout value.
-  * In __all__ module, a test is done on each target now for checking if the TNS listener is well configured. This test is done after TCP connection test.
+  * new option in _all_ module: __--nmap-file__ for loading all Oracle databases from a nmap XML outpout file
+  * new option in _all_ module: __-l__ for loading all targets from a text file (ip:port or ip on each line) 
+  * In _all_ module, a TCP connection is tested on each target before to start ODAT tests now. __--timeout-tcp-check__ can be used to manage timeout value.
+  * In _all_ module, a test is done on each target now for checking if the TNS listener is well configured. This test is done after TCP connection test.
   * new global option: __--client-driver__. Allows to set the client name for database connection (__client_driver__ from __V$SESSION_CONNECT_INFO__). 
     Useful for applications whose end-users are not aware cx_Oracle is being. used. By default, 'sql*plus' now.
   * ODAT accepts a __sqlnet.ora__ file now. A default file is in __conf/__. The timeout TCP & OUTBOUND (TNS) connection is set to 60 seconds by default now.  

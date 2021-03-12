@@ -20,6 +20,14 @@ __ODAT linux standalone__ version at [https://github.com/quentinhardy/odat/relea
 
 Changelog
 ====
+* Version __5.1__ (__12/03/2021__):
+  * new option in _all__ module: __--nmap-file__ for loading all Oracle databases from a nmap XML outpout file
+  * new option in _all__ module: __-l__ for loading all targets from a text file (ip:port or ip on each line) 
+  * In __all__ module, a TCP connection is tested on each target before to start ODAT tests now. __--timeout-tcp-check__ can be used to manage timeout value.
+  * In __all__ module, a test is done on each target now for checking if the TNS listener is well configured. This test is done after TCP connection test.
+  * new global option: __--client-driver__. Allows to set the client name for database connection (__client_driver__ from __V$SESSION_CONNECT_INFO__). 
+    Useful for applications whose end-users are not aware cx_Oracle is being. used. By default, 'sql*plus' now.
+  * ODAT accepts a __sqlnet.ora__ file now. A default file is in __conf/__. The timeout TCP & OUTBOUND (TNS) connection is set to 60 seconds by default now.  
 * Version __5.0__ (__08/02/2021__):
   * Important new module: __Service Name Guesser__, for searching valid Service Names. Specific module named __*snguesser*__ and integrated in *all* module too. By default, *all* module searches all valid Service Names now after searching SIDs. SIDs can be identical to Service Name. When a Service Name is found but not a SID, Service Name can be used as a SID for connection.
   * __--basic-info__ option in _search_ module for getting some basic technical information about the database/instance. It gets Service Name, SID, databases, Oracle Database Vault status, Java status, hostname, ip address of the server, password policy, current system pivileges, current roles, pathches (when >= 12c and user is privileged), etc. Requires high pivileges for very interesting information (e.g. password policy & lock status).
@@ -219,6 +227,9 @@ git submodule update
 * Get instant client basic, sdk (devel) and sqlplus from the Oracle web site:
   * X64: http://www.oracle.com/technetwork/topics/linuxx86-64soft-092277.html
   * X86: http://www.oracle.com/technetwork/topics/linuxsoft-082809.html
+  
+* For the moment (03/2021), Oracle Database instant client version 11.2 is the best version if you want to generate the ODAT standalone with pyinstaller.
+For using the ODAT development version, the last version of the Oracle client can be used (e.g. version 19).
 
 * Install *python3-dev*, *alien* and *libaio1* package (for sqlplus):
 ```bash

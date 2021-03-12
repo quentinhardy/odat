@@ -1,7 +1,7 @@
 #/bin/bash
 GLIBC_VERSION=`ldd --version | grep ldd | grep -o ')[^"]*' | sed "s/) //g"`
 VERSION="libc$GLIBC_VERSION-`uname -m`"
-PYINSTALLER="pyinstaller" #or "/opt/python2.7.8/bin/pyinstaller"
+PYINSTALLER="pyinstaller"
 #Creation
 if which $PYINSTALLER >/dev/null; then
 	echo "Pyinstaller has been found: good news :)"
@@ -12,16 +12,12 @@ fi
 mkdir -p ./build/linux/
 $PYINSTALLER --clean --onedir --noconfirm --distpath="./build/linux/" --workpath="./build/" --name="odat-$VERSION" odat.py --strip
 #Add a librarie manually
-cp "$ORACLE_HOME"/lib/libociei.so ./build/linux/odat-$VERSION/libociei.so
-#cp "$ORACLE_HOME"/lib/libclntsh.so ./build/linux/odat-$VERSION/libclntsh.so
-cp "$ORACLE_HOME"/lib/libnnz19.so ./build/linux/odat-$VERSION/libnnz19.so
-cp "$ORACLE_HOME"/lib/libclntshcore.so.19.1 ./build/linux/odat-$VERSION/libclntshcore.so.19.1
-cp "$ORACLE_HOME"/lib/libclntsh.so.19.1 ./build/linux/odat-$VERSION/libclntsh.so.19.1
+cp "$ORACLE_HOME"/lib/lib* ./build/linux/odat-$VERSION/
 cp /lib64/libaio.so.1 ./build/linux/odat-$VERSION/libaio.so.1
 #cp "$ORACLE_HOME"/lib/libons.so ./build/linux/odat-$VERSION/libons.so
 #Required files
 cp -R accounts/ ./build/linux/odat-$VERSION/accounts
-cp sids.txt ./build/linux/odat-$VERSION/sids.txt
+cp -R resources/ ./build/linux/odat-$VERSION/resources
 chmod a+x ./build/linux/odat-$VERSION/libociei.so
 #Suppression des traces
 rm -R build/odat-$VERSION/

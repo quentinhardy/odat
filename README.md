@@ -180,7 +180,12 @@ Thanks to ODAT, you can:
 * get __system privileges__ and __roles granted__. It is possible to get privileges and roles of roles granted also
 * execute arbitrary SELECT requests (aka minimal sql shell)
 
-![Alt text](./pictures/ODAT_main_features_v2.0.jpg)
+This list is not exhaustive.
+
+Mind map - ODAT & Oracle Database pentests
+====
+
+![Alt text](./pictures/odat_mind_map_v1.0.jpg)
 
 Supported Platforms and dependencies
 ====

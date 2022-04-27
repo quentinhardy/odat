@@ -188,8 +188,9 @@ class PasswordGuesser (OracleDatabase):
 					status = self.__retryConnect__(nbTry=4)
 				elif self.ERROR_ACCOUNT_LOCKED in str(status):
 					self.args['print'].printImportantNotice("{0} account is locked, so skipping this username for password".format(repr(self.args['user'])))
-					#logging.debug("{0} account is locked, so skipping this username for password".format(repr(self.args['user'])))
 					lockedUsernames.append(self.args['user'].lower())
+				elif self.ERROR_SERVICE_HANDLER in str(status):
+					logging.error("Error during connection with this account. You should use a time sleep between each try: {0}".format(status))
 				else:
 					logging.debug("Error during connection with this account: {0}".format(status))
 				self.close()
@@ -277,6 +278,5 @@ def runPasswordGuesserModule(args):
 		args['print'].badNews("No found a valid account on {0}:{1}/{2}. You should try with the option '--accounts-file accounts/accounts_multiple.txt' or '--accounts-files accounts/logins.txt accounts/pwds.txt'".format(args['server'], args['port'], getSIDorServiceNameWithType(args)))
 	else :
 		args['print'].goodNews("Accounts found on {0}:{1}/{2}: {3}".format(args['server'], args['port'], getSIDorServiceNameWithType(args),getCredentialsFormated(validAccountsList)))
-
 
 

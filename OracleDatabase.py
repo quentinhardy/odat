@@ -42,6 +42,7 @@ class OracleDatabase:
         self.ERROR_NOT_CONNECTED = "ORA-03114: "
         self.ERROR_SHARED_MEMORY = "ORA-27101: "
         self.ERROR_ACCOUNT_LOCKED = "ORA-28000: "
+        self.ERROR_SERVICE_HANDLER = "ORA-12519" #TNS:no appropriate service handler found
         self.encoding = args['encoding']
         self.nencoding = args['encoding']
 
@@ -662,7 +663,6 @@ class OracleDatabase:
         self.args['sid']         = lastSID
         self.args['serviceName'] = lastServiceName
         return workingTNS
-
 
 
 

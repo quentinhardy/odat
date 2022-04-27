@@ -20,6 +20,8 @@ __ODAT linux standalone__ version at [https://github.com/quentinhardy/odat/relea
 
 Changelog
 ====
+* Version __5.1.1__ (__27/04/2022__):
+  * print a warning message when an "ORA-12519 - TNS:no appropriate service handler found" occured. This error can be triggered by the database server (listener) when too many connections have been established (when bruteforcing credentials for example). In this case, __--sleep__ option should be used (e.g. *--sleep 0.2*).
 * Version __5.1__ (__12/03/2021__):
   * new option in _all_ module: __--nmap-file__ for loading all Oracle databases from a nmap XML outpout file
   * new option in _all_ module: __-l__ for loading all targets from a text file (ip:port or ip on each line) 

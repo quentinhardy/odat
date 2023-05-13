@@ -309,7 +309,108 @@ pip3 install pyinstaller
 ./odat.py -h
 ```
 
-> __Good job if you have not errors:)__
+> __Good job if you have no errors:)__
+
+## Appendix - For ARM64 Users
+
+If you have an arm64 system (tested on kali 2023, mac m1 host) use the following instructions.
+
+* Clone the repository to get the ODAT source code:
+```bash
+git clone https://github.com/quentinhardy/odat.git
+```
+
+* Update wiki pages in this repository for getting the ODAT documentation locally:
+```bash
+cd odat/
+git submodule init
+git submodule update
+```
+
+* Get instant client basic, sdk (devel) and sqlplus from the Oracle web site:
+  [Oracle Instant Client for Linux ARM (aarch64)](https://www.oracle.com/database/technologies/instant-client/linux-arm-aarch64-downloads.html)
+  
+* At the moment of writing the latest version is *Version 19.10.0.0.0*. We will be using the latest version.
+
+* Install *python3-dev*, *alien* and *libaio1* package (for sqlplus):
+```bash
+sudo apt-get install libaio1 python3-dev alien python3-pip
+```
+
+* Generate DEB files from RPM files with :
+```bash
+sudo alien --to-deb *.rpm
+```
+
+* Install instant client basic, sdk and sqlplus:
+```bash
+sudo dpkg -i *.deb
+```
+
+* Put these lines in your */etc/profile* file in order to define Oracle *env* variables. *I have these at the end of the file outside of the IF statement*:
+```bash
+export ORACLE_HOME=/usr/lib/oracle/19.3/client64/
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ORACLE_HOME/lib
+export PATH=${ORACLE_HOME}bin:$PATH
+```
+
+- Run the following commands to create and edit the oracle configuration file and update ldpath: 
+```bash
+sh -c "echo /usr/lib/oracle/19.10/ > /etc/ld.so.conf.d/oracle-instantclient.conf"
+sudo ldconfig
+```
+
+* Restart your session (to apply env variables)
+
+* Install *CX_Oracle*
+```bash
+sudo -s
+source /etc/profile
+pip3 install cx_Oracle
+```
+
+* Test if all is good:
+```bash
+python3 -c 'import cx_Oracle' 
+```
+> This command should *just return* without errors.
+
+* Install some python libraries:
+```bash
+sudo apt-get install python3-scapy
+sudo pip3 install colorlog termcolor pycryptodome passlib python-libnmap
+sudo pip3 install argcomplete && sudo activate-global-python-argcomplete
+```
+
+* Download and install the __development__ version of pyinstaller (http://www.pyinstaller.org/) for python 3.
+```bash
+python setup.py install
+```
+
+* or install through pip:
+```bash
+pip3 install pyinstaller
+```
+
+- Install patchelf. This program is going to be used for changing the interpreter for the three Oracle elf files we installed (adrci, genezi and sqlplus):
+
+```bash
+sudo apt install -y patchelf
+```
+
+```bash
+patchelf --set-interpreter /lib/ld-linux-aarch64.so.1 instantclient_19_10/sqlplus
+patchelf --set-interpreter /lib/ld-linux-aarch64.so.1 instantclient_19_10/adrci
+patchelf --set-interpreter /lib/ld-linux-aarch64.so.1 instantclient_19_10/genezi
+```
+
+* Run ODAT:
+```bash
+./odat.py -h
+```
+
+Now you should be able to run ODAT and sqlplus (for manual enumeration) smoothly.
+
 
 Docs and examples
 ====

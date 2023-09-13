@@ -349,7 +349,7 @@ sudo dpkg -i *.deb
 
 * Put these lines in your */etc/profile* file in order to define Oracle *env* variables. *I have these at the end of the file outside of the IF statement*:
 ```bash
-export ORACLE_HOME=/usr/lib/oracle/19.3/client64/
+export ORACLE_HOME=/usr/lib/oracle/19.10/client64/
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ORACLE_HOME/lib
 export PATH=${ORACLE_HOME}bin:$PATH
 ```

@@ -5,7 +5,7 @@ from sys import exit,stdout,version_info
 from libnmap.parser import NmapParser
 import socket
 if version_info[0] < 3:
-	print("ERROT: Python 3 has to be used for this version of ODAT")
+	print("ERROR: Python 3 has to be used for this version of ODAT")
 	exit(99)
 
 #PYTHON_ARGCOMPLETE_OK
@@ -22,7 +22,6 @@ except ImportError:
 	COLORLOG_AVAILABLE = False
 
 import argparse, logging, platform, cx_Oracle, string, os, sys
-from libnmap.parser import NmapParser
 from Utils import (areEquals,
 				   configureLogging,
 				   ErrorSQLRequest,

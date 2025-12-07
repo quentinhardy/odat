@@ -1,0 +1,16 @@
+# ODAT - Oracle Database Attacking Tool
+# Python 3 dependencies
+
+# Required dependencies
+cx_Oracle>=8.0.0
+python-libnmap>=0.7.0
+passlib>=1.7.0
+pycryptodome>=3.10.0
+
+# Python 3.12+ compatibility (asyncore was removed)
+pyasyncore>=1.0.0
+
+# Optional dependencies (graceful fallback if missing)
+colorlog>=6.0.0
+argcomplete>=2.0.0
+scapy>=2.5.0

@@ -26,9 +26,9 @@ class DbmsScheduler (OracleDatabase):
 		logging.debug("DbmSscheduler object created")
 		OracleDatabase.__init__(self,args)
 		self.jobName = None
-		self.CMD_WIND_PATH = "c:\windows\system32\cmd.exe"
-		self.PS_X86_PATH = """C:\windows\syswow64\windowspowershell\\v1.0\powershell.exe"""
-		self.PS_X64_PATH = """C:\Windows\System32\WindowsPowerShell\\v1.0\powershell.exe"""
+		self.CMD_WIND_PATH = r"c:\windows\system32\cmd.exe"
+		self.PS_X86_PATH = r"C:\windows\syswow64\windowspowershell\v1.0\powershell.exe"
+		self.PS_X64_PATH = r"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
 
 	def __removeJob__(self, jobName, force=False, defer=True):
 		'''
@@ -168,7 +168,7 @@ class DbmsScheduler (OracleDatabase):
 		- targetFilename: path to the file on the target (Windows Only)
 		'''
 		if self.remoteSystemIsWindows() == True :
-			CMD_EXEC_FILE = ".\{0}"
+			CMD_EXEC_FILE = r".\{0}"
 			CMD_DEL_FILE = "del {0}"
 			httpPort = None
 			CMD = self.getReverseShellPowershellCommand(localip, localport)

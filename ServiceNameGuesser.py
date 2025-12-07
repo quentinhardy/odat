@@ -27,7 +27,10 @@ class ServiceNameGuesser (OracleDatabase):
 		self.timeSleep = timeSleep
 		self.NO_GOOD_SERVICE_NAME_STRING_LIST = ["listener does not currently know of service requested",
 												 "listener does not currently know of SID",
-												 "connection to server failed"]
+												 "connection to server failed",
+												 "ORA-12514",
+												 "ORA-12505",
+												 "is not registered with the listener"]
 
 	def getValidServiceNames(self):
 		'''

@@ -17,7 +17,7 @@ class Java (OracleDatabase):
 		'''
 		logging.debug("Java object created")
 		OracleDatabase.__init__(self,args)
-		self.SOURCE_OS_COMMAND_CLASS = """
+		self.SOURCE_OS_COMMAND_CLASS = r"""
 CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
   import java.io.*;
   public class OSCommand {

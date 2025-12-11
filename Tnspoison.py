@@ -69,7 +69,7 @@ class receiver(asyncore.dispatcher):
 				logging.debug('Your string {0} is not in the packet received.'.format(repr(self.replaceStr[0])))
 		if self.nbRcvd == 0 and len(self.args['sid']) in [9,10,11,12]:
 			logging.debug('SID >= 9. Consequently, we need modify the Connection String in the first packet of a communication.')
-			searchCS = re.search('\(DESCRIPTION(.*)\)$',read)
+			searchCS = re.search(r'\(DESCRIPTION(.*)\)$',read)
 			if searchCS == None:
 				logging.debug('Connection String was not found in this first packet: anomalous. No aletration of this packet')
 			else:

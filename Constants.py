@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*
 import string
 
-DESCRIPTION = ""\
-"""
-            _  __   _  ___ 
+DESCRIPTION = r"""
+            _  __   _  ___
            / \|  \ / \|_ _|
-          ( o ) o ) o || | 
-           \_/|__/|_n_||_| 
+          ( o ) o ) o || |
+           \_/|__/|_n_||_|
 -------------------------------------------
-  _        __           _           ___ 
+  _        __           _           ___
  / \      |  \         / \         |_ _|
-( o )       o )         o |         | | 
- \_/racle |__/atabase |_n_|ttacking |_|ool 
+( o )       o )         o |         | |
+ \_/racle |__/atabase |_n_|ttacking |_|ool
 -------------------------------------------
 
 By Quentin Hardy (quentin.hardy@protonmail.com or quentin.hardy@bt.com)

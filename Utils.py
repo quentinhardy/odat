@@ -218,8 +218,14 @@ def getScreenSize ():
 	'''
 	Returns screen size (columns, lines)
 	'''
-	columns, rows  = os.popen('stty size', 'r').read().split()
-	return (int(rows), int(columns))
+	try:
+		import subprocess
+		result = subprocess.run(['stty', 'size'], capture_output=True, text=True, stdin=subprocess.DEVNULL)
+		columns, rows = result.stdout.split()
+		return (int(rows), int(columns))
+	except (ValueError, subprocess.SubprocessError):
+		# Fallback for non-interactive terminals
+		return (80, 24)
 	
 def stringToLinePadded(string, padValue=" "):
 	'''

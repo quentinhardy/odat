@@ -22,6 +22,7 @@ except ImportError:
 	COLORLOG_AVAILABLE = False
 
 import argparse, logging, platform, cx_Oracle, string, os, sys
+from pathlib import Path
 from libnmap.parser import NmapParser
 from Utils import (areEquals,
 				   configureLogging,
@@ -63,31 +64,31 @@ from OracleDatabase import OracleDatabase
 from ServiceNameGuesser import runServiceNameGuesserModule
 
 class MyFormatter(argparse.RawTextHelpFormatter):
-    """
-    Corrected _max_action_length for the indenting of subactions
-    SRC: http://stackoverflow.com/questions/32888815/max-help-position-is-not-works-in-python-argparse-library
-    """
-    def add_argument(self, action):
-        if action.help is not argparse.SUPPRESS:
-            # find all invocations
-            get_invocation = self._format_action_invocation
-            invocations = [get_invocation(action)]
-            current_indent = self._current_indent
-            for subaction in self._iter_indented_subactions(action):
-                # compensate for the indent that will be added
-                indent_chg = self._current_indent - current_indent
-                added_indent = 'x'*indent_chg
-                invocations.append(added_indent+get_invocation(subaction))
-            # print('inv', invocations)
+	"""
+	Corrected _max_action_length for the indenting of subactions
+	SRC: http://stackoverflow.com/questions/32888815/max-help-position-is-not-works-in-python-argparse-library
+	"""
+	def add_argument(self, action):
+		if action.help is not argparse.SUPPRESS:
+			# find all invocations
+			get_invocation = self._format_action_invocation
+			invocations = [get_invocation(action)]
+			current_indent = self._current_indent
+			for subaction in self._iter_indented_subactions(action):
+				# compensate for the indent that will be added
+				indent_chg = self._current_indent - current_indent
+				added_indent = 'x'*indent_chg
+				invocations.append(added_indent+get_invocation(subaction))
+			# print('inv', invocations)
 
-            # update the maximum item length
-            invocation_length = max([len(s) for s in invocations])
-            action_length = invocation_length + self._current_indent
-            self._action_max_length = max(self._action_max_length,
-                                          action_length)
+			# update the maximum item length
+			invocation_length = max([len(s) for s in invocations])
+			action_length = invocation_length + self._current_indent
+			self._action_max_length = max(self._action_max_length,
+										  action_length)
 
-            # add the item to the list
-            self._add_item(self._format_action, [action])
+			# add the item to the list
+			self._add_item(self._format_action, [action])
 
 def runClean (args):
 	'''
@@ -784,7 +785,9 @@ def main():
 		if ipOrNameServerHasBeenGiven(args) == False :
 			return EXIT_MISS_ARGUMENT
 	try:
-		cx_Oracle.init_oracle_client(config_dir="conf/", driver_name=args['client-driver'], error_url= "")
+		cfgPath = str(Path("./conf/").resolve())
+		logging.info(f"Using this folder as TNS_ADMIN env var : {cfgPath}")
+		cx_Oracle.init_oracle_client(config_dir=cfgPath, driver_name=args['client-driver'], error_url= "")
 		logging.info("CX_Oracle is well configured according to parameters")
 	except Exception as e:
 		logging.error("Impossible to load local configuration files in conf/ and to set driver_name: {0}".format(str(e)))

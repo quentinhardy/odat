@@ -8,6 +8,7 @@ import logging, string
 from Tnscmd import Tnscmd
 from Constants import *
 from Utils import stringToLinePadded
+import re
 
 class SIDGuesser (OracleDatabase):
 	'''
@@ -38,10 +39,10 @@ class SIDGuesser (OracleDatabase):
 									"ORA-28547", #connection to server failed
 									"ORA-12543", #destination host unreachable
 									"ORA-12504", #listener was not given the SERVICE_NAME in CONNECT_DATA
-                                    "ORA-12757", #instance does not currently know of requested service
-                                    "ORA-12516", #listener cannot find available handler
-                                    "ORA-12519", #no appropriate service handler
-                                    "ORA-12520", #no handler for requested server type
+									"ORA-12757", #instance does not currently know of requested service
+									"ORA-12516", #listener cannot find available handler
+									"ORA-12519", #no appropriate service handler
+									"ORA-12520", #no handler for requested server type
 									]
 
 	def getValidSIDs(self):
@@ -131,6 +132,37 @@ class SIDGuesser (OracleDatabase):
 			sleep(self.timeSleep)
 		pbar.finish()
 		return True
+		
+	import re
+
+	def _underscoreSIDSubstrings(self, value):
+		'''
+		Return all unique contiguous underscore-joined substrings from a string.
+		Example:
+			"LISTENER_A_DG"
+		returns:
+			[
+				"LISTENER",
+				"A",
+				"DG",
+				"LISTENER_A",
+				"A_DG",
+				"LISTENER_A_DG",
+			]
+		Returns None if an error
+		'''
+		if not re.fullmatch(r"[A-Za-z0-9_#$]+", value):
+			logging.error(f"SID {value} contains invalid characters")
+		parts = value.split("_")
+		result = []
+		seen = set()
+		for length in range(1, len(parts) + 1):
+			for start in range(len(parts) - length + 1):
+				substring = "_".join(parts[start:start + length])
+				if substring not in seen:
+					seen.add(substring)
+					result.append(substring)
+		return result
 
 	def loadSidsFromListenerAlias(self):
 		'''
@@ -139,7 +171,12 @@ class SIDGuesser (OracleDatabase):
 		logging.info('Put listener ALIAS into the SID list to try ALIAS like SID')
 		tnscmd = Tnscmd(self.args)
 		tnscmd.getInformation()
-		self.sids += tnscmd.getAlias()
+		aliasRawList = tnscmd.getAlias()
+		if aliasRawList != None and len(aliasRawList)>0:
+			sidsPossibleList = self._underscoreSIDSubstrings(aliasRawList[0])
+			logging.info(f"These SIDs extracted from ALIAS will be tested too: {sidsPossibleList}")
+			if sidsPossibleList != None:
+				self.sids += sidsPossibleList
 
 def runSIDGuesserModule(args):
 	'''

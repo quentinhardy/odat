@@ -2,7 +2,7 @@
 import string
 
 DESCRIPTION = ""\
-"""
+r"""
             _  __   _  ___ 
            / \|  \ / \|_ _|
           ( o ) o ) o || | 

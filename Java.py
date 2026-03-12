@@ -17,7 +17,7 @@ class Java (OracleDatabase):
 		'''
 		logging.debug("Java object created")
 		OracleDatabase.__init__(self,args)
-		self.SOURCE_OS_COMMAND_CLASS = """
+		self.SOURCE_OS_COMMAND_CLASS = r"""
 CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
   import java.io.*;
   public class OSCommand {
@@ -32,7 +32,7 @@ CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
 	        systemRootvariable = System.getProperty("SystemRoot");
           }
           finalCommand = new String[4];
-          finalCommand[0] = systemRootvariable+"\\\system32\\\cmd.exe";
+          finalCommand[0] = systemRootvariable+"\\system32\\cmd.exe";
           finalCommand[1] = "/y";
           finalCommand[2] = "/c";
           finalCommand[3] = command;

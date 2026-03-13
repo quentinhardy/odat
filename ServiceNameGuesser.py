@@ -25,9 +25,24 @@ class ServiceNameGuesser (OracleDatabase):
 		self.args['SYSDBA'] = False
 		self.args['SYSOPER'] = False
 		self.timeSleep = timeSleep
-		self.NO_GOOD_SERVICE_NAME_STRING_LIST = ["listener does not currently know of service requested",
-												 "listener does not currently know of SID",
-												 "connection to server failed"]
+		self.ORA_ERROR_NO_GOOD_SID = ["ORA-12514",#listener does not currently know of service requested
+									"ORA-12505", #listener does not currently know of SID given in connect descriptor
+									"TNS-12505", #listener does not currently know of SID given in connect descriptor
+									"ORA-12521", #listener does not currently know of instance requested in connect descriptor
+									"TNS-12521", #listener does not currently know of instance requested in connect descriptor
+									"ORA-12520", #TNS:listener could not find available handler for requested type of server
+									"ORA-12541", #TNS:no listener
+									"ORA-12543", #destination host unreachable / unable to connect to destination
+									"ORA-12545", #target host or object does not exist / name lookup style failure
+									"ORA-12154", #TNS:could not resolve the connect identifier specified
+									"ORA-28547", #connection to server failed
+									"ORA-12543", #destination host unreachable
+									"ORA-12504", #listener was not given the SERVICE_NAME in CONNECT_DATA
+									"ORA-12757", #instance does not currently know of requested service
+									"ORA-12516", #listener cannot find available handler
+									"ORA-12519", #no appropriate service handler
+									"ORA-12520", #no handler for requested server type
+									]
 
 	def getValidServiceNames(self):
 		'''
@@ -65,8 +80,8 @@ class ServiceNameGuesser (OracleDatabase):
 		if self.__needRetryConnection__(status) == True: 
 			status = self.__retryConnect__(nbTry=4)
 		if status != None :
-			for aNoGoodString in self.NO_GOOD_SERVICE_NAME_STRING_LIST:
-				if aNoGoodString in str(status):
+			for aNoGoodString in self.ORA_ERROR_NO_GOOD_SID:
+				if aNoGoodString.upper() in str(status).upper():
 					no_good_service_name_found = True
 					break
 			if no_good_service_name_found == False:

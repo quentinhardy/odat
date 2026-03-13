@@ -17,88 +17,85 @@ class Java (OracleDatabase):
 		'''
 		logging.debug("Java object created")
 		OracleDatabase.__init__(self,args)
-		self.SOURCE_OS_COMMAND_CLASS = """
+		self.SOURCE_OS_COMMAND_CLASS = r"""
 CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
   import java.io.*;
   public class OSCommand {
-    public static String executeCommand(String command) {
-      StringBuffer sb = new StringBuffer();
-      try {
-        String[] finalCommand;
-        if (System.getProperty("os.name").toLowerCase().indexOf("windows") != -1) {
-          String systemRootvariable;
-          try {systemRootvariable = System.getenv("SystemRoot");} 
-          catch (ClassCastException e) {
-	        systemRootvariable = System.getProperty("SystemRoot");
-          }
-          finalCommand = new String[4];
-          finalCommand[0] = systemRootvariable+"\\\system32\\\cmd.exe";
-          finalCommand[1] = "/y";
-          finalCommand[2] = "/c";
-          finalCommand[3] = command;
-        } else { // Linux or Unix System
-          finalCommand = new String[3];
-          finalCommand[0] = "/bin/sh";
-          finalCommand[1] = "-c";
-          finalCommand[2] = command;
-        }
-        // Execute the command...
-        final Process pr = Runtime.getRuntime().exec(finalCommand);
-        pr.waitFor();
-        // Capture output from STDOUT
-        BufferedReader br_in = null;
-        try {
-          br_in = new BufferedReader(new InputStreamReader(pr.getInputStream()));
-          String buff = null;
-          while ((buff = br_in.readLine()) != null) {
-            sb.append(buff); sb.append("\\n");
-            //try {Thread.sleep(100);} catch(Exception e) {}
-          }
-          br_in.close();
-        } catch (IOException ioe) {
-          sb.append("IOException in input stream: ").append(ioe.getMessage());
-          System.out.println("Error printing process output.");
-          ioe.printStackTrace();
-        } finally {
-          try {
-            br_in.close();
-          } catch (Exception ex) {}
-        }
-        // Capture output from STDERR
-        BufferedReader br_err = null;
-        try {
-          br_err = new BufferedReader(new InputStreamReader(pr.getErrorStream()));
-          String buff = null;
-          while ((buff = br_err.readLine()) != null) {
-            sb.append("stderr:");
-            sb.append(buff);
-            sb.append("\\n");
-            //try {Thread.sleep(100);} catch(Exception e) {}
-          }
-          br_err.close();
-        } catch (IOException ioe) {
-          sb.append("IOException in error stream: ").append(ioe.getMessage());
-          System.out.println("Error printing execution errors.");
-          ioe.printStackTrace();
-        } finally {
-          try {
-            br_err.close();
-          } catch (Exception ex) {}
-        }
-      }
-      catch (Exception ex) {
-        sb.append("Exception: ").append(ex.getMessage());
-        System.out.println(ex.getLocalizedMessage());
-      }
-      return sb.toString();
-    }
-  };"""
-		self.SOURCE_OS_COMMAND_CREATE_FUNCTION = "CREATE OR REPLACE FUNCTION oscmd (p_command IN VARCHAR2) RETURN VARCHAR2 AS LANGUAGE JAVA NAME 'OSCommand.executeCommand (java.lang.String) return java.lang.String';"
+	public static String executeCommand(String command) {
+	  final StringBuffer sb = new StringBuffer();
+	  try {
+		String[] finalCommand;
+		if (System.getProperty("os.name").toLowerCase().indexOf("windows") != -1) {
+		  String systemRootvariable;
+		  try { systemRootvariable = System.getenv("SystemRoot"); }
+		  catch (ClassCastException e) {
+			systemRootvariable = System.getProperty("SystemRoot");
+		  }
+		  finalCommand = new String[]{ systemRootvariable + "\\system32\\cmd.exe", "/y", "/c", command };
+		} else { // Linux or Unix
+		  finalCommand = new String[]{ "/bin/sh", "-c", command };
+		}
+		final Process pr = Runtime.getRuntime().exec(finalCommand);
+		// Drain stdout and stderr concurrently to avoid pipe-buffer deadlock
+		Thread stdoutThread = new Thread(new Runnable() {
+		  public void run() {
+			try {
+			  BufferedReader br = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+			  String line;
+			  while ((line = br.readLine()) != null) {
+				sb.append(line + "\n");
+			  }
+			  br.close();
+			} catch (IOException ioe) {
+			  sb.append("IOException stdout: " + ioe.getMessage() + "\n");
+			}
+		  }
+		});
+		Thread stderrThread = new Thread(new Runnable() {
+		  public void run() {
+			try {
+			  BufferedReader br = new BufferedReader(new InputStreamReader(pr.getErrorStream()));
+			  String line;
+			  while ((line = br.readLine()) != null) {
+				sb.append("stderr:" + line + "\n");
+			  }
+			  br.close();
+			} catch (IOException ioe) {
+			  sb.append("IOException stderr: " + ioe.getMessage() + "\n");
+			}
+		  }
+		});
+		stdoutThread.start();
+		stderrThread.start();
+		stdoutThread.join();
+		stderrThread.join();
+		pr.waitFor();
+	  } catch (Exception ex) {
+		sb.append("Exception: " + ex.getMessage());
+	  }
+	  return sb.toString();
+	}
+  }"""
+		self.SOURCE_OS_COMMAND_RAW_CREATE_FUNCTION = "CREATE OR REPLACE FUNCTION oscmd_raw (p_command IN VARCHAR2) RETURN VARCHAR2 AS LANGUAGE JAVA NAME 'OSCommand.executeCommand (java.lang.String) return java.lang.String';"
+		self.SOURCE_OS_COMMAND_CREATE_FUNCTION = "CREATE OR REPLACE FUNCTION oscmd (p_command IN VARCHAR2) RETURN CLOB AS BEGIN RETURN TO_CLOB(oscmd_raw(p_command)); END;"
 		self.SOURCE_OS_COMMAND_EXEC = "select oscmd('{0}') from dual"
 		self.SOURCE_DROP_CLASS = "DROP JAVA SOURCE \"OSCommand\""
-		self.SOURCE_DROP_FUNCTION = "DROP FUNCTION oscmd"
+		self.SOURCE_DROP_OS_COMMAND_RAW = "DROP FUNCTION oscmd_raw"
+		self.SOURCE_DROP_OS_COMMAND = "DROP FUNCTION oscmd"
 		self.LINUX_CMD_ERROR = 'No such file or directory'
 		self.JAVA_SESSION_CLEARED = "Java session state cleared"
+		
+	def allowJavaExectingSh(self):
+		'''
+		Allows current DB user executing /bin/sh
+		'''
+		logging.info(f"Trying to allow current db user ({self.args['user']}) executing /bin/sh over java")
+		response = self.__execProc__("DBMS_JAVA.GRANT_PERMISSION",options=(self.args['user'].upper(), "SYS:java.io.FilePermission", "/bin/sh", 'execute'))
+		if isinstance(response,Exception):
+			logging.info("Impossible to allow current DB user {1} executing /bin/sh: {0}".format(self.cleanError(response), self.args['user']))
+			return False
+		logging.info(f"Allow executing /bin/sh over java for current user done")
+		return True
 
 	def createClassAndFunctionToExecOsCmd(self):
 		'''
@@ -112,7 +109,12 @@ CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
 			logging.info("Impossible to create and compile the java class: {0}".format(self.cleanError(status)))
 			return status
 		else : 
-			logging.info("Create a function to call java")
+			logging.info("Create a function to call java 1")
+			status = self.__execPLSQL__(self.SOURCE_OS_COMMAND_RAW_CREATE_FUNCTION)
+			if isinstance(status,Exception):
+				logging.info("Impossible to create function to call java: {0}".format(self.cleanError(status)))
+				return status
+			logging.info("Create a function to call java 2")
 			status = self.__execPLSQL__(self.SOURCE_OS_COMMAND_CREATE_FUNCTION)
 			if isinstance(status,Exception):
 				logging.info("Impossible to create function to call java: {0}".format(self.cleanError(status)))
@@ -122,19 +124,21 @@ CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
 	
 	def deleteClassAndFunctionToExecOsCmd(self):
 		'''
-		Delete the COMPILED JAVA CLASS and delete the CREATED FUNCTION
+		Delete the COMPILED JAVA CLASS and delete the CREATED FUNCTIONS
 		'''
 		logging.info("Delete the PL/SQL function created")
-		status = self.__execPLSQL__(self.SOURCE_DROP_FUNCTION)
+		status = self.__execPLSQL__(self.SOURCE_DROP_OS_COMMAND_RAW)
 		if isinstance(status,Exception):
-			logging.info("Impossible to drop the function: {0}".format(self.cleanError(status)))
+			logging.warning("Impossible to drop the function: {0}".format(self.cleanError(status)))
+		status = self.__execPLSQL__(self.SOURCE_DROP_OS_COMMAND)
+		if isinstance(status,Exception):
+			logging.warning("Impossible to drop the function: {0}".format(self.cleanError(status)))
+		
+		logging.info("Delete the java class compiled")
+		status = self.__execPLSQL__(self.SOURCE_DROP_CLASS)
+		if isinstance(status,Exception):
+			logging.warning("Impossible to drop the class: {0}".format(self.cleanError(status)))
 			return status
-		else: 
-			logging.info("Delete the java class compiled")
-			status = self.__execPLSQL__(self.SOURCE_DROP_CLASS)
-			if isinstance(status,Exception):
-				logging.info("Impossible to drop the class: {0}".format(self.cleanError(status)))
-				return status
 		return True
 
 	def __runOSCmd__ (self, cmd, printResponse=True, retryNb=1):
@@ -156,10 +160,11 @@ CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "OSCommand" AS
 			logging.info('The system command output is empty')
 			return ''
 		else : 
-			logging.info('The system command output is: `{0}`...'.format(data[0][0][:100]))
+			blobAsString = data[0][0].read()
+			logging.info('The system command output is: `{0}`...'.format(blobAsString))
 			if printResponse == True :
-				self.args['print'].printOSCmdOutput(data[0][0])
-			return data[0][0]
+				self.args['print'].printOSCmdOutput(blobAsString)
+			return blobAsString
 
 	def execOSCommand(self,cmd, printResponse=True, needCreateClassAndFunction=True, needDeleteClassAndFunction=True):
 		'''
@@ -346,6 +351,9 @@ def runjavaModule(args):
 	if args['test-module'] == True :
 		args['print'].title("Test if the DBMSScheduler library can be used")
 		status = java.testAll()
+	if args['allowShJava'] == True :
+		args['print'].title("Trying to allow current db user to execute /bin/sh over Java")
+		status = java.allowJavaExectingSh()
 	#Option 1: exec
 	if args['exec'] != None:
 		args['print'].title("Execute the `{0}` on the {1} server".format(args['exec'],args['server']))

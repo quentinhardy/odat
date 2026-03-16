@@ -560,6 +560,7 @@ def main():
 	PPjava._optionals.title = "java commands"
 	PPjava.add_argument('--exec',dest='exec',default=None,required=False,help='execute a system command on the remote system')
 	PPjava.add_argument('--shell',dest='shell',action='store_true',required=False,help='get a shell on the remote system')
+	PPjava.add_argument('--allow-sh',dest='allowShJava',action='store_true',required=False,help='Allow executing /bin/sh for current user for java')
 	PPjava.add_argument('--path-shell',dest='path-shell',default="/bin/sh",required=False,help='specify path to shell (default: %(default)s)')
 	PPjava.add_argument('--reverse-shell',dest='reverse-shell',required=False,nargs=2,metavar=('ip','port'),help='get a reverse shell')
 	PPjava.add_argument('--create-file-CVE-2018-3004',dest='create-file-CVE-2018-3004',required=False,nargs=2,metavar=('data','filename'),help='create (or append to) a file with CVE-2018-3004 (Bypass built in Oracle JVM security)')
@@ -578,6 +579,8 @@ def main():
 	PPpasswords.add_argument('--get-passwords-ocm-not-locked', dest='get-passwords-ocm-not-locked', action='store_true', required=False, help='get Oracle hashed passwords (accounts not locked) indirectly (CVE-2020-2984). "Lateral Thinking" with an ORACLE_OCM view. Only when 12c or higher and for some accounts (e.g SYSTEM)')
 	PPpasswords.add_argument('--get-passwords-from-history',dest='get-passwords-from-history',action='store_true',required=False,help='get Oracle hashed passwords from history')
 	PPpasswords.add_argument('--get-passwords-dbms-stats', dest='get-passwords-dbms-stats', action='store_true',required=False, help='get Oracle hashed passwords with DBMS_STAT')
+	PPpasswords.add_argument('--get-passwords-ddl',dest='get-passwords-ddl',action='store_true',required=False,help='get Oracle hashed passwords with the "export database object definitions as DDL SQL" method (accounts can be locked or not)')
+	
 	PPpasswords.add_argument('--test-module',dest='test-module',action='store_true',help='test the module before use it')
 	#1.11- Parent parser: dbmsxslprocessor
 	PPdbmsxslprocessor = argparse.ArgumentParser(add_help=False,formatter_class=myFormatterClass)

@@ -60,39 +60,57 @@ class Search (OracleDatabase):
 					print("------->"+e)
 		return tables
 		
-	def getDescOfEachNoSystemTable(self):
+	def getDescOfEachNoSystemTable(self, tableNames=None):
 		'''
+		tableNames: list of table names (optional). Each entry can be 'TABLE' or 'OWNER.TABLE'.
+		            If empty or None, all non-system tables are described.
 		returns a String for print
 		'''
 		outputString = ""
-		logging.debug("Getting all no system tables accessible with the current user")
-		tablesAccessible = self.__execQuery__(query=self.REQ_GET_ALL_NO_SYSTEM_TABLES, ld=['owner', 'table_name'])
-		if isinstance(tablesAccessible,Exception):
-			logging.warning("Impossible to execute the request '{0}': {1}".format(self.REQ_GET_ALL_NO_SYSTEM_TABLES, tablesAccessible.generateInfoAboutError(self.REQ_GET_ALL_NO_SYSTEM_TABLES)))
-			return ""
+		if tableNames is None or tableNames == []:
+			logging.debug("Getting all no system tables accessible with the current user")
+			tablesAccessible = self.__execQuery__(query=self.REQ_GET_ALL_NO_SYSTEM_TABLES, ld=['owner', 'table_name'])
+			if isinstance(tablesAccessible,Exception):
+				logging.warning("Impossible to execute the request '{0}': {1}".format(self.REQ_GET_ALL_NO_SYSTEM_TABLES, tablesAccessible.generateInfoAboutError(self.REQ_GET_ALL_NO_SYSTEM_TABLES)))
+				return ""
 		else:
-			nbTables = len(tablesAccessible)
-			colNb = nbTables
-			if colNb>0 : 
-				pbar,currentColNum = self.getStandardBarStarted(colNb), 0
-			for aTable in tablesAccessible:
-				if colNb>0:
-					currentColNum += 1
-					pbar.update(currentColNum)
-				request = self.REQ_GET_COLUMNS_FOR_TABLE.format(aTable['table_name'], aTable['owner'])
-				columnsAndTypes = self.__execQuery__(query=request, ld=['column_name', 'data_type'])
-				if isinstance(columnsAndTypes,Exception):
-					logging.warning("Impossible to execute the request '{0}': {1}".format(request, columnsAndTypes.generateInfoAboutError(request)))
-				outputString += "\n[+] {0}.{1} ({2}/{3})\n".format(aTable['owner'], aTable['table_name'], currentColNum, colNb)
-				resultsToTable = [('column_name', 'data_type')]
-				for aLine in columnsAndTypes:
-					resultsToTable.append((aLine['column_name'], aLine['data_type']))
-				table = Texttable(max_width=getScreenSize()[1])
-				table.set_deco(Texttable.HEADER)
-				table.add_rows(resultsToTable)
-				outputString += table.draw()
-				outputString += '\n'
-			if colNb>0 : pbar.finish()
+			tablesAccessible = []
+			for name in tableNames:
+				name = name.upper()
+				if '.' in name:
+					owner, tableName = name.split('.', 1)
+					query = "SELECT DISTINCT owner, table_name FROM all_tables WHERE owner='{0}' AND table_name='{1}'".format(owner, tableName)
+				else:
+					query = "SELECT DISTINCT owner, table_name FROM all_tables WHERE table_name='{0}'".format(name)
+				results = self.__execQuery__(query=query, ld=['owner', 'table_name'])
+				if isinstance(results, Exception):
+					logging.warning("Impossible to execute the request '{0}': {1}".format(query, results.generateInfoAboutError(query)))
+				elif results == []:
+					logging.warning("Table '{0}' not found or not accessible".format(name))
+				else:
+					tablesAccessible.extend(results)
+		nbTables = len(tablesAccessible)
+		colNb = nbTables
+		if colNb>0 :
+			pbar,currentColNum = self.getStandardBarStarted(colNb), 0
+		for aTable in tablesAccessible:
+			if colNb>0:
+				currentColNum += 1
+				pbar.update(currentColNum)
+			request = self.REQ_GET_COLUMNS_FOR_TABLE.format(aTable['table_name'], aTable['owner'])
+			columnsAndTypes = self.__execQuery__(query=request, ld=['column_name', 'data_type'])
+			if isinstance(columnsAndTypes,Exception):
+				logging.warning("Impossible to execute the request '{0}': {1}".format(request, columnsAndTypes.generateInfoAboutError(request)))
+			outputString += "\n[+] {0}.{1} ({2}/{3})\n".format(aTable['owner'], aTable['table_name'], currentColNum, colNb)
+			resultsToTable = [('column_name', 'data_type')]
+			for aLine in columnsAndTypes:
+				resultsToTable.append((aLine['column_name'], aLine['data_type']))
+			table = Texttable(max_width=getScreenSize()[1])
+			table.set_deco(Texttable.HEADER)
+			table.add_rows(resultsToTable)
+			outputString += table.draw()
+			outputString += '\n'
+		if colNb>0 : pbar.finish()
 		return outputString
 		
 	def getInfoIntable(self,listOfDicos, columns, showEmptyColumns, withoutExample=False):
@@ -406,9 +424,12 @@ def runSearchModule(args):
 			args['print'].badNews("no result found")
 		else :
 			args['print'].goodNews(table)
-	if args['desc-tables']==True:
-		args['print'].title("Descibe each table which is accessible by the current user (without system tables)")
-		table = search.getDescOfEachNoSystemTable()
+	if args['desc-tables'] is not None:
+		if args['desc-tables'] == []:
+			args['print'].title("Descibe each table which is accessible by the current user (without system tables)")
+		else:
+			args['print'].title("Descibe specified tables: {0}".format(', '.join(args['desc-tables'])))
+		table = search.getDescOfEachNoSystemTable(tableNames=args['desc-tables'])
 		print(table)
 	if args['sql-shell'] == True:
 		args['print'].title("Starting an interactive SQL shell")

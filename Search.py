@@ -86,7 +86,7 @@ class Search (OracleDatabase):
 				resultsToTable = [('column_name', 'data_type')]
 				for aLine in columnsAndTypes:
 					resultsToTable.append((aLine['column_name'], aLine['data_type']))
-				table = Texttable(max_width=getScreenSize()[0])
+				table = Texttable(max_width=getScreenSize()[1])
 				table.set_deco(Texttable.HEADER)
 				table.add_rows(resultsToTable)
 				outputString += table.draw()
@@ -135,7 +135,7 @@ class Search (OracleDatabase):
 				elif showEmptyColumns==True :
 					resultsToTable.append(l)
 		if colNb>0 : pbar.finish()
-		table = Texttable(max_width=getScreenSize()[0])
+		table = Texttable(max_width=getScreenSize()[1])
 		table.set_deco(Texttable.HEADER)
 		table.add_rows(resultsToTable)
 		return table.draw()
@@ -177,7 +177,7 @@ class Search (OracleDatabase):
 				elif results==[()]:
 					print("Executed successfully")
 				else:
-					table = Texttable(max_width=getScreenSize()[0])
+					table = Texttable(max_width=getScreenSize()[1])
 					table.set_deco(Texttable.HEADER)
 					table.add_rows(results)
 					print(table.draw())
@@ -305,7 +305,7 @@ class Search (OracleDatabase):
 						"HELP": "Sessions per user",
 						"TABLE": True},
 					   {"REQ": "SELECT * FROM USER_SYS_PRIVS",
-					    "HELP": "Current user's privileges (via USER_SYS_PRIVS & no recursion on roles)",
+						"HELP": "Current user's privileges (via USER_SYS_PRIVS & no recursion on roles)",
 						"TABLE": True},
 					   {"REQ": "SELECT * FROM USER_ROLE_PRIVS",
 						"HELP": "Current user's roles",
@@ -343,7 +343,7 @@ class Search (OracleDatabase):
 			response = self.__execThisQuery__(query=aDefinition["REQ"],
 											  ld=ld,
 											  isquery=True,
-										  	  getColumnNames=getColumnNames,
+											  getColumnNames=getColumnNames,
 											  stringOnly=False)
 			if isinstance(response,Exception) :
 				logging.warning('Error with the SQL request {0}: {1}'.format(aDefinition["REQ"], str(response)))
@@ -351,7 +351,7 @@ class Search (OracleDatabase):
 			else:
 				if 'TABLE' in aDefinition and aDefinition['TABLE'] == True:
 					print("\n--> {0}:".format(aDefinition["HELP"]))
-					table = Texttable(max_width=getScreenSize()[0])
+					table = Texttable(max_width=getScreenSize()[1])
 					table.set_deco(Texttable.HEADER)
 					table.add_rows(response)
 					print(table.draw())

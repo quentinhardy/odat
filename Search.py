@@ -14,6 +14,7 @@ class Search (OracleDatabase):
 	
 	REQ_INFO_FROM_COLUMN_NAMES = "SELECT owner, table_name, column_name FROM all_tab_columns WHERE column_name LIKE '{0}'" #{0}==pattern
 	REQ_VALUE_IN_COLUMN = 'SELECT "{0}" FROM "{1}"."{2}" WHERE "{0}" is not null and rownum = 1' #{0}==column, {1}==database, {2}==table
+	REQ_COUNT_ROWS_IN_TABLE = 'SELECT COUNT(*) AS nb FROM "{0}"."{1}"' #{0}==owner, {1}==table
 	REQ_GET_ALL_NO_SYSTEM_TABLES = "SELECT DISTINCT owner, table_name FROM all_tables WHERE owner not in ('SYS','SYSTEM')"
 	REQ_GET_COLUMNS_FOR_TABLE = "SELECT column_name, data_type FROM all_tab_columns WHERE table_name='{0}' and owner='{1}'" #{0}==table name, {1}==owner
 	DEFAULT_VALUE_EMPTY_COLUMN = "(Empty Column)"
@@ -38,7 +39,7 @@ class Search (OracleDatabase):
 		if isinstance(results, Exception):
 			logging.error("Impossible to continue in searchInColumns(): {0}".format(results))
 			return []
-		table = self.getInfoIntable(results, ["owner","table_name","column_name", "example"], showEmptyColumns=showEmptyColumns, withoutExample=withoutExample)
+		table = self.getInfoIntable(results, ["owner","table_name","column_name", "example", "nb_rows"], showEmptyColumns=showEmptyColumns, withoutExample=withoutExample)
 		return table
 		
 	def searchPwdKeyworkInColumnNames(self, showEmptyColumns, withoutExample=False):
@@ -113,6 +114,11 @@ class Search (OracleDatabase):
 			l.append(e['column_name'])
 			if withoutExample == True:
 				l.append(self.DEFAULT_VALUE_UNKNOWN)
+				nbRows = self.__execQuery__(query=self.REQ_COUNT_ROWS_IN_TABLE.format(e['owner'], e['table_name']), ld=['nb'])
+				if isinstance(nbRows, Exception) or nbRows == []:
+					l.append(self.DEFAULT_VALUE_UNKNOWN)
+				else:
+					l.append(str(nbRows[0]['nb']))
 				resultsToTable.append(l)
 			else:
 				logging.debug("Search a not null value in the column '{0}' of the table '{1}'.'{2}' ({3}/{4})".format(e['column_name'], e['owner'], e['table_name'],currentColNum,colNb))
@@ -130,9 +136,12 @@ class Search (OracleDatabase):
 							value = value[0:self.EXEMPLE_VALUE_LEN_MAX] + ' ' +self.TRUNCATED_MESSAGE_EXEMPLE
 						l.append(value)
 					else: l.append(self.DEFAULT_VALUE_EMPTY_COLUMN)
-				if isStringValueInColumn == True :
-					resultsToTable.append(l)
-				elif showEmptyColumns==True :
+				if isStringValueInColumn == True or showEmptyColumns==True:
+					nbRows = self.__execQuery__(query=self.REQ_COUNT_ROWS_IN_TABLE.format(e['owner'], e['table_name']), ld=['nb'])
+					if isinstance(nbRows, Exception) or nbRows == []:
+						l.append(self.DEFAULT_VALUE_UNKNOWN)
+					else:
+						l.append(str(nbRows[0]['nb']))
 					resultsToTable.append(l)
 		if colNb>0 : pbar.finish()
 		table = Texttable(max_width=getScreenSize()[1])

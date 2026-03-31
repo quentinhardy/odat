@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from OracleDatabase import OracleDatabase
-import logging
+import logging, csv, os
+from openpyxl import Workbook
 from Constants import *
 from Utils import checkOptionsGivenByTheUser, getScreenSize
 from texttable import Texttable
@@ -112,7 +113,147 @@ class Search (OracleDatabase):
 			outputString += '\n'
 		if colNb>0 : pbar.finish()
 		return outputString
-		
+
+	def __parseDumpArg__(self, arg):
+		'''
+		Parse a single dump argument string.
+		Accepted formats:
+		- 'EMPLOYEES'                        -> owner=None, tableName='EMPLOYEES', columns=None
+		- 'HR.EMPLOYEES'                     -> owner='HR', tableName='EMPLOYEES', columns=None
+		- 'EMPLOYEES:USERNAME,PASSWORD'      -> owner=None, tableName='EMPLOYEES', columns=['USERNAME','PASSWORD']
+		- 'HR.EMPLOYEES:USERNAME,PASSWORD'   -> owner='HR', tableName='EMPLOYEES', columns=['USERNAME','PASSWORD']
+		Returns a tuple: (owner or None, table_name, list of columns or None)
+		'''
+		columns = None
+		if ':' in arg:
+			tablePart, colPart = arg.split(':', 1)
+			columns = []
+			for c in colPart.split(','):
+				columns.append(c.strip().upper())
+		else:
+			tablePart = arg
+		tablePart = tablePart.upper()
+		if '.' in tablePart:
+			owner, tableName = tablePart.split('.', 1)
+		else:
+			owner = None
+			tableName = tablePart
+		return owner, tableName, columns
+
+	def __resolveTable__(self, owner, tableName):
+		'''
+		Resolve a table name to a list of (owner, table_name) dicts via all_tables.
+		If owner is specified, filters by owner and table_name.
+		If owner is None, filters by table_name only (all schemas).
+		'''
+		if owner is not None:
+			query = "SELECT DISTINCT owner, table_name FROM all_tables WHERE owner='{0}' AND table_name='{1}'".format(owner, tableName)
+		else:
+			query = "SELECT DISTINCT owner, table_name FROM all_tables WHERE table_name='{0}'".format(tableName)
+		results = self.__execQuery__(query=query, ld=['owner', 'table_name'])
+		if isinstance(results, Exception):
+			logging.warning("Impossible to resolve table '{0}': {1}".format(tableName, results))
+			return []
+		if results == []:
+			logging.warning("Table '{0}' not found or not accessible".format(tableName))
+		return results
+
+	def dumpTables(self, dumpArgs, dumpFile=None):
+		'''
+		Dump data from one or more tables.
+		- dumpArgs: list of strings from the command line, e.g. ['HR.EMPLOYEES', 'USERS:PWD,LOGIN']
+		  Each string is parsed by __parseDumpArg__() to extract owner, table name and optional columns.
+		- dumpFile: base filename for output files (without extension).
+		  If specified, generates both <dumpFile>.csv and <dumpFile>.xlsx.
+		  If None, output is printed as texttable to stdout.
+		'''
+		outputString = ""
+		csvFileHandle = None
+		csvWriter = None
+		wb = None
+		if dumpFile is not None:
+			# Remove extension if user provided one, we add our own
+			baseName = os.path.splitext(dumpFile)[0]
+			csvPath = baseName + '.csv'
+			xlsxPath = baseName + '.xlsx'
+			wb = Workbook()
+			wb.remove(wb.active)
+			try:
+				csvFileHandle = open(csvPath, 'w', newline='', encoding='utf-8')
+				csvWriter = csv.writer(csvFileHandle)
+			except Exception as e:
+				logging.error("Impossible to open file '{0}' for writing: {1}".format(csvPath, e))
+				return ""
+		# First pass: resolve all tables and build a list of (owner, table_name, columns) tasks
+		tasks = []
+		for arg in dumpArgs:
+			owner, tableName, columns = self.__parseDumpArg__(arg)
+			resolved = self.__resolveTable__(owner, tableName)
+			for aTable in resolved:
+				tasks.append((aTable['owner'], aTable['table_name'], columns))
+		# Second pass: dump each table with a progress bar
+		colNb = len(tasks)
+		if colNb > 0:
+			pbar, currentColNum = self.getStandardBarStarted(colNb), 0
+		for tableOwner, tableTableName, columns in tasks:
+			if colNb > 0:
+				currentColNum += 1
+				pbar.update(currentColNum)
+			if columns is not None:
+				colParts = []
+				for c in columns:
+					colParts.append('"{0}"'.format(c))
+				colList = ', '.join(colParts)
+			else:
+				colList = '*'
+			query = 'SELECT {0} FROM "{1}"."{2}"'.format(colList, tableOwner, tableTableName)
+			logging.info("Dumping {0}.{1} with query: {2}".format(tableOwner, tableTableName, query))
+			results = self.__execThisQuery__(query=query, getColumnNames=True, stringOnly=True)
+			if isinstance(results, Exception):
+				logging.warning("Impossible to dump table '{0}'.'{1}': {2}".format(tableOwner, tableTableName, results))
+				continue
+			if results == [] or results == [()]:
+				logging.info("Table '{0}'.'{1}' is empty or returned no data".format(tableOwner, tableTableName))
+				continue
+			columnNames = list(results[0])
+			rows = results[1:]
+			if dumpFile is not None:
+				# Write to CSV
+				csvWriter.writerow(['{0}.{1}'.format(tableOwner, tableTableName)])
+				csvWriter.writerow(columnNames)
+				for row in rows:
+					csvWriter.writerow(row)
+				csvWriter.writerow([])
+				# Write to Excel (one sheet per table)
+				sheetName = '{0}.{1}'.format(tableOwner, tableTableName)
+				if len(sheetName) > 31:
+					sheetName = sheetName[:31]
+				ws = wb.create_sheet(title=sheetName)
+				ws.append(columnNames)
+				for row in rows:
+					ws.append(list(row))
+			else:
+				outputString += "\n[+] {0}.{1} ({2} rows)\n".format(tableOwner, tableTableName, len(rows))
+				resultsToTable = [columnNames]
+				for row in rows:
+					resultsToTable.append(list(row))
+				table = Texttable(max_width=getScreenSize()[1])
+				table.set_deco(Texttable.HEADER)
+				table.add_rows(resultsToTable)
+				outputString += table.draw()
+				outputString += '\n'
+		if colNb > 0:
+			pbar.finish()
+		if dumpFile is not None:
+			csvFileHandle.close()
+			logging.info("Data written to '{0}'".format(csvPath))
+			try:
+				wb.save(xlsxPath)
+				logging.info("Data written to '{0}'".format(xlsxPath))
+			except Exception as e:
+				logging.error("Impossible to save Excel file '{0}': {1}".format(xlsxPath, e))
+		return outputString
+
 	def getInfoIntable(self,listOfDicos, columns, showEmptyColumns, withoutExample=False):
 		'''
 		columns: list which contains column names for the output
@@ -401,7 +542,7 @@ def runSearchModule(args):
 	Run the Search module
 	'''
 	status = True
-	if checkOptionsGivenByTheUser(args,["test-module","column-names","pwd-column-names","desc-tables","without-example","sql-shell",'basic-info']) == False : return EXIT_MISS_ARGUMENT
+	if checkOptionsGivenByTheUser(args,["test-module","column-names","pwd-column-names","desc-tables","without-example","sql-shell",'basic-info','dump']) == False : return EXIT_MISS_ARGUMENT
 	search = Search(args)
 	status = search.connection(stopIfError=True)
 	if args['test-module'] == True :
@@ -431,6 +572,20 @@ def runSearchModule(args):
 			args['print'].title("Descibe specified tables: {0}".format(', '.join(args['desc-tables'])))
 		table = search.getDescOfEachNoSystemTable(tableNames=args['desc-tables'])
 		print(table)
+	if args['dump'] is not None:
+		if args['dump-file'] is not None:
+			baseName = os.path.splitext(args['dump-file'])[0]
+			args['print'].title("Dumping tables to '{0}.csv' and '{1}.xlsx'".format(baseName, baseName))
+		else:
+			args['print'].title("Dumping tables: {0}".format(', '.join(args['dump'])))
+		output = search.dumpTables(dumpArgs=args['dump'], dumpFile=args['dump-file'])
+		if args['dump-file'] is not None:
+			baseName = os.path.splitext(args['dump-file'])[0]
+			args['print'].goodNews("Data written to '{0}.csv' and '{1}.xlsx'".format(baseName, baseName))
+		elif output != "":
+			print(output)
+		else:
+			args['print'].badNews("no data found")
 	if args['sql-shell'] == True:
 		args['print'].title("Starting an interactive SQL shell")
 		search.startInteractiveSQLShell()

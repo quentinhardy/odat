@@ -675,9 +675,11 @@ def main():
 	PPsearch.add_argument('--basic-info', dest='basic-info', action='store_true', required=False,help='get basic information about the instance & database')
 	PPsearch.add_argument('--column-names',dest='column-names',default=None,required=False,metavar='sqlPattern',help='search pattern in all collumns')
 	PPsearch.add_argument('--pwd-column-names',dest='pwd-column-names',action='store_true',help='search password patterns in all collumns')
-	PPsearch.add_argument('--desc-tables',dest='desc-tables',action='store_true',help='describe each table which is accessible')
+	PPsearch.add_argument('--desc-tables',dest='desc-tables',nargs='*',default=None,metavar='table',help='describe tables accessible by the current user. No argument: all non-system tables. Accepts TABLE or OWNER.TABLE')
 	PPsearch.add_argument('--show-empty-columns',dest='show-empty-columns',action='store_true',help='show columns even if columns are empty')
 	PPsearch.add_argument('--without-example',dest='without-example',action='store_true',help="don't get an example value when column matches (for --column-names and --pwd-column-names)")
+	PPsearch.add_argument('--dump',dest='dump',nargs='+',default=None,metavar='target',help='dump table data. Accepts TABLE, OWNER.TABLE, TABLE:COL1,COL2 or OWNER.TABLE:COL1,COL2')
+	PPsearch.add_argument('--dump-file',dest='dump-file',default=None,metavar='filename',help='write dump output to filename.csv and filename.xlsx (extension is added automatically). Each table is a separate sheet in xlsx')
 	PPsearch.add_argument('--sql-shell', dest='sql-shell', action='store_true',help="start a minimal interactive SQL shell")
 	PPsearch.add_argument('--test-module',dest='test-module',action='store_true',help='test the module before use it')
 	#1.22- Parent parser: unwrapper
@@ -796,6 +798,17 @@ def main():
 		logging.error("Impossible to load local configuration files in conf/ and to set driver_name: {0}".format(str(e)))
 	logging.debug("cx_Oracle Version: {0}".format(cx_Oracle.version))
 	logging.debug("Oracle Client Version: {0}".format(cx_Oracle.clientversion()))
+	msg = '[+] Target: {0}:{1}'.format(args['server'], args['port'])
+	if args.get('sid') is not None:
+		msg += ' (SID: {0})'.format(args['sid'])
+	elif args.get('serviceName') is not None:
+		msg += ' (Service Name: {0})'.format(args['serviceName'])
+	if args.get('user') is not None and args.get('password') is not None:
+		msg += ' as {0}/{1}'.format(args['user'], args['password'])
+	elif args.get('user') is not None:
+		msg += ' as {0}'.format(args['user'])
+	msg += ' [{0}]'.format(args.get('auditType', ''))
+	print(msg)
 	arguments.func(args)
 	exit(ALL_IS_OK)
 

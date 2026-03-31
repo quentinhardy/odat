@@ -2,8 +2,12 @@
 # -*- coding: utf-8 -*-
 
 from OracleDatabase import OracleDatabase
-import logging, csv, os
+import logging, csv, os, warnings
 from openpyxl import Workbook
+# Suppress openpyxl warning about sheet names > 31 chars.
+# This can happen because openpyxl's internal duplicate handling may append
+# a suffix after our own truncation. The file is still valid.
+warnings.filterwarnings("ignore", message="Title is more than 31 characters", category=UserWarning, module="openpyxl")
 from Constants import *
 from Utils import checkOptionsGivenByTheUser, getScreenSize
 from texttable import Texttable
@@ -29,6 +33,25 @@ class Search (OracleDatabase):
 		'''
 		logging.debug("Search object created")
 		OracleDatabase.__init__(self,args)
+		self.__usedSheetNames__ = {}
+
+	def __getUniqueSheetName__(self, name):
+		'''
+		Returns a unique Excel sheet name, truncated to 31 characters max.
+		If the truncated name already exists, appends _2, _3, etc.
+		Each returned name is tracked to avoid duplicates.
+		'''
+		if len(name) > 31:
+			name = name[:31]
+		if name not in self.__usedSheetNames__:
+			self.__usedSheetNames__[name] = 1
+			return name
+		self.__usedSheetNames__[name] += 1
+		suffix = '_{0}'.format(self.__usedSheetNames__[name])
+		uniqueName = name[:31 - len(suffix)] + suffix
+		# Track the new name too, in case it also collides later
+		self.__usedSheetNames__[uniqueName] = 1
+		return uniqueName
 
 	def searchInColumns(self, sqlPattern, showEmptyColumns, withoutExample=False):
 		'''
@@ -61,18 +84,39 @@ class Search (OracleDatabase):
 					print("------->"+e)
 		return tables
 		
-	def getDescOfEachNoSystemTable(self, tableNames=None):
+	def getDescOfEachNoSystemTable(self, tableNames=None, dumpFile=None):
 		'''
 		tableNames: list of table names (optional). Each entry can be 'TABLE' or 'OWNER.TABLE'.
 		            If empty or None, all non-system tables are described.
+		dumpFile: base filename for output files (without extension).
+		          If specified, generates both <dumpFile>.csv and <dumpFile>.xlsx.
+		          If None, output is printed as texttable to stdout.
 		returns a String for print
 		'''
+		self.__usedSheetNames__ = {}
 		outputString = ""
+		csvFileHandle = None
+		csvWriter = None
+		wb = None
+		if dumpFile is not None:
+			baseName = os.path.splitext(dumpFile)[0]
+			csvPath = baseName + '.csv'
+			xlsxPath = baseName + '.xlsx'
+			wb = Workbook()
+			wb.remove(wb.active)
+			try:
+				csvFileHandle = open(csvPath, 'w', newline='', encoding='utf-8')
+				csvWriter = csv.writer(csvFileHandle)
+			except Exception as e:
+				logging.error("Impossible to open file '{0}' for writing: {1}".format(csvPath, e))
+				return ""
 		if tableNames is None or tableNames == []:
 			logging.debug("Getting all no system tables accessible with the current user")
 			tablesAccessible = self.__execQuery__(query=self.REQ_GET_ALL_NO_SYSTEM_TABLES, ld=['owner', 'table_name'])
 			if isinstance(tablesAccessible,Exception):
 				logging.warning("Impossible to execute the request '{0}': {1}".format(self.REQ_GET_ALL_NO_SYSTEM_TABLES, tablesAccessible.generateInfoAboutError(self.REQ_GET_ALL_NO_SYSTEM_TABLES)))
+				if csvFileHandle is not None:
+					csvFileHandle.close()
 				return ""
 		else:
 			tablesAccessible = []
@@ -102,16 +146,39 @@ class Search (OracleDatabase):
 			columnsAndTypes = self.__execQuery__(query=request, ld=['column_name', 'data_type'])
 			if isinstance(columnsAndTypes,Exception):
 				logging.warning("Impossible to execute the request '{0}': {1}".format(request, columnsAndTypes.generateInfoAboutError(request)))
-			outputString += "\n[+] {0}.{1} ({2}/{3})\n".format(aTable['owner'], aTable['table_name'], currentColNum, colNb)
-			resultsToTable = [('column_name', 'data_type')]
-			for aLine in columnsAndTypes:
-				resultsToTable.append((aLine['column_name'], aLine['data_type']))
-			table = Texttable(max_width=getScreenSize()[1])
-			table.set_deco(Texttable.HEADER)
-			table.add_rows(resultsToTable)
-			outputString += table.draw()
-			outputString += '\n'
+				continue
+			if dumpFile is not None:
+				# Write to CSV
+				csvWriter.writerow(['{0}.{1}'.format(aTable['owner'], aTable['table_name'])])
+				csvWriter.writerow(['column_name', 'data_type'])
+				for aLine in columnsAndTypes:
+					csvWriter.writerow([aLine['column_name'], aLine['data_type']])
+				csvWriter.writerow([])
+				# Write to Excel (one sheet per table)
+				sheetName = self.__getUniqueSheetName__('{0}.{1}'.format(aTable['owner'], aTable['table_name']))
+				ws = wb.create_sheet(title=sheetName)
+				ws.append(['column_name', 'data_type'])
+				for aLine in columnsAndTypes:
+					ws.append([aLine['column_name'], aLine['data_type']])
+			else:
+				outputString += "\n[+] {0}.{1} ({2}/{3})\n".format(aTable['owner'], aTable['table_name'], currentColNum, colNb)
+				resultsToTable = [('column_name', 'data_type')]
+				for aLine in columnsAndTypes:
+					resultsToTable.append((aLine['column_name'], aLine['data_type']))
+				table = Texttable(max_width=getScreenSize()[1])
+				table.set_deco(Texttable.HEADER)
+				table.add_rows(resultsToTable)
+				outputString += table.draw()
+				outputString += '\n'
 		if colNb>0 : pbar.finish()
+		if dumpFile is not None:
+			csvFileHandle.close()
+			logging.info("Data written to '{0}'".format(csvPath))
+			try:
+				wb.save(xlsxPath)
+				logging.info("Data written to '{0}'".format(xlsxPath))
+			except Exception as e:
+				logging.error("Impossible to save Excel file '{0}': {1}".format(xlsxPath, e))
 		return outputString
 
 	def __parseDumpArg__(self, arg):
@@ -167,6 +234,7 @@ class Search (OracleDatabase):
 		  If specified, generates both <dumpFile>.csv and <dumpFile>.xlsx.
 		  If None, output is printed as texttable to stdout.
 		'''
+		self.__usedSheetNames__ = {}
 		outputString = ""
 		csvFileHandle = None
 		csvWriter = None
@@ -225,9 +293,7 @@ class Search (OracleDatabase):
 					csvWriter.writerow(row)
 				csvWriter.writerow([])
 				# Write to Excel (one sheet per table)
-				sheetName = '{0}.{1}'.format(tableOwner, tableTableName)
-				if len(sheetName) > 31:
-					sheetName = sheetName[:31]
+				sheetName = self.__getUniqueSheetName__('{0}.{1}'.format(tableOwner, tableTableName))
 				ws = wb.create_sheet(title=sheetName)
 				ws.append(columnNames)
 				for row in rows:
@@ -570,8 +636,12 @@ def runSearchModule(args):
 			args['print'].title("Descibe each table which is accessible by the current user (without system tables)")
 		else:
 			args['print'].title("Descibe specified tables: {0}".format(', '.join(args['desc-tables'])))
-		table = search.getDescOfEachNoSystemTable(tableNames=args['desc-tables'])
-		print(table)
+		table = search.getDescOfEachNoSystemTable(tableNames=args['desc-tables'], dumpFile=args['dump-file'])
+		if args['dump-file'] is not None:
+			baseName = os.path.splitext(args['dump-file'])[0]
+			args['print'].goodNews("Data written to '{0}.csv' and '{1}.xlsx'".format(baseName, baseName))
+		else:
+			print(table)
 	if args['dump'] is not None:
 		if args['dump-file'] is not None:
 			baseName = os.path.splitext(args['dump-file'])[0]

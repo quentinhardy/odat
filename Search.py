@@ -383,14 +383,21 @@ class Search (OracleDatabase):
 		else : 
 			return False
 
+	def __isPLSQLBlock__(self, query):
+		"""
+		Returns True if the query is a PL/SQL block (BEGIN...END or DECLARE...END).
+		"""
+		stripped = query.strip().upper()
+		return stripped.startswith('BEGIN') or stripped.startswith('DECLARE')
+
 	def startInteractiveSQLShell(self):
 		"""
 		Start an interactive SQL shell
 		Return True when finished
-		Tested with:
-		- select
-		- create user
-		- create or replace
+		Supports:
+		- SELECT queries (displayed as table)
+		- DDL/DML (CREATE, INSERT, UPDATE, DELETE, etc.)
+		- PL/SQL blocks (BEGIN...END / DECLARE...END) with DBMS_OUTPUT support
 		"""
 		print("Ctrl-D to close the SQL shell")
 		while True:
@@ -405,16 +412,31 @@ class Search (OracleDatabase):
 					return True
 				allLines += theLine
 			if allLines != "":
-				results = self.__execQuery__(query=allLines, getColumnNames=True,stringOnly=True)
-				if isinstance(results,Exception):
-					print(results)
-				elif results==[()]:
-					print("Executed successfully")
+				# Strip trailing semicolon which causes cx_Oracle errors on regular SQL
+				cleanedQuery = allLines.strip()
+				if self.__isPLSQLBlock__(cleanedQuery):
+					# PL/SQL block: use __execPLSQLwithDbmsOutput__ to capture DBMS_OUTPUT
+					results = self.__execPLSQLwithDbmsOutput__(cleanedQuery, addLineBreak=True)
+					if isinstance(results, Exception):
+						print(results)
+					elif results == "":
+						print("PL/SQL block executed successfully (no DBMS_OUTPUT)")
+					else:
+						print(results)
 				else:
-					table = Texttable(max_width=getScreenSize()[1])
-					table.set_deco(Texttable.HEADER)
-					table.add_rows(results)
-					print(table.draw())
+					# Regular SQL query
+					if cleanedQuery.endswith(';'):
+						cleanedQuery = cleanedQuery[:-1]
+					results = self.__execQuery__(query=cleanedQuery, getColumnNames=True, stringOnly=True)
+					if isinstance(results, Exception):
+						print(results)
+					elif results == [()]:
+						print("Executed successfully")
+					else:
+						table = Texttable(max_width=getScreenSize()[1])
+						table.set_deco(Texttable.HEADER)
+						table.add_rows(results)
+						print(table.draw())
 
 	def getAllPrivs(self):
 		'''

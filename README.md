@@ -241,6 +241,9 @@ For using the ODAT development version, the last version of the Oracle client ca
 * Install *python3-dev*, *alien* and *libaio1* package (for sqlplus):
 ```bash
 sudo apt-get install libaio1 python3-dev alien python3-pip
+
+# adding python dependencies
+pip install pycryptodome python-libnmap
 ```
 
 * Generate DEB files from RPM files with :

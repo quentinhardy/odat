@@ -77,7 +77,7 @@ class ProgressBarWidget(object):
         where one can access attributes of the class for knowing how
         the update must be made.
 
-        At least this function must be overriden."""
+        At least this function must be overridden."""
         pass
 
 class ProgressBarWidgetHFill(object):
@@ -97,7 +97,7 @@ class ProgressBarWidgetHFill(object):
         the update must be made. The parameter width is the total
         horizontal width the widget must have.
 
-        At least this function must be overriden."""
+        At least this function must be overridden."""
         pass
 
 

@@ -7,6 +7,7 @@ import logging, os.path
 from Constants import *
 from Utils import sidOrServiceNameHasBeenGiven, stringToLinePadded, getCredentialsFormated, getSIDorServiceNameWithType, getSIDorServiceName
 from random import shuffle
+from OracleDriver import ERROR_VERIFIER_NOT_SUPPORTED
 
 class PasswordGuesser (OracleDatabase):
 	'''
@@ -147,6 +148,8 @@ class PasswordGuesser (OracleDatabase):
 		'''
 		userChoice = 1
 		lockedUsernames = []
+		#Accounts with a 10G password verifier only can not be tested in thin mode
+		verifier10GUsernames = []
 		logging.info("Searching valid accounts on {0}:{1}/{2}".format(self.args['server'], self.args['port'], getSIDorServiceNameWithType(self.args)))
 		logging.debug("{0} accounts will be tested".format(len(self.accounts)))
 		if len(self.accounts) == 0:
@@ -170,13 +173,15 @@ class PasswordGuesser (OracleDatabase):
 				logging.info("Skip account {0} and continue to next one. Ask each time".format(repr(self.args['user'])))
 			elif self.args['user'].lower() in lockedUsernames:
 				logging.info("Skip this creds {0}/{1} because we known this account is locked".format(repr(self.args['user']),repr(self.args['password'])))
+			elif self.args['user'].lower() in verifier10GUsernames:
+				logging.info("Skip this creds {0}/{1} because this account uses a 10G password verifier only".format(repr(self.args['user']),repr(self.args['password'])))
 			else:
 				status = self.connection(threaded=False)
 				if status == True:
 					self.valideAccounts[self.args['user']] = self.args['password']
 					logging.info("Valid credential: {0} ({1})  ".format('/'.join(anAccount),self.args['connectionStr']))
 					self.args['print'].goodNews(stringToLinePadded("Valid credentials found: {0}. Continue... ".format('/'.join(anAccount))))
-				elif "connection as SYS should be as SYSDBA or SYSOPER" in str(status):
+				elif self.ERROR_NOT_SYSDBA in str(status):
 					logging.debug("Try to connect as sysdba")
 					self.args['SYSDBA'] = True
 					status = self.connection()
@@ -189,6 +194,9 @@ class PasswordGuesser (OracleDatabase):
 				elif self.ERROR_ACCOUNT_LOCKED in str(status):
 					self.args['print'].printImportantNotice("{0} account is locked, so skipping this username for password".format(repr(self.args['user'])))
 					lockedUsernames.append(self.args['user'].lower())
+				elif ERROR_VERIFIER_NOT_SUPPORTED in str(status):
+					self.args['print'].printImportantNotice("{0} account uses a 10G password verifier only, it can not be tested in thin mode (use --thick), so skipping this username".format(repr(self.args['user'])))
+					verifier10GUsernames.append(self.args['user'].lower())
 				elif self.ERROR_SERVICE_HANDLER in str(status):
 					logging.error("Error during connection with this account. You should use a time sleep between each try: {0}".format(status))
 				else:

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from Http import Http
-import logging, cx_Oracle
+import logging, oracledb
 from Utils import ErrorSQLRequest, checkOptionsGivenByTheUser
 from Constants import *
 

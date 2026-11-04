@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from DirectoryManagement import DirectoryManagement
-import logging, random, string, cx_Oracle
+import logging, random, string, oracledb
 from hashlib import md5
 from Utils import ErrorSQLRequest, checkOptionsGivenByTheUser
 from Constants import *
@@ -91,7 +91,7 @@ class UtlFile (DirectoryManagement):
 		if isinstance(status,Exception): return status
 		#Get data of the remote file
 		UTL_FILE_GET_FILE = "DECLARE l_fileID UTL_FILE.FILE_TYPE; l_buffer VARCHAR2(32000); hexdata VARCHAR2(32000); BEGIN l_fileID := UTL_FILE.FOPEN ('{0}', '{1}', 'r', 32000); LOOP UTL_FILE.GET_LINE(l_fileID, l_buffer, 32000); select RAWTOHEX(l_buffer) into hexdata from dual; dbms_output.put_line(hexdata); END LOOP; EXCEPTION WHEN NO_DATA_FOUND THEN UTL_FILE.fclose(l_fileID); NULL; END;"
-		cursor = cx_Oracle.Cursor(self.args['dbcon'])
+		cursor = self.args['dbcon'].cursor()
 		try : 		
 			cursor.callproc("dbms_output.enable")
 			try:
@@ -101,8 +101,8 @@ class UtlFile (DirectoryManagement):
 				self.__dropDirectory__()
 				return ErrorSQLRequest(e)
 			else :
-				statusVar = cursor.var(cx_Oracle.NUMBER)
-				lineVar = cursor.var(cx_Oracle.STRING)
+				statusVar = cursor.var(oracledb.NUMBER)
+				lineVar = cursor.var(oracledb.STRING)
 				while True:
 					cursor.callproc("dbms_output.get_line", (lineVar, statusVar))
 					if statusVar.getvalue() != 0:
@@ -137,7 +137,7 @@ class UtlFile (DirectoryManagement):
 			if length <= 0:	
 				pass
 			else :
-				cursor = cx_Oracle.Cursor(self.args['dbcon'])
+				cursor = self.args['dbcon'].cursor()
 				cursor.callproc("dbms_output.enable")
 				nbNewLine=0
 				logging.debug("Reading the entire file ({0} bytes)...".format(length))
@@ -153,8 +153,8 @@ class UtlFile (DirectoryManagement):
 						self.__dropDirectory__()
 						return ErrorSQLRequest(e)
 					else :
-						statusVar = cursor.var(cx_Oracle.NUMBER)
-						lineVar = cursor.var(cx_Oracle.STRING)
+						statusVar = cursor.var(oracledb.NUMBER)
+						lineVar = cursor.var(oracledb.STRING)
 						while True:
 							cursor.callproc("dbms_output.get_line", (lineVar, statusVar))
 							if statusVar.getvalue() != 0: break
@@ -182,7 +182,7 @@ class UtlFile (DirectoryManagement):
 		status = self.__createOrRemplaceDirectory__(remotePath)
 		if isinstance(status,Exception): return status
 		UTL_FILE_GET_LENGTH = "DECLARE l_fileID UTL_FILE.FILE_TYPE; l_value VARCHAR2(32000); l_exists BOOLEAN; l_file_length NUMBER; l_blocksize NUMBER; BEGIN UTL_FILE.fgetattr('{0}', '{1}', l_exists, l_file_length, l_blocksize); dbms_output.put_line(l_file_length); END;"		
-		cursor = cx_Oracle.Cursor(self.args['dbcon'])
+		cursor = self.args['dbcon'].cursor()
 		try : 	
 			cursor.callproc("dbms_output.enable")
 			try:
@@ -192,8 +192,8 @@ class UtlFile (DirectoryManagement):
 				self.__dropDirectory__()
 				return ErrorSQLRequest(e)
 			else :
-				statusVar = cursor.var(cx_Oracle.NUMBER)
-				lineVar = cursor.var(cx_Oracle.STRING)
+				statusVar = cursor.var(oracledb.NUMBER)
+				lineVar = cursor.var(oracledb.STRING)
 				while True:
 					cursor.callproc("dbms_output.get_line", (lineVar, statusVar))
 					if statusVar.getvalue() != 0:
@@ -220,7 +220,7 @@ class UtlFile (DirectoryManagement):
 		status = self.__createOrRemplaceDirectory__(remotePath)
 		if isinstance(status,Exception): return status
 		UTL_FILE_EXIST = "DECLARE l_fileID UTL_FILE.FILE_TYPE; l_value VARCHAR2(32000); l_exists BOOLEAN; l_file_length NUMBER; l_blocksize NUMBER; BEGIN UTL_FILE.fgetattr('{0}', '{1}', l_exists, l_file_length, l_blocksize); dbms_output.put_line(case when l_exists then 'True' else 'False' end); END;"		
-		cursor = cx_Oracle.Cursor(self.args['dbcon'])
+		cursor = self.args['dbcon'].cursor()
 		try :
 			cursor.callproc("dbms_output.enable")
 			try:
@@ -230,8 +230,8 @@ class UtlFile (DirectoryManagement):
 				self.__dropDirectory__()
 				return ErrorSQLRequest(e)
 			else :
-				statusVar = cursor.var(cx_Oracle.NUMBER)
-				lineVar = cursor.var(cx_Oracle.STRING)
+				statusVar = cursor.var(oracledb.NUMBER)
+				lineVar = cursor.var(oracledb.STRING)
 				while True:
 					cursor.callproc("dbms_output.get_line", (lineVar, statusVar))
 					if statusVar.getvalue() != 0: break

@@ -1,0 +1,11 @@
+oracledb
+passlib
+pycryptodome
+scapy
+python-libnmap
+colorlog
+termcolor
+argcomplete
+openpyxl
+PySocks
+pyasyncore; python_version >= "3.12"

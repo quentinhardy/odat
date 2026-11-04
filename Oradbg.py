@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from OracleDatabase import OracleDatabase
-import logging, cx_Oracle
+import logging, oracledb
 from Utils import ErrorSQLRequest, checkOptionsGivenByTheUser
 from Constants import *
 

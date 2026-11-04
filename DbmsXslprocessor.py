@@ -5,7 +5,7 @@ from DirectoryManagement import DirectoryManagement
 import logging, random, string 
 from Utils import checkOptionsGivenByTheUser
 from Constants import *
-import cx_Oracle
+import oracledb
 from Utils import ErrorSQLRequest
 
 class DbmsXslprocessor (DirectoryManagement):	
@@ -66,7 +66,7 @@ class DbmsXslprocessor (DirectoryManagement):
 		self.__setDirectoryName__()
 		status = self.__createOrRemplaceDirectory__(remotePath)
 		if isinstance(status, Exception): return status
-		cursor = cx_Oracle.Cursor(self.args['dbcon'])
+		cursor = self.args['dbcon'].cursor()
 		cursor.callproc("dbms_output.enable")
 		try:
 			cursor.execute(READ2CLOB_GET_FILE.format(self.directoryName, remoteNameFile))
@@ -75,8 +75,8 @@ class DbmsXslprocessor (DirectoryManagement):
 			self.__dropDirectory__()
 			return ErrorSQLRequest(e)
 		else:
-			statusVar = cursor.var(cx_Oracle.NUMBER)
-			lineVar = cursor.var(cx_Oracle.STRING)
+			statusVar = cursor.var(oracledb.NUMBER)
+			lineVar = cursor.var(oracledb.STRING)
 			while True:
 				cursor.callproc("dbms_output.get_line", (lineVar, statusVar))
 				if statusVar.getvalue() != 0: break

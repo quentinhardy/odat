@@ -55,22 +55,28 @@ class Unwrapper (OracleDatabase):
 		Returns PL/SQL data unwrapped or None if error
 		'''
 		logging.info("Unwrapping the following PL/SQL source code: '{0}'".format(wrappedCode))
-		lines = wrappedCode['sourceCode'].split('\n')[:-1]
+		lines = wrappedCode['sourceCode'].split('\n')
+		units = []
 		try:
-			for i in range(0, len(lines)):
+			i = 0
+			while i < len(lines):
 				matches = re.compile(r"^[0-9a-f]+ ([0-9a-f]+)$").match(lines[i])
 				if matches:
-					b64str, j = '', 0
-					b64len = int(matches.groups()[0], 16) 
-					logging.debug("Length of base 64 string equal to {0}".format(b64len))
-					while len(b64str) < b64len:
-						j+=1
-						b64len-=1
-						b64str += lines[i+j]
-					return(self.__decodeBase64Package__(b64str))
+					# base64 payload follows, spanning until a blank line or '/' terminator
+					b64str, j = '', i + 1
+					while j < len(lines) and lines[j].strip() not in ('', '/'):
+						b64str += lines[j].strip()
+						j += 1
+					decoded = self.__decodeBase64Package__(b64str)
+					if decoded != None: units.append(decoded)
+					i = j
+				else:
+					i += 1
 		except Exception as e:
-			logging.error("Impossible to parse the correctly the PL/SQL source code: '{0}'".format(e)) 
-		return None
+			logging.error("Impossible to parse the correctly the PL/SQL source code: '{0}'".format(e))
+		if units == []:
+			return None
+		return "\n".join(units)
 		
 	def unwrapRemotely(self, objectName, objectType):
 		'''
@@ -86,8 +92,13 @@ class Unwrapper (OracleDatabase):
 		'''
 		unwrap a PL/SQL code remotely
 		'''
-		f = open(filename)
-		lines = "".join(f.readlines())
+		try:
+			f = open(filename, encoding='latin1')
+			lines = "".join(f.readlines())
+			f.close()
+		except Exception as e:
+			logging.error("Impossible to read the file {0}: {1}".format(filename, str(e)))
+			return None
 		code = self.__unwrap__({'owner':'unknown', 'sourceCode':lines})
 		return code
 	
@@ -96,15 +107,15 @@ class Unwrapper (OracleDatabase):
 		'''
 		Return None if error
 		'''
-		decoded = ''
 		try:
-			b64dec = base64.decodestring(b64str)[20:] # we strip the first 20 chars (SHA1 hash, I don't bother checking it at the moment)
-			for byte in range(0, len(b64dec)): decoded += chr(self.CHAR_MAP_SUBSTITUTION[ord(b64dec[byte])])
+			# strip the first 20 bytes (SHA1 hash), apply the substitution table, then inflate
+			b64dec = base64.b64decode(b64str)[20:]
+			decoded = bytes(self.CHAR_MAP_SUBSTITUTION[byte] for byte in b64dec)
 			datadec = zlib.decompress(decoded)
 		except Exception as e:
-			logging.error("Impossible to decompress data: '{0}'".format(e)) 
+			logging.error("Impossible to decompress data: '{0}'".format(e))
 			return None
-		return datadec
+		return datadec.decode('latin1')
 			
 	def testAll (self):
 		'''

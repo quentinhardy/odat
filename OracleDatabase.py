@@ -1,17 +1,20 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import logging, random, string, cx_Oracle
+import logging, random, string, oracledb
 
 from Utils import areEquals,checkOracleVersion,getOracleConnection,ErrorSQLRequest
 from progressbar import *
 from time import sleep
 from sys import exit
 from Constants import *
+from OracleDriver import connect as oracleConnect, getThickModeRequiredCode, THICK_MODE_REQUIRED
 
 class OracleDatabase:
     '''
     '''
+    THICK_MODE_WARNINGS_DONE = []
+
     def __init__(self,args):
         '''
         Constructor
@@ -21,8 +24,9 @@ class OracleDatabase:
         self.__generateConnectionString__()
         self.oracleDatabaseversion = ''
         self.remoteOS = ''
-        self.TARGET_UNAVAILABLE = ["Connect failed because target host or object does not exist",
-                                    "listener could not find available handler with matching protocol stack"]
+        #Error codes instead of messages: messages can be localized by the server
+        self.TARGET_UNAVAILABLE = ["ORA-12545", #Connect failed because target host or object does not exist
+                                   "ORA-12516"] #listener could not find available handler with matching protocol stack
         self.ERROR_BAD_FOLDER_OR_BAD_SYSTEM_PRIV = "ORA-29283: "
         self.ERROR_FILEOPEN_FAILED = "ORA-22288: "
         self.ERROR_NO_PRIVILEGE = "ORA-24247: "
@@ -60,18 +64,18 @@ class OracleDatabase:
             logging.critical("serviceName and sid are empty for generating a connection string")
         if 'serviceName' in self.args and  self.args['serviceName'] != None:
             logging.debug("TNS Connection string mode enabled and SERVICE NAME used for connection string")
-            self.args['connectionStr'] = "{0}/{1}@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(Host={2})(Port={3})))(CONNECT_DATA=(SERVICE_NAME={4})))".format(user,
-                                                                                                                                                                     pwd,
-                                                                                                                                                                     self.args['server'],
-                                                                                                                                                                     self.args['port'],
-                                                                                                                                                                     self.args['serviceName'])
+            self.args['dsn'] = "(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(Host={0})(Port={1})))(CONNECT_DATA=(SERVICE_NAME={2})))".format(self.args['server'],
+                                                                                                                                                  self.args['port'],
+                                                                                                                                                  self.args['serviceName'])
         else:
             logging.debug("TNS Connection string mode enabled and SID used for connection string")
-            self.args['connectionStr'] = "{0}/{1}@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(Host={2})(Port={3})))(CONNECT_DATA=(SID={4})))".format(user,
-                                                                                                                                                            pwd,
-                                                                                                                                                            self.args['server'],
-                                                                                                                                                            self.args['port'],
-                                                                                                                                                            self.args['sid'])
+            self.args['dsn'] = "(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(Host={0})(Port={1})))(CONNECT_DATA=(SID={2})))".format(self.args['server'],
+                                                                                                                                         self.args['port'],
+                                                                                                                                         self.args['sid'])
+        #user and password are given separately to the driver (python-oracledb does not accept user/password@dsn as user)
+        self.args['dbUser'] = user
+        self.args['dbPassword'] = pwd
+        self.args['connectionStr'] = "{0}/{1}@{2}".format(user, pwd, self.args['dsn'])
         logging.debug('Oracle connection string: {0}'.format(self.args['connectionStr']))
         return self.args['connectionStr']
     
@@ -92,34 +96,25 @@ class OracleDatabase:
             nencoding =self.nencoding
         logging.debug("Connection encoding set to {0}/{1}".format(repr(encoding), repr(nencoding)))
         try: 
+            mode = None
             if self.args['SYSDBA'] == True :
                 logging.debug("Connecting as SYSDBA to the database")
-                # user parameter is assumed to be a connect string
-                self.args['dbcon'] = cx_Oracle.connect(user=self.args['connectionStr'],
-                                                       mode=cx_Oracle.SYSDBA,
-                                                       threaded=threaded,
-                                                       encoding=encoding,
-                                                       nencoding=nencoding)
+                mode = oracledb.AUTH_MODE_SYSDBA
             elif self.args['SYSOPER'] == True : 
                 logging.debug("Connecting as SYSOPER to the database")
-                # user parameter is assumed to be a connect string
-                self.args['dbcon'] = cx_Oracle.connect(user=self.args['connectionStr'],
-                                                       mode=cx_Oracle.SYSOPER,
-                                                       threaded=threaded,
-                                                       encoding=encoding,
-                                                       nencoding=nencoding)
-            else :
-                # user parameter is assumed to be a connect string
-                self.args['dbcon'] = cx_Oracle.connect(user=self.args['connectionStr'],
-                                                       threaded=threaded,
-                                                       encoding=encoding,
-                                                       nencoding=nencoding)
+                mode = oracledb.AUTH_MODE_SYSOPER
+            #threaded, encoding and nencoding are not used anymore: python-oracledb is always thread safe and uses UTF-8
+            self.args['dbcon'] = oracleConnect(user=self.args['dbUser'],
+                                               password=self.args['dbPassword'],
+                                               dsn=self.args['dsn'],
+                                               mode=mode)
             self.args['dbcon'].autocommit = True
             if self.remoteOS == '' or self.oracleDatabaseversion=='' : self.loadInformationRemoteDatabase()
             return True
         except Exception as e:
+            self.__warnIfThickModeRequired__(e)
             if self.ERROR_CONN_IMPOSS in str(e) or self.ERROR_UNABLE_TO_ACQUIRE_ENV in str(e):
-                logging.critical("Impossible to connect to the remost host")
+                logging.critical("Impossible to connect to the remote host: {0}".format(self.cleanError(e)))
                 exit(EXIT_BAD_CONNECTION)
             elif self.ERROR_NOT_SYSDBA in str(e): 
                 logging.info("Connection as SYS should be as SYSDBA or SYSOPER, try to connect as SYSDBA")
@@ -141,6 +136,19 @@ class OracleDatabase:
             else :
                 return ErrorSQLRequest(e)
         
+
+    def __warnIfThickModeRequired__(self, error):
+        '''
+        Print a warning (once per error code) when the thin mode can not be used for this connection
+        Return True if thick mode is required, otherwise False
+        '''
+        code = getThickModeRequiredCode(error)
+        if code == None:
+            return False
+        if code not in OracleDatabase.THICK_MODE_WARNINGS_DONE:
+            OracleDatabase.THICK_MODE_WARNINGS_DONE.append(code)
+            logging.critical("Thin mode can not be used: {0} ({1}). Try with the '--thick' option (Oracle Instant Client required)".format(THICK_MODE_REQUIRED[code], code))
+        return True
 
     def __retryConnect__(self, nbTry=3):
         '''
@@ -269,10 +277,10 @@ class OracleDatabase:
         '''
         Execute the stored procedure
         - proc: procedure name
-        - options: callproc parameters (see http://cx-oracle.readthedocs.org/en/latest/cursor.html)
+        - options: callproc parameters (see https://python-oracledb.readthedocs.io/en/latest/api_manual/cursor.html)
         Return True if no error. Otherwise returns Exception (ErrorSQLRequest)
         '''
-        cursor = cx_Oracle.Cursor(self.args['dbcon'])
+        cursor = self.args['dbcon'].cursor()
         try:
             if options == None :
                 cursor.callproc(proc)
@@ -290,7 +298,7 @@ class OracleDatabase:
         Execute the request containing dbms_output  
         '''
         responsedata = ""
-        cursor = cx_Oracle.Cursor(self.args['dbcon'])
+        cursor = self.args['dbcon'].cursor()
         try :       
             cursor.callproc("dbms_output.enable")
             try:
@@ -299,8 +307,8 @@ class OracleDatabase:
                 logging.info("Impossible to execute the query `{0}`: {1}".format(request, self.cleanError(e)))
                 return ErrorSQLRequest(e)
             else :
-                statusVar = cursor.var(cx_Oracle.NUMBER)
-                lineVar = cursor.var(cx_Oracle.STRING)
+                statusVar = cursor.var(oracledb.NUMBER)
+                lineVar = cursor.var(oracledb.STRING)
                 while True:
                     cursor.callproc("dbms_output.get_line", (lineVar, statusVar))
                     if statusVar.getvalue() != 0:

@@ -399,44 +399,137 @@ class Search (OracleDatabase):
 		- DDL/DML (CREATE, INSERT, UPDATE, DELETE, etc.)
 		- PL/SQL blocks (BEGIN...END / DECLARE...END) with DBMS_OUTPUT support
 		"""
-		print("Ctrl-D to close the SQL shell")
+		try:
+			#Enables up/down history and left/right line editing for input() on Unix
+			import readline
+		except ImportError:
+			pass
+		print("Ctrl-D to close the SQL shell. An empty line executes the request (multi-line requests are allowed)")
 		while True:
 			theLine = None
 			allLines = ""
-			print("SQL> ", end='')
 			while theLine != "":
 				try:
-					theLine = input()
+					# Pass the prompt to input/readline instead of printing it
+					# separately. GNU readline needs the prompt length to redraw a
+					# recalled history line at the correct cursor position.
+					prompt = "SQL> " if allLines == "" else "  > "
+					theLine = input(prompt)
 				except EOFError:
 					print("\nSQL shell closed")
 					return True
-				allLines += theLine
-			if allLines != "":
-				# Strip trailing semicolon which causes cx_Oracle errors on regular SQL
-				cleanedQuery = allLines.strip()
-				if self.__isPLSQLBlock__(cleanedQuery):
-					# PL/SQL block: use __execPLSQLwithDbmsOutput__ to capture DBMS_OUTPUT
-					results = self.__execPLSQLwithDbmsOutput__(cleanedQuery, addLineBreak=True)
-					if isinstance(results, Exception):
-						print(results)
-					elif results == "":
-						print("PL/SQL block executed successfully (no DBMS_OUTPUT)")
+				#Keep line breaks: lines of a multi-line request must not be glued together
+				allLines += theLine + "\n"
+			if allLines.strip() != "":
+				self.__runOneStatement__(allLines.strip())
+
+	def __emit__(self, text):
+		"""
+		Print text to stdout and, when --output-file is set, append it there too.
+		Lets the interactive shell and the --sql-file runner save their results.
+		"""
+		text = str(text)
+		print(text)
+		outputFile = self.args.get('outputFile')
+		if outputFile:
+			try:
+				with open(outputFile, 'a') as f:
+					f.write(text + "\n")
+			except Exception as e:
+				logging.error("Impossible to write to the output file {0}: {1}".format(outputFile, self.cleanError(e)))
+
+	def __runOneStatement__(self, cleanedQuery):
+		"""
+		Execute a single SQL statement or PL/SQL block and print the result.
+		Shared by the interactive shell and the --sql-file runner.
+		"""
+		if self.__isPLSQLBlock__(cleanedQuery):
+			# PL/SQL block: use __execPLSQLwithDbmsOutput__ to capture DBMS_OUTPUT
+			results = self.__execPLSQLwithDbmsOutput__(cleanedQuery, addLineBreak=True)
+			if isinstance(results, Exception):
+				self.__emit__(results)
+			elif results == "":
+				self.__emit__("PL/SQL block executed successfully (no DBMS_OUTPUT)")
+			else:
+				self.__emit__(results)
+		else:
+			# Regular SQL query - strip trailing semicolon which causes driver errors
+			if cleanedQuery.endswith(';'):
+				cleanedQuery = cleanedQuery[:-1]
+			results = self.__execQuery__(query=cleanedQuery, getColumnNames=True, stringOnly=True)
+			if isinstance(results, Exception):
+				self.__emit__(results)
+			elif results == [()]:
+				self.__emit__("Executed successfully")
+			else:
+				table = Texttable(max_width=getScreenSize()[1])
+				table.set_deco(Texttable.HEADER)
+				table.add_rows(results)
+				self.__emit__(table.draw())
+
+	def runSqlFile(self, filename):
+		"""
+		Run SQL statements from a file. Statements are separated by a line
+		containing only '/' or by ';' at the end of a line (SQL*Plus style).
+		Comment lines (-- ...) and empty lines are ignored between statements.
+		Return True when finished.
+		"""
+		try:
+			f = open(filename)
+			lines = f.readlines()
+			f.close()
+		except Exception as e:
+			logging.error("Impossible to read the SQL file {0}: {1}".format(filename, self.cleanError(e)))
+			return False
+		#truncate the output file once so re-runs don't append to stale results
+		outputFile = self.args.get('outputFile')
+		if outputFile:
+			try:
+				open(outputFile, 'w').close()
+			except Exception as e:
+				logging.error("Impossible to open the output file {0}: {1}".format(outputFile, self.cleanError(e)))
+		#SQL*Plus client directives that are not SQL - skipped when not inside a statement
+		SQLPLUS_DIRECTIVES = ('SET','COLUMN','COL','PROMPT','WHENEVER','SPOOL','DEFINE','UNDEFINE',
+							  'ACCEPT','PAUSE','CLEAR','TTITLE','BTITLE','BREAK','COMPUTE','SHOW',
+							  'REM','REMARK','CONNECT','DISCONNECT','STORE','SAVE','START','VARIABLE')
+		def runStmt(stmt):
+			#Execute a completed statement inline so PROMPT headers interleave with output
+			self.__emit__("SQL> {0}".format(stmt))
+			self.__runOneStatement__(stmt)
+		count, current = 0, ""
+		for line in lines:
+			stripped = line.strip()
+			if stripped == "/":
+				#SQL*Plus terminator for PL/SQL blocks
+				if current.strip() != "": runStmt(current.strip()); count += 1
+				current = ""
+				continue
+			if current.strip() == "":
+				#between statements: skip comments and SQL*Plus-only directives
+				if stripped == "" or stripped.startswith("--"):
+					continue
+				firstword = stripped.split(None, 1)[0].upper() if stripped else ""
+				if firstword in SQLPLUS_DIRECTIVES:
+					if firstword == "PROMPT":
+						#keep PROMPT text visible in the output
+						self.__emit__(stripped[6:].strip())
 					else:
-						print(results)
-				else:
-					# Regular SQL query
-					if cleanedQuery.endswith(';'):
-						cleanedQuery = cleanedQuery[:-1]
-					results = self.__execQuery__(query=cleanedQuery, getColumnNames=True, stringOnly=True)
-					if isinstance(results, Exception):
-						print(results)
-					elif results == [()]:
-						print("Executed successfully")
-					else:
-						table = Texttable(max_width=getScreenSize()[1])
-						table.set_deco(Texttable.HEADER)
-						table.add_rows(results)
-						print(table.draw())
+						logging.debug("Skipping SQL*Plus directive: {0}".format(stripped))
+					continue
+			elif stripped == "" and not self.__isPLSQLBlock__(current.strip()):
+				#blank line ends a non-PL/SQL statement (files that separate by blank line, no ';')
+				runStmt(current.strip()); count += 1
+				current = ""
+				continue
+			current += line
+			if stripped.endswith(";") and not self.__isPLSQLBlock__(current.strip()):
+				#end of a regular SQL statement
+				runStmt(current.strip()); count += 1
+				current = ""
+		if current.strip() != "":
+			runStmt(current.strip()); count += 1
+		logging.info("Ran {0} statement(s) from {1}".format(count, filename))
+		return True
 
 	def getAllPrivs(self):
 		'''
@@ -630,7 +723,7 @@ def runSearchModule(args):
 	Run the Search module
 	'''
 	status = True
-	if checkOptionsGivenByTheUser(args,["test-module","column-names","pwd-column-names","desc-tables","without-example","sql-shell",'basic-info','dump']) == False : return EXIT_MISS_ARGUMENT
+	if checkOptionsGivenByTheUser(args,["test-module","column-names","pwd-column-names","desc-tables","without-example","sql-shell","sql-file",'basic-info','dump']) == False : return EXIT_MISS_ARGUMENT
 	search = Search(args)
 	status = search.connection(stopIfError=True)
 	if args['test-module'] == True :
@@ -681,3 +774,6 @@ def runSearchModule(args):
 	if args['sql-shell'] == True:
 		args['print'].title("Starting an interactive SQL shell")
 		search.startInteractiveSQLShell()
+	if args['sql-file'] != None:
+		args['print'].title("Running SQL statements from {0}".format(args['sql-file']))
+		search.runSqlFile(args['sql-file'])

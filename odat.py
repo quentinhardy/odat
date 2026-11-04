@@ -21,7 +21,8 @@ try:
 except ImportError:
 	COLORLOG_AVAILABLE = False
 
-import argparse, logging, platform, cx_Oracle, string, os, sys
+import argparse, logging, platform, string, os, sys
+from getpass import getpass
 from pathlib import Path
 from libnmap.parser import NmapParser
 from Utils import (areEquals,
@@ -35,6 +36,8 @@ from Utils import (areEquals,
 				   getHostsFromFile)
 
 from Constants import *
+from OracleDriver import initDriver
+from SocksProxy import enableSocksProxy
 from Output import Output
 from Tnscmd import runTnsCmdModule
 from UtlFile import UtlFile, runUtlFileModule
@@ -142,17 +145,16 @@ def checkIfWorkingTnsListener(args, timeoutTCP=10):
 	Use server and port of args only for testing.
 	'''
 	args['print'].printMessage("Checking if target {0}:{1} is well configured for a connection...".format(args['server'], args['port']))
-	socks = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	socks.settimeout(timeoutTCP)
 	logging.debug('Trying a TCP connection to {0} port {1}'.format(args['server'], args['port']))
 	try:
-		socks.connect((args['server'], int(args['port'])))
+		#socket.create_connection() goes through the SOCKS proxy when --socks is used
+		sock = socket.create_connection((args['server'], int(args['port'])), timeoutTCP)
 		logging.debug("Connection established to server")
 	except Exception as e:
 		args['print'].badNews("Impossible to establish a TCP connection to {0}:{1}. This target is SKIPPED".format(args['server'], args['port']))
 		logging.debug("TCP error: {0}".format(str(e)))
 		return False
-	socks.close()
+	sock.close()
 	odb = OracleDatabase(args)
 	statusWorking = odb.isWorkingTnsListener()
 	if statusWorking == False:
@@ -472,6 +474,8 @@ def main():
 	PPconnection.add_argument('--client-driver', dest='client-driver', required=False, default="SQL*PLUS", help='Set client driver name (default: %(default)s)')
 	PPconnection.add_argument('--sysdba', dest='SYSDBA', action='store_true', default=False, help='connection as SYSDBA')
 	PPconnection.add_argument('--sysoper', dest='SYSOPER', action='store_true', default=False, help='connection as SYSOPER')
+	PPconnection.add_argument('--socks', dest='socks', required=False, default=None, metavar='URL', help='SOCKS proxy, e.g. socks5h://127.0.0.1:1080 (socks5h/socks4a: DNS resolution by the proxy). Thin mode only')
+	PPconnection.add_argument('--thick', dest='thick', action='store_true', default=False, help='use thick mode (Oracle Instant Client required), needed for Native Network Encryption, databases < 12.1 and 10G password verifiers')
 	#1.2- Parent parser: output options
 	PPoutput = argparse.ArgumentParser(add_help=False,formatter_class=myFormatterClass)
 	PPoutput._optionals.title = "output configurations"
@@ -681,6 +685,7 @@ def main():
 	PPsearch.add_argument('--dump',dest='dump',nargs='+',default=None,metavar='target',help='dump table data. Accepts TABLE, OWNER.TABLE, TABLE:COL1,COL2 or OWNER.TABLE:COL1,COL2')
 	PPsearch.add_argument('--dump-file',dest='dump-file',default=None,metavar='filename',help='write output to filename.csv and filename.xlsx (extension is added automatically). Each table is a separate sheet in xlsx. Compatible with --dump and --desc-tables only')
 	PPsearch.add_argument('--sql-shell', dest='sql-shell', action='store_true',help="start a minimal interactive SQL shell")
+	PPsearch.add_argument('--sql-file', dest='sql-file', default=None, metavar="FILE", help="run SQL statements from a file (separated by ';' or a line with '/')")
 	PPsearch.add_argument('--test-module',dest='test-module',action='store_true',help='test the module before use it')
 	#1.22- Parent parser: unwrapper
 	PPunwrapper = argparse.ArgumentParser(add_help=False,formatter_class=myFormatterClass)
@@ -783,27 +788,35 @@ def main():
 	#4- Configure logging and output
 	configureLogging(args)
 	args['print'] = Output(args)
+	if args.get('socks') != None:
+		if args.get('thick', False) == True:
+			logging.warning("The SOCKS proxy is not used by the Oracle client in thick mode (use proxychains). It is used by TNS listener modules only")
+		if enableSocksProxy(args['socks']) == False:
+			exit(EXIT_BAD_CONNECTION)
 	#Start the good function
 	if 'auditType' in args and (args['auditType']=='unwrapper' or args['auditType']=='clean'):
 		pass
 	else:
 		if ipOrNameServerHasBeenGiven(args) == False :
 			return EXIT_MISS_ARGUMENT
-	try:
-		cfgPath = str(Path("./conf/").resolve())
-		logging.info(f"Using this folder as TNS_ADMIN env var : {cfgPath}")
-		cx_Oracle.init_oracle_client(config_dir=cfgPath, driver_name=args['client-driver'], error_url= "")
-		logging.info("CX_Oracle is well configured according to parameters")
-	except Exception as e:
-		logging.error("Impossible to load local configuration files in conf/ and to set driver_name: {0}".format(str(e)))
-	logging.debug("cx_Oracle Version: {0}".format(cx_Oracle.version))
-	logging.debug("Oracle Client Version: {0}".format(cx_Oracle.clientversion()))
+	cfgPath = str(Path("./conf/").resolve())
+	if initDriver(thick=args.get('thick', False), configDir=cfgPath, driverName=args.get('client-driver', "SQL*PLUS")) == False:
+		exit(EXIT_BAD_CONNECTION)
+	#Ask the password when a username is given without -P: not visible in the shell history and the process list
+	passwordPrompted = False
+	if args.get('user') != None and args.get('password') == None:
+		try:
+			args['password'] = getpass("Password for {0}: ".format(args['user']))
+			passwordPrompted = True
+		except (EOFError, KeyboardInterrupt):
+			print()
+			exit(EXIT_MISS_ARGUMENT)
 	msg = '[+] Target: {0}:{1}'.format(args['server'], args['port'])
 	if args.get('sid') is not None:
 		msg += ' (SID: {0})'.format(args['sid'])
 	elif args.get('serviceName') is not None:
 		msg += ' (Service Name: {0})'.format(args['serviceName'])
-	if args.get('user') is not None and args.get('password') is not None:
+	if args.get('user') is not None and args.get('password') is not None and passwordPrompted == False:
 		msg += ' as {0}/{1}'.format(args['user'], args['password'])
 	elif args.get('user') is not None:
 		msg += ' as {0}'.format(args['user'])

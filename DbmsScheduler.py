@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from OracleDatabase import OracleDatabase
-import logging, cx_Oracle, subprocess
+import logging, oracledb, subprocess
 from Utils import ErrorSQLRequest, checkOptionsGivenByTheUser
 from Constants import *
 from time import sleep
@@ -44,7 +44,7 @@ class DbmsScheduler (OracleDatabase):
 		Return True if no error, otherwise return Exception
 		'''
 		parameters = {'job_name': jobName, 'force': force, 'defer': defer} #'force': force, 'defer': defer
-		cursor = cx_Oracle.Cursor(self.args['dbcon'])
+		cursor = self.args['dbcon'].cursor()
 		try:
 			logging.info("Trying to remove job {0}".format(jobName))
 			#cursor.callproc(name="DBMS_SCHEDULER.drop_job", keywordParameters=parameters)
@@ -66,7 +66,7 @@ class DbmsScheduler (OracleDatabase):
 		logging.info('Create a job named {0}'.format(self.jobName))
 		splitCmd = cmd.split()
 		parameters = {'job_name':self.jobName,'job_type':'EXECUTABLE','job_action':splitCmd[0],'number_of_arguments':len(splitCmd)-1} #'auto_drop':True does not work with CX_Oralce. Why ?
-		cursor = cx_Oracle.Cursor(self.args['dbcon'])
+		cursor = self.args['dbcon'].cursor()
 		try :
 			if self.args['show_sql_requests'] == True: logging.info("SQL request executed: DBMS_SCHEDULER.create_job with these parameters: {0}".format(parameters))
 			cursor.callproc(name="DBMS_SCHEDULER.create_job",keywordParameters=parameters)
@@ -91,7 +91,7 @@ class DbmsScheduler (OracleDatabase):
 		run the job named self.jobName
 		'''
 		logging.info('Run the job')
-		cursor = cx_Oracle.Cursor(self.args['dbcon'])
+		cursor = self.args['dbcon'].cursor()
 		try :
 			cursor.callproc(name="DBMS_SCHEDULER.enable",keywordParameters={'name':self.jobName})
 		except Exception as e: 

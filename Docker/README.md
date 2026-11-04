@@ -1,16 +1,20 @@
 You can use docker to rapidly deploy and use odat !
 
-You can build it with the Dockerfile provided. 
+The image uses python-oracledb in thin mode, so no Oracle Instant Client is needed and it builds on
+amd64 and arm64.
 
-* First, get RPMs of instant client basic, sdk (devel) and sqlplus from the Oracle web site
-*(use the same directory for Dockerfile and .rpm)*
-
-http://www.oracle.com/technetwork/topics/linuxx86-64soft-092277.html *(user registration required)*
-
-* Edit "Dockerfile" and adapt the version of downloaded RPMs *(line 9 to 13)*
-
-* Then :
+* Build it with the Dockerfile provided:
 ```bash
-docker build -t="odat" .
-docker run --name myodat_container -i -t odat bash
+docker build -t odat .
+```
+
+* Run it:
+```bash
+docker run --rm -it odat -h
+docker run --rm -it odat all -s 10.0.0.5 -p 1521
+```
+
+* Or get an interactive shell in the container:
+```bash
+docker run --rm -it --entrypoint bash odat
 ```

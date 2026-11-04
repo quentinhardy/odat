@@ -6,12 +6,14 @@ from socket import gethostbyname
 from sys import exit
 from sys import stdout
 from datetime import datetime
-import os.path, cx_Oracle
+import os.path, oracledb
+from OracleDriver import connect as oracleConnect
+from SocksProxy import remoteDnsEnabled
 if os.name == 'nt':
 	import ntpath
 from subprocess import STDOUT, Popen, PIPE
 from socket import inet_aton
-import os, random, string
+import os, random, string, shutil
 
 def generateUniqueNameFile ():
 	'''
@@ -87,17 +89,17 @@ def areEquals(o1,o2):
 		else : return False
 	else : logging.error("Bad comparison in the areEquals function: o1:{0}, o2:{1}".format(type(o1),type(o2)))
 
-def getOracleConnection(args, connectId):
+def getOracleConnection(args, user, password, dsn):
 	'''
-	Return an Oracle object connected to the database thanks to the Oracle connection string (connectId)
+	Return an Oracle object connected to the database thanks to user, password and the Oracle connect descriptor (dsn)
 	'''
-	try: 
-		if args['SYSDBA'] == True :	
-			return cx_Oracle.connect(connectId, mode=cx_Oracle.SYSDBA)
-		elif args['SYSOPER'] == True :	
-			return cx_Oracle.connect(connectId, mode=cx_Oracle.SYSOPER)
+	try:
+		if args['SYSDBA'] == True :
+			return oracleConnect(user, password, dsn, mode=oracledb.AUTH_MODE_SYSDBA)
+		elif args['SYSOPER'] == True :
+			return oracleConnect(user, password, dsn, mode=oracledb.AUTH_MODE_SYSOPER)
 		else :
-			return cx_Oracle.connect(connectId)
+			return oracleConnect(user, password, dsn)
 	except Exception as e:
 		logging.error("Impossible to connect to the database: {0}".format(str(e)))
 		exit(-1)
@@ -172,7 +174,7 @@ def ipOrNameServerHasBeenGiven(args):
 	if ('server' in args and args['server'] != None) or \
 	   ('hostlist' in args and args['hostlist'] != None) or \
 	   ('nmap-file' in args and args['nmap-file'] != None):
-		if (args['server']!=None):
+		if (args['server']!=None) and remoteDnsEnabled() == False:
 			try:
 				inet_aton(args['server'])
 			except Exception as e:
@@ -216,9 +218,10 @@ def checkOptionsGivenByTheUser(args,operationsAllowed,checkSID=True,checkAccount
 
 def getScreenSize ():
 	'''
-	Returns screen size (columns, lines)
+	Returns screen size (lines, columns)
+	Default size (24, 80) when the output is not a terminal (e.g. redirected to a file or a pipe)
 	'''
-	size = os.get_terminal_size()
+	size = shutil.get_terminal_size(fallback=(80, 24))
 	return (size.lines, size.columns)
 	
 def stringToLinePadded(string, padValue=" "):

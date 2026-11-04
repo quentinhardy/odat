@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from DirectoryManagement import DirectoryManagement
-import logging,cx_Oracle
+import logging,oracledb
 #from OracleDatabase import OracleDatabase
 from Utils import ErrorSQLRequest, checkOptionsGivenByTheUser
 from Constants import *
@@ -59,7 +59,7 @@ class DbmsLob (DirectoryManagement):
 		if isFileExist == True :
 			status = self.__createOrRemplaceDirectory__(remotePath)
 			if isinstance(status,Exception): return status
-			cursor = cx_Oracle.Cursor(self.args['dbcon'])
+			cursor = self.args['dbcon'].cursor()
 			cursor.callproc("dbms_output.enable")
 			try:
 				cursor.execute(DBMS_LOB_GET_FILE.format(self.directoryName, remoteNameFile))
@@ -68,8 +68,8 @@ class DbmsLob (DirectoryManagement):
 				self.__dropDirectory__()
 				return ErrorSQLRequest(e)
 			else :
-				statusVar = cursor.var(cx_Oracle.NUMBER)
-				lineVar = cursor.var(cx_Oracle.STRING)
+				statusVar = cursor.var(oracledb.NUMBER)
+				lineVar = cursor.var(oracledb.STRING)
 				while True:
 					cursor.callproc("dbms_output.get_line", (lineVar, statusVar))
 					if statusVar.getvalue() != 0: break
@@ -93,7 +93,7 @@ class DbmsLob (DirectoryManagement):
 		status = self.__createOrRemplaceDirectory__(remotePath)
 		if isinstance(status,Exception): return status
 		DBMS_LOB_FILE_EXISTS = "DECLARE l_loc BFILE; l_ret BOOLEAN := FALSE; BEGIN l_loc := BFILENAME('{0}','{1}'); l_ret := DBMS_LOB.FILEEXISTS(l_loc) = 1; IF (l_ret) THEN dbms_output.put_line('True'); ELSE dbms_output.put_line('False'); END IF;END;"
-		cursor = cx_Oracle.Cursor(self.args['dbcon'])
+		cursor = self.args['dbcon'].cursor()
 		try :
 			cursor.callproc("dbms_output.enable")
 			try:
@@ -102,8 +102,8 @@ class DbmsLob (DirectoryManagement):
 				logging.info("Impossible to execute the query `{0}`: {1}".format(DBMS_LOB_FILE_EXISTS, self.cleanError(e)))
 				returnedValue = ErrorSQLRequest(e)
 			else :
-				statusVar = cursor.var(cx_Oracle.NUMBER)
-				lineVar = cursor.var(cx_Oracle.STRING)
+				statusVar = cursor.var(oracledb.NUMBER)
+				lineVar = cursor.var(oracledb.STRING)
 				cursor.callproc("dbms_output.get_line", (lineVar, statusVar))
 				if statusVar.getvalue() != 0: returnedValue = False
 				line = lineVar.getvalue()

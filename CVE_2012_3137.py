@@ -11,7 +11,7 @@ from threading import Thread
 from progressbar import *
 from os import geteuid
 from Constants import *
-import cx_Oracle
+from OracleDriver import connect as oracleConnect
 
 #Load scapy without warnings
 tempout = sys.stdout; temperr = sys.stderr
@@ -114,7 +114,7 @@ class CVE_2012_3137 ():
 		connString = odc.__generateConnectionString__(username=user, password="aaaa")
 		try:
 			logging.debug("Connecting with {0}".format(connString))
-			cx_Oracle.connect(connString)
+			oracleConnect(self.args['dbUser'], self.args['dbPassword'], self.args['dsn'])
 		except Exception as e:
 			logging.debug("Of course, impossible to connect: {0}".format(e))
 

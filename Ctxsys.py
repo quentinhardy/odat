@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from OracleDatabase import OracleDatabase
-import logging,cx_Oracle
+import logging,oracledb
 from Utils import ErrorSQLRequest, checkOptionsGivenByTheUser
 from Constants import *
 
@@ -26,7 +26,7 @@ class Ctxsys (OracleDatabase):
 		'''
 		logging.info('Try to give the file_access_role privilege to the current user')
 		parameters = {'param_name':'file_access_role','param_value':user}
-		cursor = cx_Oracle.Cursor(self.args['dbcon'])
+		cursor = self.args['dbcon'].cursor()
 		try :
 			cursor.callproc(name="ctxsys.ctx_adm.set_parameter",keywordParameters=parameters)
 		except Exception as e: 

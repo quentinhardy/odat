@@ -6,7 +6,7 @@ from Utils import execSystemCmd, checkOptionsGivenByTheUser, anAccountIsGiven, g
 from OracleDatabase import OracleDatabase
 from time import sleep
 import hashlib
-from Crypto.Cipher import AES
+from Cryptodome.Cipher import AES
 from threading import Thread
 from progressbar import *
 from os import geteuid
